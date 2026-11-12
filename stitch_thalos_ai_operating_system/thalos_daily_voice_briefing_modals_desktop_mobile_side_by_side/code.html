@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>THALOS — Daily Voice Briefing Modals (Desktop &amp; Mobile Side-by-Side)</title>
+<!-- Tailwind CSS v3 with Forms & Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration for Cyberpunk Neon Dark Theme -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cyber: {
+              950: '#02060b',
+              900: '#050d15',
+              850: '#07121d',
+              800: '#0b1926',
+              700: '#0f2438',
+              600: '#16334e',
+              border: '#142c42',
+              'border-bright': '#1f486b',
+              glow: 'rgba(0, 240, 255, 0.18)',
+              cyan: '#00f0ff',
+              cyanHover: '#3df3ff',
+              teal: '#00e5a3',
+              amber: '#ffb020',
+              alert: '#ff3b5c'
+            }
+          },
+          fontFamily: {
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+            sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom Styling Architecture -->
+<style data-purpose="cyber-background-grid">
+    /* Subtle grid overlay mimicking an executive tactical hologram display */
+    .bg-cyber-grid {
+      background-color: #02060b;
+      background-image: 
+        radial-gradient(ellipse 90% 60% at 50% -15%, rgba(0, 240, 255, 0.08), transparent 70%),
+        linear-gradient(to right, rgba(0, 240, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 240, 255, 0.025) 1px, transparent 1px);
+      background-size: 100% 100%, 36px 36px, 36px 36px;
+    }
+    
+    .tactical-modal-backdrop {
+      background: linear-gradient(180deg, rgba(7, 18, 29, 0.94) 0%, rgba(3, 9, 15, 0.98) 100%);
+      box-shadow: 0 0 45px rgba(0, 240, 255, 0.06), inset 0 0 0 1px rgba(0, 240, 255, 0.18);
+    }
+
+    .modal-frame-desktop {
+      border: 1px solid rgba(0, 240, 255, 0.28);
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 35px -5px rgba(0, 240, 255, 0.12);
+    }
+    
+    .modal-frame-mobile {
+      border: 1px solid rgba(0, 240, 255, 0.32);
+      box-shadow: 0 25px 65px -12px rgba(0, 0, 0, 0.95), 0 0 40px -8px rgba(0, 240, 255, 0.15);
+    }
+  </style>
+<style data-purpose="neon-effects-and-glows">
+    .glow-cyan-sm {
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.45);
+    }
+    .glow-cyan-pill {
+      box-shadow: 0 0 18px rgba(0, 240, 255, 0.55), inset 0 0 8px rgba(0, 240, 255, 0.3);
+    }
+    .glow-teal-btn {
+      box-shadow: 0 0 16px rgba(0, 229, 163, 0.4);
+    }
+    .text-glow-cyan {
+      text-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+<style data-purpose="custom-waveforms">
+    /* Visual heights animation or static representation for waveform */
+    .bar-anim {
+      transform-origin: bottom;
+      transition: height 0.3s ease;
+    }
+  </style>
+<!-- END: Custom Styling Architecture -->
+</head>
+<body class="bg-cyber-grid text-slate-200 font-sans antialiased min-h-screen overflow-x-hidden flex flex-col selection:bg-cyan-500 selection:text-black">
+<!-- BEGIN: MasterComparativeHeader -->
+<header class="border-b border-cyber-border bg-[#030910]/95 backdrop-blur-md sticky top-0 z-50 px-5 py-3">
+<div class="max-w-[1920px] mx-auto flex flex-wrap items-center justify-between gap-4">
+<!-- Brand & Matrix Title -->
+<div class="flex items-center space-x-3.5">
+<div class="w-10 h-10 rounded-lg bg-cyber-850 border border-cyber-cyan/40 flex items-center justify-center glow-cyan-sm relative overflow-hidden group">
+<div class="absolute inset-0 bg-cyber-cyan/10 group-hover:bg-cyber-cyan/20 transition-all"></div>
+<svg class="w-6 h-6 text-cyber-cyan" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polygon points="12 2 2 8.5 12 15 22 8.5 12 2"></polygon>
+<polygon points="2 15.5 12 22 22 15.5 12 9 2 15.5"></polygon>
+</svg>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-bold tracking-widest text-white text-base font-mono">THALOS</span>
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/30 font-mono font-semibold">OS v4.8 AUTONOMOUS</span>
+<span class="text-xs text-slate-500 hidden sm:inline font-mono">// COMPARATIVE AUDIO TELEMETRY MATRIX</span>
+</div>
+<p class="text-[11px] text-slate-400 font-mono flex items-center gap-2">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            YUGANTAR GROWTH CORE • MULTI-PLATFORM RUNTIME SYNCHRONIZED
+          </p>
+</div>
+</div>
+<!-- Center Status: Audio Codec & Realtime Clock -->
+<div class="hidden xl:flex items-center space-x-3 text-xs font-mono">
+<div class="px-3.5 py-1.5 rounded-full bg-cyber-850/90 border border-cyber-cyan/30 flex items-center gap-2 text-cyber-cyan shadow-[0_0_12px_rgba(0,240,255,0.15)]">
+<span class="w-2 h-2 rounded-full bg-cyber-cyan animate-ping"></span>
+<span>NEURAL SYNAPSE ACTIVE • ELEVENLABS 24-bit / 48kHz HD</span>
+</div>
+<div class="text-slate-400 border-l border-cyber-border pl-3 flex items-center gap-1.5">
+<svg class="w-3.5 h-3.5 text-cyber-cyan/80" fill="none" stroke="currentColor" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+<span>Mon, Apr 28 • 09:41 AM IST</span>
+</div>
+</div>
+<!-- Right Mode Controls & Executive Avatar -->
+<div class="flex items-center space-x-3 font-mono text-xs">
+<div class="hidden sm:flex bg-cyber-900 border border-cyber-border rounded-lg p-0.5">
+<button class="px-3 py-1 rounded bg-cyber-cyan text-black font-semibold text-[11px] shadow-sm">SIDE-BY-SIDE 1:1</button>
+<button class="px-3 py-1 rounded text-slate-400 hover:text-white text-[11px] transition">SYNCHRONIZED AUDIT</button>
+<button class="px-3 py-1 rounded text-slate-400 hover:text-white text-[11px] transition">SPECS &amp; GATES</button>
+</div>
+<div class="flex items-center space-x-2 pl-2 border-l border-cyber-border">
+<span class="px-2 py-0.5 rounded text-[11px] bg-cyber-cyan/10 border border-cyber-cyan/30 text-cyber-cyan">
+            1.2s Latency
+          </span>
+<div class="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-600 to-emerald-500 border border-cyber-cyan/60 flex items-center justify-center font-bold text-black text-xs shadow">
+            YL
+          </div>
+</div>
+</div>
+</div>
+</header>
+<!-- END: MasterComparativeHeader -->
+<!-- BEGIN: MainPanoramicWorkspace -->
+<main class="flex-1 max-w-[1920px] w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+<!-- Top Meta Context Strip -->
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-2 border-b border-cyber-border/70 text-xs font-mono">
+<div class="flex items-center gap-2 text-slate-300">
+<span class="inline-block w-2 h-2 bg-cyber-cyan rounded-sm"></span>
+<span class="text-white font-semibold uppercase tracking-wider">THALOS Autonomous Daily Voice Briefing Engine</span>
+<span class="text-slate-500">• Comparative Topology Evaluation (Desktop 1440p vs. Mobile Touch UI)</span>
+</div>
+<div class="flex items-center gap-3 text-slate-400">
+<span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Both instances bound to Neural Stream ID #VOC-8842-AX</span>
+<span class="px-2 py-0.5 rounded bg-cyber-800 text-cyber-cyan border border-cyber-border text-[11px]">Sync Delta: &lt; 0.4ms</span>
+</div>
+</div>
+<!-- Side-by-Side Split Viewport Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- ========================================================================= -->
+<!-- BEGIN: Left Column - DESKTOP DAILY VOICE BRIEFING MODAL (approx 62% col) -->
+<!-- ========================================================================= -->
+<section aria-label="Desktop Daily Voice Briefing HUD" class="lg:col-span-7 xl:col-span-8 flex flex-col space-y-3">
+<!-- Viewport Header Badge -->
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center space-x-2">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-cyber-cyan/15 border border-cyber-cyan/40 text-cyber-cyan font-mono text-xs font-medium tracking-wide glow-cyan-sm">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><rect height="14" rx="2" ry="2" width="20" x="2" y="3"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg>
+              DESKTOP EXECUTIVE HUD // 1440px EXPANSIVE VIEW
+            </span>
+<span class="text-[11px] font-mono text-slate-400">Dual-Pane Audio Telemetry &amp; Clearance Hub</span>
+</div>
+<span class="text-[11px] font-mono text-slate-500 uppercase tracking-wider">Ref: Screen-3 Native View</span>
+</div>
+<!-- Render Desktop Modal Frame -->
+<div class="tactical-modal-backdrop modal-frame-desktop rounded-2xl overflow-hidden backdrop-blur-xl p-5 md:p-6 text-slate-200">
+<!-- Desktop Modal Top Bar -->
+<div class="flex flex-wrap items-center justify-between pb-4 border-b border-cyber-border gap-3">
+<div class="flex items-center space-x-3.5">
+<div class="w-9 h-9 rounded-lg bg-[#071929] border border-cyber-cyan/50 flex items-center justify-center glow-cyan-sm">
+<svg class="w-5 h-5 text-cyber-cyan" fill="none" stroke="currentColor" stroke-width="2.2" viewbox="0 0 24 24">
+<polygon points="12 2 2 8.5 12 15 22 8.5 12 2"></polygon>
+<polygon points="2 15.5 12 22 22 15.5 12 9 2 15.5"></polygon>
+</svg>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h1 class="text-sm md:text-base font-bold font-mono tracking-wider text-white">THALOS</h1>
+<span class="px-2 py-0.5 text-[10px] rounded bg-cyber-cyan/15 border border-cyber-cyan/40 text-cyber-cyan font-mono font-semibold tracking-wide">OS V4.8 AUTONOMOUS</span>
+<span class="px-2 py-0.5 text-[10px] rounded-full bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 font-mono flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> NEURAL SYNAPSE ACTIVE
+                  </span>
+</div>
+<p class="text-xs text-slate-400 mt-0.5 font-mono">
+                  Good Morning, Boss! • Daily Standup Synthesis | Mon, Apr 28 • 09:41 AM IST
+                </p>
+</div>
+</div>
+<!-- Modal Right Audio Tag & Window Controls -->
+<div class="flex items-center space-x-3">
+<div class="px-3 py-1.5 rounded-lg bg-cyber-900/90 border border-cyber-border text-xs font-mono text-slate-300 flex items-center gap-2">
+<svg class="w-3.5 h-3.5 text-cyber-cyan" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+<span class="text-cyber-cyan font-medium">24-bit / 48kHz HD</span>
+<span class="text-slate-500">•</span>
+<span class="text-slate-400">ElevenLabs Ultra-HD Adam/Cerebral</span>
+</div>
+<div class="flex items-center space-x-1.5">
+<button class="w-7 h-7 rounded bg-cyber-850 hover:bg-cyber-700 border border-cyber-border flex items-center justify-center text-slate-400 hover:text-white transition" title="Minimize">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><line x1="5" x2="19" y1="12" y2="12"></line></svg>
+</button>
+<button class="w-7 h-7 rounded bg-cyber-850 hover:bg-cyber-700 border border-cyber-border flex items-center justify-center text-slate-400 hover:text-white transition" title="Close">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><line x1="18" x2="6" y1="6" y2="18"></line><line x1="6" x2="18" y1="6" y2="18"></line></svg>
+</button>
+</div>
+</div>
+</div>
+<!-- Desktop Modal Main Content Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-5 mt-5">
+<!-- Left Deck: Audio Player + Live Waveform (7 cols) -->
+<div class="xl:col-span-7 flex flex-col space-y-4">
+<!-- Waveform Card Container -->
+<div class="bg-gradient-to-b from-[#061423] to-[#040c16] rounded-xl border border-cyber-cyan/25 p-4 relative overflow-hidden shadow-inner">
+<!-- Speaker Header -->
+<div class="flex items-center justify-between text-xs font-mono mb-3">
+<div class="flex items-center gap-2 text-slate-300">
+<span class="w-2 h-2 rounded-full bg-cyber-cyan animate-pulse"></span>
+<span class="uppercase tracking-wide font-medium text-slate-200">Speaker: THALOS Synthetic Executive Orchestrator</span>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] bg-cyber-cyan/15 border border-cyber-cyan/40 text-cyber-cyan uppercase font-mono">
+                    • Streaming Live // 1.2s Latency
+                  </span>
+</div>
+<!-- Bioluminescent Audio Equalizer Waveform Bars -->
+<div class="h-28 flex items-end justify-between gap-1.5 px-3 py-2 bg-[#02070e]/80 rounded-lg border border-cyber-border relative overflow-hidden">
+<!-- Waveform bars -->
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[55%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[82%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[35%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[48%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[72%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[90%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[65%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[44%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[58%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[78%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[95%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[84%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[70%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[88%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[60%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[75%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[50%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[66%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[40%]"></span>
+<span class="w-2.5 rounded-sm bg-gradient-to-t from-cyber-cyan to-teal-300 shadow-[0_0_10px_rgba(0,240,255,0.7)] h-[54%]"></span>
+</div>
+<!-- Timeline Scrubber with glowing knob -->
+<div class="mt-4 space-y-1.5">
+<div class="relative w-full h-1.5 bg-[#0e2236] rounded-full overflow-visible flex items-center">
+<div class="h-full bg-gradient-to-r from-cyan-500 to-cyber-cyan rounded-full shadow-[0_0_8px_rgba(0,240,255,0.8)]" style="width: 38%;"></div>
+<!-- Scrubber Knob -->
+<div class="absolute left-[38%] -translate-x-1/2 w-4 h-4 bg-white rounded-full border-2 border-cyber-cyan shadow-[0_0_14px_rgba(0,240,255,1)] cursor-pointer"></div>
+</div>
+<div class="flex justify-between text-[11px] font-mono text-slate-400">
+<span class="text-cyber-cyan font-bold">01:24</span>
+<span>03:45 (Total Briefing)</span>
+</div>
+</div>
+<!-- Control Buttons Deck -->
+<div class="flex flex-wrap items-center justify-between gap-3 mt-4 pt-3 border-t border-cyber-border/70">
+<div class="flex items-center space-x-2.5">
+<!-- Rewind 15s -->
+<button class="w-9 h-9 rounded-lg bg-cyber-850 hover:bg-cyber-700 border border-cyber-border flex items-center justify-center text-slate-300 transition" title="Rewind 15s">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><polygon points="11 19 2 12 11 5 11 19"></polygon><polygon points="22 19 13 12 22 5 22 19"></polygon></svg>
+</button>
+<!-- Main Pause Pill -->
+<button class="w-12 h-10 rounded-xl bg-cyber-cyan text-black flex items-center justify-center glow-cyan-pill hover:bg-cyber-cyanHover transition" title="Pause Briefing">
+<svg class="w-5 h-5 fill-current stroke-current" viewbox="0 0 24 24"><rect height="16" rx="1" width="4" x="6" y="4"></rect><rect height="16" rx="1" width="4" x="14" y="4"></rect></svg>
+</button>
+<!-- Fast Forward 15s -->
+<button class="w-9 h-9 rounded-lg bg-cyber-850 hover:bg-cyber-700 border border-cyber-border flex items-center justify-center text-slate-300 transition" title="Fast Forward 15s">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
+</button>
+<!-- Speed Selector Pills -->
+<div class="flex bg-cyber-900 border border-cyber-border rounded-lg p-0.5 font-mono text-[11px] ml-2">
+<button class="px-2 py-1 text-slate-400 hover:text-white">1.0x</button>
+<button class="px-2.5 py-1 rounded bg-cyber-cyan/20 border border-cyber-cyan/50 text-cyber-cyan font-bold">1.25x</button>
+<button class="px-2 py-1 text-slate-400 hover:text-white">1.5x</button>
+<button class="px-2 py-1 text-slate-400 hover:text-white">2.0x</button>
+</div>
+</div>
+<!-- Persona Selector and Audio Output Toggle -->
+<div class="flex items-center space-x-2">
+<div class="relative">
+<button class="px-3 py-1.5 rounded-lg bg-cyber-900 border border-cyber-cyan/40 text-xs font-mono text-slate-200 flex items-center gap-2 hover:border-cyber-cyan transition">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+<span>Executive Brief (Assertive)</span>
+<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></svg>
+</button>
+</div>
+<button class="w-8 h-8 rounded-lg bg-cyber-850 hover:bg-cyber-700 border border-cyber-border flex items-center justify-center text-slate-300 hover:text-cyber-cyan transition" title="Mute/Unmute">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+</button>
+</div>
+</div>
+</div>
+<!-- Desktop Live Synchronized Transcript & Telemetry -->
+<div class="bg-cyber-900/90 rounded-xl border border-cyber-border p-4 font-mono space-y-3">
+<div class="flex items-center justify-between border-b border-cyber-border/70 pb-2">
+<div class="flex items-center gap-2 text-xs font-semibold text-slate-300">
+<svg class="w-3.5 h-3.5 text-cyber-cyan" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+<span>LIVE SYNCHRONIZED TRANSCRIPT &amp; CONTEXT TELEMETRY</span>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] bg-cyber-850 border border-cyber-cyan/30 text-cyber-cyan">
+                    Word Sync: 99.8% Neural Precision
+                  </span>
+</div>
+<div class="space-y-2 text-xs leading-relaxed max-h-36 overflow-y-auto scrollbar-hide pr-1">
+<p class="text-slate-500 font-mono">
+<span class="text-slate-600">[00:05]</span> "Good morning Boss. All seven THALOS core environments are operating in equilibrium at 99.8% neural sync."
+                  </p>
+<p class="text-slate-400 font-mono">
+<span class="text-slate-600">[00:22]</span> "Key overnight velocity: Revenue hit <span class="text-emerald-400 font-semibold">₹42,500</span>, tracking 12% ahead of our daily runway target. Active deals remain strong at four."
+                  </p>
+<!-- Active Speaking Bubble -->
+<div class="p-2.5 rounded-lg bg-cyber-cyan/10 border border-cyber-cyan/50 text-white shadow-[0_0_15px_rgba(0,240,255,0.1)]">
+<div class="flex items-center gap-1.5 text-[10px] text-cyber-cyan font-bold mb-1 tracking-wider uppercase">
+<span class="w-1.5 h-1.5 rounded-full bg-cyber-cyan animate-ping"></span>
+                      Currently Speaking • Timestamp 01:24
+                    </div>
+<p class="text-xs text-slate-100 italic">
+                      "DevAgent-X successfully merged PR #142 for the NexGen Client System. We now have 2 priority clearance gates awaiting authorization."
+                    </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column Inside Desktop Modal: Briefing Segments & Clearance Gates (5 cols) -->
+<div class="xl:col-span-5 flex flex-col space-y-4">
+<!-- Briefing Segments (4 Segments) -->
+<div class="bg-cyber-900/90 rounded-xl border border-cyber-border p-4 font-mono space-y-2.5">
+<div class="flex items-center justify-between border-b border-cyber-border/70 pb-2">
+<div class="flex items-center gap-2 text-xs font-semibold text-slate-300">
+<svg class="w-3.5 h-3.5 text-cyber-cyan" fill="none" stroke="currentColor" viewbox="0 0 24 24"><line x1="8" x2="21" y1="6" y2="6"></line><line x1="8" x2="21" y1="12" y2="12"></line><line x1="8" x2="21" y1="18" y2="18"></line><line x1="3" x2="3.01" y1="6" y2="6"></line><line x1="3" x2="3.01" y1="12" y2="12"></line><line x1="3" x2="3.01" y1="18" y2="18"></line></svg>
+<span>BRIEFING SEGMENTS</span>
+</div>
+<span class="text-[10px] px-2 py-0.5 rounded bg-cyber-850 border border-cyber-border text-slate-400">4 Segments</span>
+</div>
+<!-- Segment List -->
+<div class="space-y-2 text-xs">
+<!-- Segment 1 (Done) -->
+<div class="p-2 rounded-lg bg-cyber-850/60 border border-cyber-border/80 flex items-center justify-between">
+<div class="flex items-start gap-2.5">
+<span class="text-emerald-400 text-xs mt-0.5">✓</span>
+<div>
+<div class="flex items-center gap-2">
+<span class="text-slate-500 font-mono text-[11px]">00:00</span>
+<span class="text-slate-300 font-semibold text-[11px]">Macro Business Health &amp; Revenue Pulse</span>
+</div>
+<p class="text-[10px] text-slate-400 mt-0.5">Revenue ₹42,500 • Target Beat +12%</p>
+</div>
+</div>
+<span class="px-2 py-0.5 text-[9px] rounded bg-cyber-800 text-slate-400 border border-slate-700">Done</span>
+</div>
+<!-- Segment 2 (Now Playing) -->
+<div class="p-2 rounded-lg bg-cyber-cyan/15 border border-cyber-cyan/50 flex items-center justify-between glow-cyan-sm">
+<div class="flex items-start gap-2.5">
+<span class="text-cyber-cyan text-xs mt-0.5 animate-pulse">▶</span>
+<div>
+<div class="flex items-center gap-2">
+<span class="text-cyber-cyan font-mono text-[11px] font-bold">00:45</span>
+<span class="text-white font-semibold text-[11px]">AI Team Velocity &amp; PR Merges</span>
+</div>
+<p class="text-[10px] text-cyan-200 mt-0.5">DevAgent-X NexGen PR #142 Merged</p>
+</div>
+</div>
+<span class="px-2 py-0.5 text-[9px] rounded bg-cyber-cyan text-black font-bold uppercase">Now Playing</span>
+</div>
+<!-- Segment 3 (Critical Action Req) -->
+<div class="p-2 rounded-lg bg-cyber-850/60 border border-cyber-amber/40 flex items-center justify-between">
+<div class="flex items-start gap-2.5">
+<span class="text-cyber-amber text-xs mt-0.5">●</span>
+<div>
+<div class="flex items-center gap-2">
+<span class="text-cyber-amber font-mono text-[11px]">01:40</span>
+<span class="text-slate-200 font-semibold text-[11px]">Critical Priority Gates &amp; Clearances</span>
+</div>
+<p class="text-[10px] text-slate-400 mt-0.5">Acme SLA (₹6L) + AdSpend Realloc</p>
+</div>
+</div>
+<span class="px-2 py-0.5 text-[9px] rounded bg-cyber-amber/15 text-cyber-amber border border-cyber-amber/40 font-bold">Action Req</span>
+</div>
+<!-- Segment 4 (Queued) -->
+<div class="p-2 rounded-lg bg-cyber-850/40 border border-cyber-border/60 flex items-center justify-between opacity-80">
+<div class="flex items-start gap-2.5">
+<span class="text-slate-500 text-xs mt-0.5">○</span>
+<div>
+<div class="flex items-center gap-2">
+<span class="text-slate-500 font-mono text-[11px]">02:30</span>
+<span class="text-slate-400 font-semibold text-[11px]">Strategic Market Anomalies</span>
+</div>
+<p class="text-[10px] text-slate-500 mt-0.5">Competitor Pivot Detection</p>
+</div>
+</div>
+<span class="px-2 py-0.5 text-[9px] rounded bg-cyber-850 text-slate-500 border border-cyber-border">Queued</span>
+</div>
+</div>
+<!-- Contributing Sub-Agents pills -->
+<div class="pt-2 border-t border-cyber-border/60">
+<div class="text-[10px] text-slate-400 font-mono uppercase mb-1.5">Contributing Sub-Agents:</div>
+<div class="flex flex-wrap gap-1.5 text-[10px] font-mono">
+<span class="px-2 py-0.5 rounded bg-cyber-850 border border-cyber-cyan/30 text-cyber-cyan flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-cyber-cyan"></span> Outreach Agent</span>
+<span class="px-2 py-0.5 rounded bg-cyber-850 border border-cyber-cyan/30 text-cyber-cyan flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-cyber-cyan"></span> DevAgent-X</span>
+<span class="px-2 py-0.5 rounded bg-cyber-850 border border-cyber-amber/40 text-cyber-amber flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-cyber-amber"></span> Deal Architect</span>
+<span class="px-2 py-0.5 rounded bg-cyber-850 border border-cyber-cyan/30 text-cyber-cyan flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-cyber-cyan"></span> Compliance Agent</span>
+</div>
+</div>
+</div>
+<!-- Executive Clearance Gates Section -->
+<div class="bg-gradient-to-b from-[#0a1b2b] to-[#06121f] rounded-xl border border-cyber-cyan/40 p-4 font-mono space-y-3">
+<div class="flex items-center justify-between border-b border-cyber-border pb-2">
+<div class="flex items-center gap-2 text-xs font-semibold text-slate-200">
+<svg class="w-4 h-4 text-cyber-amber" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+<span class="tracking-wide">EXECUTIVE CLEARANCE GATES</span>
+</div>
+<span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
+                    2 Pending Authorization
+                  </span>
+</div>
+<!-- Clearance Gate 01 Card -->
+<div class="p-3 rounded-lg bg-cyber-900 border border-cyber-amber/40 space-y-2.5">
+<div class="flex items-start justify-between">
+<div>
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">GATE 01</span>
+<h4 class="text-xs font-bold text-white mt-1">Acme Corp Custom SLA v2</h4>
+<p class="text-[11px] text-emerald-400 font-semibold mt-0.5">₹6,00,000 Contract Value</p>
+</div>
+<span class="text-[10px] text-slate-400 font-mono">SLA: 99.95%</span>
+</div>
+<!-- Action Buttons -->
+<div class="grid grid-cols-12 gap-2 pt-1">
+<button class="col-span-8 py-2 rounded-lg bg-cyber-teal text-black font-bold text-xs flex items-center justify-center gap-1.5 glow-teal-btn hover:bg-emerald-400 transition">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      Approve &amp; Sign
+                    </button>
+<button class="col-span-4 py-2 rounded-lg bg-cyber-850 hover:bg-cyber-700 border border-cyber-border text-slate-300 text-xs font-medium transition">
+                      Review
+                    </button>
+</div>
+</div>
+<!-- Clearance Gate 02 Minimalist -->
+<div class="p-2.5 rounded-lg bg-cyber-850/70 border border-cyber-border flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-cyber-800 text-cyber-cyan font-bold border border-cyber-cyan/30">GATE 02</span>
+<span class="text-xs text-slate-200">Q2 AdSpend Agent Escalation</span>
+</div>
+<button class="text-xs text-cyber-cyan hover:underline flex items-center gap-1">Auth ↗</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Voice Interruption & Prompt Capsule (Desktop) -->
+<div class="mt-5 pt-4 border-t border-cyber-border flex flex-col md:flex-row items-center gap-3">
+<div class="relative flex-1 w-full">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-cyber-cyan">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="23"></line><line x1="8" x2="16" y1="23" y2="23"></line></svg>
+</div>
+<input class="w-full bg-[#050f1a] border border-cyber-border focus:border-cyber-cyan rounded-lg pl-9 pr-24 py-2.5 text-xs text-slate-300 font-mono focus:ring-1 focus:ring-cyber-cyan focus:outline-none" type="text" value="Interrupt briefing or query THALOS... (e.g. 'Why did Acme Corp request SLA change?')"/>
+<button class="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-cyber-cyan/20 border border-cyber-cyan/40 hover:bg-cyber-cyan text-cyber-cyan hover:text-black rounded text-xs font-mono font-semibold transition flex items-center gap-1">
+<span>Send</span>
+<span>→</span>
+</button>
+</div>
+<div class="flex items-center gap-1.5 text-[11px] font-mono text-slate-400 shrink-0">
+<span class="text-slate-500">Ask Quick:</span>
+<button class="px-2.5 py-1 rounded bg-cyber-850 hover:bg-cyber-800 border border-cyber-border text-slate-300 hover:text-cyber-cyan transition">"Deep Dive on DevAgent-X PR"</button>
+<button class="px-2.5 py-1 rounded bg-cyber-850 hover:bg-cyber-800 border border-cyber-border text-slate-300 hover:text-cyber-cyan transition">"Summarize Revenue Breakdown"</button>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Left Column (Desktop Modal) -->
+<!-- ========================================================================= -->
+<!-- BEGIN: Right Column - MOBILE PORTRAIT BRIEFING MODAL (approx 38% col)   -->
+<!-- ========================================================================= -->
+<section aria-label="Mobile Daily Voice Briefing HUD" class="lg:col-span-5 xl:col-span-4 flex flex-col space-y-3">
+<!-- Viewport Header Badge -->
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center space-x-2">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-cyber-cyan/15 border border-cyber-cyan/40 text-cyber-cyan font-mono text-xs font-medium tracking-wide glow-cyan-sm">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><rect height="20" rx="2" ry="2" width="14" x="5" y="2"></rect><line x1="12" x2="12.01" y1="18" y2="18"></line></svg>
+              MOBILE PORTRAIT HUD // 390px ONE-HAND TOUCH
+            </span>
+</div>
+<span class="text-[11px] font-mono text-slate-500 uppercase tracking-wider">Ref: Screen-1 Native Touch</span>
+</div>
+<!-- Sleek Smartphone Device Enclosure Frame -->
+<div class="mx-auto w-full max-w-[420px] rounded-[36px] bg-[#020509] p-3 border-2 border-cyber-border-bright/50 shadow-[0_0_50px_rgba(0,0,0,0.9),0_0_25px_rgba(0,240,255,0.12)] relative">
+<!-- Outer Phone Shell Accent Glow -->
+<div class="absolute inset-0 rounded-[36px] border border-cyber-cyan/20 pointer-events-none"></div>
+<!-- Phone Screen Frame Container -->
+<div class="bg-gradient-to-b from-[#05111d] to-[#02070e] rounded-[28px] border border-cyber-border overflow-hidden p-4 space-y-4 text-slate-200">
+<!-- Mobile Top Status Bar -->
+<div class="flex items-center justify-between text-xs font-mono text-slate-400 px-1 pt-1">
+<span class="font-bold text-white tracking-wider">9:41</span>
+<!-- Phone Sensor Island Notch -->
+<div class="w-20 h-4 bg-black rounded-full border border-cyber-border/40 mx-auto"></div>
+<div class="flex items-center space-x-1.5 text-[11px]">
+<span class="text-cyber-cyan font-bold">5G</span>
+<svg class="w-3 h-3 text-slate-300" fill="currentColor" viewbox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L12 22l7.03-4.39C20.26 16.07 21 14.12 21 12c0-4.97-4.03-9-9-9z"></path></svg>
+<div class="w-4 h-2 rounded-sm border border-slate-300 p-0.5 flex items-center">
+<div class="h-full w-full bg-emerald-400"></div>
+</div>
+</div>
+</div>
+<!-- Mobile Modal Header -->
+<div class="border-b border-cyber-border/80 pb-3 pt-1">
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-2.5">
+<div class="w-8 h-8 rounded-lg bg-cyber-850 border border-cyber-cyan/40 flex items-center justify-center glow-cyan-sm">
+<svg class="w-4 h-4 text-cyber-cyan" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polygon points="12 2 2 8.5 12 15 22 8.5 12 2"></polygon>
+<polygon points="2 15.5 12 22 22 15.5 12 9 2 15.5"></polygon>
+</svg>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="text-xs font-bold font-mono tracking-wider text-white">THALOS</span>
+<span class="text-[9px] px-1.5 py-0.2 rounded bg-cyber-cyan/20 text-cyber-cyan font-mono font-semibold">OS v4.8</span>
+<span class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-mono">• ACTIVE</span>
+</div>
+<div class="text-[11px] font-bold text-white font-mono mt-0.5">Good Morning, Boss!</div>
+</div>
+</div>
+<!-- Window Dismiss -->
+<div class="flex items-center space-x-1">
+<button class="w-6 h-6 rounded bg-cyber-850 border border-cyber-border flex items-center justify-center text-slate-400">
+<span class="text-xs">−</span>
+</button>
+<button class="w-6 h-6 rounded bg-cyber-850 border border-cyber-border flex items-center justify-center text-slate-400">
+<span class="text-xs">✕</span>
+</button>
+</div>
+</div>
+<div class="flex items-center justify-between text-[10px] font-mono text-slate-400 mt-2">
+<span>Daily Standup Synthesis • 09:41 IST</span>
+</div>
+<!-- Audio Fidelity Codec Pill -->
+<div class="mt-2 px-2.5 py-1 rounded bg-cyber-900 border border-cyber-border text-[10px] font-mono text-slate-300 flex items-center justify-between">
+<span class="text-cyber-cyan font-medium flex items-center gap-1">
+<svg class="w-3 h-3 text-cyber-cyan" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                  24-bit / 48kHz HD
+                </span>
+<span class="text-slate-400">ElevenLabs Adam/Cerebral</span>
+</div>
+</div>
+<!-- Mobile Audio Waveform Chamber -->
+<div class="bg-[#040d18] rounded-2xl border border-cyber-cyan/30 p-3 space-y-3">
+<div class="flex items-center justify-between text-[10px] font-mono">
+<span class="text-slate-300 flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-cyber-cyan animate-pulse"></span>
+                  SYNTHETIC ORCHESTRATOR
+                </span>
+<span class="text-cyber-cyan bg-cyber-cyan/15 px-1.5 py-0.5 rounded border border-cyber-cyan/30 font-semibold">
+                  • STREAMING // 1.2s LATENCY
+                </span>
+</div>
+<!-- Compact Bioluminescent Equalizer -->
+<div class="h-20 flex items-center justify-center gap-1 px-2 py-1 bg-[#01060d] rounded-xl border border-cyber-border">
+<span class="w-1.5 rounded-full bg-gradient-to-t from-cyber-cyan to-teal-300 h-6"></span>
+<span class="w-1.5 rounded-full bg-gradient-to-t from-cyber-cyan to-teal-300 h-10"></span>
+<span class="w-1.5 rounded-full bg-gradient-to-t from-cyber-cyan to-teal-300 h-14"></span>
+<span class="w-1.5 rounded-full bg-gradient-to-t from-cyber-cyan to-teal-300 h-8"></span>
+<span class="w-1.5 rounded-full bg-gradient-to-t from-cyber-cyan to-teal-300 h-16 shadow-[0_0_8px_rgba(0,240,255,0.7)]"></span>
+<span class="w-1.5 rounded-full bg-gradient-to-t from-cyber-cyan to-teal-300 h-12"></span>
+<span class="w-1.5 rounded-full bg-gradient-to-t from-cyber-cyan to-teal-300 h-16 shadow-[0_0_8px_rgba(0,240,255,0.7)]"></span>
+<span class="w-1.5 rounded-full bg-gradient-to-t from-cyber-cyan to-teal-300 h-11"></span>
+<span class="w-1.5 rounded-full bg-gradient-to-t from-cyber-cyan to-teal-300 h-14"></span>
+<span class="w-1.5 rounded-full bg-gradient-to-t from-cyber-cyan to-teal-300 h-7"></span>
+<span class="w-1.5 rounded-full bg-gradient-to-t from-cyber-cyan to-teal-300 h-10"></span>
+<span class="w-1.5 rounded-full bg-gradient-to-t from-cyber-cyan to-teal-300 h-5"></span>
+</div>
+<!-- Mobile Scrubber Track -->
+<div class="space-y-1">
+<div class="relative w-full h-1 bg-[#0f2438] rounded-full flex items-center">
+<div class="h-full bg-cyber-cyan rounded-full" style="width: 38%;"></div>
+<div class="absolute left-[38%] -translate-x-1/2 w-3 h-3 bg-white rounded-full border-2 border-cyber-cyan shadow-[0_0_10px_rgba(0,240,255,1)]"></div>
+</div>
+<div class="flex justify-between text-[10px] font-mono text-slate-400">
+<span class="text-cyber-cyan font-bold">01:24</span>
+<span>03:45 (Total Briefing)</span>
+</div>
+</div>
+<!-- Mobile Touch Playback Controls -->
+<div class="flex items-center justify-between pt-1">
+<div class="flex items-center space-x-2">
+<button class="w-8 h-8 rounded-lg bg-cyber-850 border border-cyber-border flex items-center justify-center text-slate-300">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><polygon points="11 19 2 12 11 5 11 19"></polygon><polygon points="22 19 13 12 22 5 22 19"></polygon></svg>
+</button>
+<button class="w-12 h-9 rounded-xl bg-cyber-cyan text-black flex items-center justify-center glow-cyan-pill">
+<svg class="w-4 h-4 fill-current stroke-current" viewbox="0 0 24 24"><rect height="16" rx="1" width="4" x="6" y="4"></rect><rect height="16" rx="1" width="4" x="14" y="4"></rect></svg>
+</button>
+<button class="w-8 h-8 rounded-lg bg-cyber-850 border border-cyber-border flex items-center justify-center text-slate-300">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
+</button>
+</div>
+<div class="flex bg-cyber-900 border border-cyber-border rounded-lg p-0.5 text-[10px] font-mono">
+<button class="px-1.5 py-0.5 text-slate-400">1.0x</button>
+<button class="px-1.5 py-0.5 rounded bg-cyber-cyan/20 border border-cyber-cyan/40 text-cyber-cyan font-bold">1.25x</button>
+<button class="px-1.5 py-0.5 text-slate-400">1.5x</button>
+</div>
+</div>
+<!-- Persona Selector Dropdown -->
+<div class="flex items-center justify-between gap-2 pt-1">
+<button class="flex-1 px-2.5 py-1.5 rounded-lg bg-cyber-900 border border-cyber-border text-[10px] font-mono text-slate-300 flex items-center justify-between">
+<span class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-cyber-cyan"></span>
+                    Executive Brief (Assertive)
+                  </span>
+<span class="text-slate-400">▼</span>
+</button>
+<button class="w-7 h-7 rounded-lg bg-cyber-850 border border-cyber-border flex items-center justify-center text-slate-300">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+</button>
+</div>
+</div>
+<!-- Mobile Priority Clearance Gate Card (Thumb-Optimized) -->
+<div class="bg-gradient-to-b from-[#0c2033] to-[#071421] rounded-2xl border border-amber-500/40 p-3 font-mono space-y-2.5 shadow-[0_0_20px_rgba(255,176,32,0.08)]">
+<div class="flex items-center justify-between border-b border-cyber-border pb-1.5">
+<span class="text-[11px] font-bold text-amber-300 flex items-center gap-1.5">
+<svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                  EXECUTIVE CLEARANCE GATES
+                </span>
+<span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">2 Pending</span>
+</div>
+<!-- Gate 01 -->
+<div class="p-2.5 rounded-xl bg-cyber-900 border border-cyber-amber/30 space-y-2">
+<div class="flex items-start justify-between">
+<div>
+<span class="text-[9px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold">GATE 01</span>
+<h5 class="text-xs font-bold text-white mt-0.5">Acme Corp Custom SLA v2</h5>
+<div class="text-[11px] text-emerald-400 font-bold">₹6,00,000 <span class="text-[10px] text-slate-400 font-normal">Contract Value</span></div>
+</div>
+<span class="text-[9px] text-slate-400">SLA: 99.95%</span>
+</div>
+<!-- 1-Tap Touch Large Button -->
+<div class="grid grid-cols-12 gap-2 pt-0.5">
+<button class="col-span-8 py-2 rounded-lg bg-cyber-teal text-black font-bold text-xs flex items-center justify-center gap-1 glow-teal-btn">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Approve &amp; Sign
+                  </button>
+<button class="col-span-4 py-2 rounded-lg bg-cyber-850 border border-cyber-border text-slate-300 text-xs font-medium">
+                    Review
+                  </button>
+</div>
+</div>
+<!-- Gate 02 Minimal Row -->
+<div class="px-2 py-1.5 rounded-lg bg-cyber-850/60 border border-cyber-border flex items-center justify-between text-[11px]">
+<span class="text-slate-300 flex items-center gap-1.5">
+<span class="text-[9px] px-1 py-0.2 rounded bg-cyber-800 text-cyber-cyan border border-cyber-cyan/30 font-bold">GATE 02</span>
+                  Q2 AdSpend Agent Escalation
+                </span>
+<span class="text-cyber-cyan text-xs font-bold">Auth ↗</span>
+</div>
+</div>
+<!-- Mobile Briefing Segments Preview List -->
+<div class="bg-cyber-900/90 rounded-2xl border border-cyber-border p-3 font-mono space-y-2">
+<div class="flex items-center justify-between text-[10px] text-slate-400 pb-1 border-b border-cyber-border/60">
+<span class="text-slate-200 font-bold flex items-center gap-1">
+<svg class="w-3 h-3 text-cyber-cyan" fill="none" stroke="currentColor" viewbox="0 0 24 24"><line x1="8" x2="21" y1="6" y2="6"></line><line x1="8" x2="21" y1="12" y2="12"></line><line x1="8" x2="21" y1="18" y2="18"></line></svg>
+                  BRIEFING SEGMENTS
+                </span>
+<span>4 Segments</span>
+</div>
+<div class="space-y-1.5 text-[10px]">
+<div class="flex items-center justify-between p-1.5 rounded bg-cyber-850/50 border border-cyber-border/60">
+<span class="text-slate-300">✓ 00:00 Macro Business Health</span>
+<span class="text-slate-500">Done</span>
+</div>
+<div class="flex items-center justify-between p-1.5 rounded bg-cyber-cyan/15 border border-cyber-cyan/40 text-cyber-cyan font-bold">
+<span>▶ 00:45 AI Team Velocity &amp; PR Merges</span>
+<span class="text-[9px] px-1.5 bg-cyber-cyan text-black rounded uppercase">Playing</span>
+</div>
+<div class="flex items-center justify-between p-1.5 rounded bg-cyber-850/50 border border-cyber-amber/30 text-amber-300">
+<span>● 01:40 Critical Priority Gates</span>
+<span class="text-[9px] text-amber-300 font-bold">Action Req</span>
+</div>
+<div class="flex items-center justify-between p-1.5 rounded bg-cyber-850/30 text-slate-500">
+<span>○ 02:30 Strategic Market Anomalies</span>
+<span>Queued</span>
+</div>
+</div>
+<!-- Mobile Sub-Agents -->
+<div class="pt-1.5 flex flex-wrap gap-1 text-[9px]">
+<span class="px-1.5 py-0.5 rounded bg-cyber-850 border border-cyber-cyan/30 text-cyber-cyan">• Outreach Agent</span>
+<span class="px-1.5 py-0.5 rounded bg-cyber-850 border border-cyber-cyan/30 text-cyber-cyan">• DevAgent-X</span>
+<span class="px-1.5 py-0.5 rounded bg-cyber-850 border border-cyber-amber/40 text-cyber-amber">• Deal Architect</span>
+</div>
+</div>
+<!-- Mobile Live Telemetry Transcript Preview -->
+<div class="bg-cyber-900 rounded-xl border border-cyber-border p-2.5 font-mono text-[10px] space-y-1.5">
+<div class="flex items-center justify-between text-slate-400">
+<span class="text-slate-300 font-bold flex items-center gap-1">
+<svg class="w-3 h-3 text-cyber-cyan" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                  LIVE TELEMETRY TRANSCRIPT
+                </span>
+<span class="text-cyber-cyan">Word Sync: 99.8%</span>
+</div>
+<div class="p-2 rounded bg-cyber-cyan/10 border border-cyber-cyan/30 text-slate-200 text-[10px] leading-tight italic">
+<span class="text-cyber-cyan font-bold block not-italic text-[9px] mb-0.5">• CURRENTLY SPOKEN (01:24)</span>
+                "DevAgent-X successfully merged PR #142 for the NexGen Client System. We now have 2 priority clearance gates awaiting authorization."
+              </div>
+</div>
+<!-- Mobile Sticky Quick Triggers & Command Capsule -->
+<div class="pt-2 border-t border-cyber-border space-y-2">
+<div class="flex items-center gap-1 text-[9px] font-mono text-slate-400 overflow-x-auto scrollbar-hide py-0.5">
+<span class="text-slate-500 shrink-0">Ask:</span>
+<button class="px-2 py-0.5 rounded-full bg-cyber-850 border border-cyber-border text-slate-300 shrink-0">"Deep Dive PR #142"</button>
+<button class="px-2 py-0.5 rounded-full bg-cyber-850 border border-cyber-border text-slate-300 shrink-0">"Summarize Revenue"</button>
+</div>
+<!-- Mic + Command input -->
+<div class="flex items-center gap-1.5">
+<button class="w-8 h-8 rounded-lg bg-cyber-cyan/20 border border-cyber-cyan/50 flex items-center justify-center text-cyber-cyan shrink-0">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg>
+</button>
+<input class="flex-1 bg-cyber-950 border border-cyber-border rounded-lg px-2.5 py-1.5 text-[10px] text-slate-400 font-mono focus:outline-none" type="text" value="Interrupt briefing or query THALOS..."/>
+<button class="px-2.5 py-1.5 rounded-lg bg-cyber-cyan text-black text-[10px] font-mono font-bold shrink-0">
+                  Send →
+                </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Right Column (Mobile Modal) -->
+</div>
+<!-- END: Side-by-Side Split Viewport Grid -->
+<!-- BEGIN: ComparativeTelemetryStrip (Bottom Info Bar) -->
+<section class="mt-8 border border-cyber-border bg-[#030910]/95 rounded-xl p-4 sm:p-5 font-mono text-xs space-y-3">
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-b border-cyber-border/70 pb-3">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-cyber-cyan animate-pulse"></span>
+<span class="text-white font-bold tracking-wider uppercase">Global Synapse Telemetry // Real-Time Cross-Device Broadcast Active</span>
+</div>
+<div class="flex items-center gap-4 text-[11px] text-slate-400">
+<span>Audio Engine: <span class="text-cyber-cyan">ElevenLabs Adam (Ultra-HD Neural Model)</span></span>
+<span>Sample: <span class="text-white">48,000 Hz / 24-Bit FLAC Stream</span></span>
+<span>Sync Delta: <span class="text-emerald-400">&lt;0.5ms</span></span>
+</div>
+</div>
+<!-- Architectural Comparative Matrix Specs -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px] leading-relaxed">
+<div class="p-3 rounded-lg bg-cyber-900/60 border border-cyber-border/80">
+<span class="text-cyber-cyan font-bold block mb-1">DESKTOP EXECUTIVE HUD ARCHITECTURE:</span>
+<p class="text-slate-400">
+            Wide-spectrum visualizer with full 20-band frequency equalizer bars, simultaneous live transcript word-level synchronization (<span class="text-slate-200">99.8% precision</span>), direct inline Executive Clearance Gates with 1-click cryptographic SLA authorization, and rapid sub-agent filter triggers.
+          </p>
+</div>
+<div class="p-3 rounded-lg bg-cyber-900/60 border border-cyber-border/80">
+<span class="text-cyber-cyan font-bold block mb-1">MOBILE PORTRAIT HUD ARCHITECTURE:</span>
+<p class="text-slate-400">
+            Thumb-zoned vertical stack prioritizing immediate touch actions: persistent top audio chamber, prominent high-contrast <span class="text-emerald-400">[✓ Approve &amp; Sign]</span> gate button, collapsed chronological segment drawer, and bottom micro-docked voice interrupt input.
+          </p>
+</div>
+</div>
+<!-- Omnipresent Status Ticker -->
+<div class="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500 pt-2 border-t border-cyber-border/50">
+<div>THALOS AUTONOMOUS PROTOCOL V4.8 • YUGANTAR AI CORP • SECURED BY 4096-BIT NEURAL HANDSHAKE</div>
+<div class="flex items-center gap-3">
+<span class="text-emerald-400">● 7 / 7 Core Nodes Online</span>
+<span>Latency: 1.2s</span>
+<span>Packet Loss: 0.00%</span>
+</div>
+</div>
+</section>
+<!-- END: ComparativeTelemetryStrip -->
+</main>
+<!-- END: MainPanoramicWorkspace -->
+</body></html>

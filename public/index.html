@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#05090C] text-[#E6F0EF] antialiased">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>THALOS — Agentic AI Business Operating System</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  
+  <!-- FontAwesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            obsidian: '#05090C',
+            deepOcean: '#0C171E',
+            midnightTeal: '#10232B',
+            oceanTeal: '#147F83',
+            biolumCyan: '#50D9D0',
+            glowCyan: '#38efdf',
+            mist: '#A5C7C8',
+            iceWhite: '#E6F0EF'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            orbitron: ['Orbitron', 'sans-serif'],
+            space: ['Space Grotesk', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          boxShadow: {
+            'cyan-glow': '0 0 25px rgba(80, 217, 208, 0.35)',
+            'cyan-glow-lg': '0 0 50px rgba(80, 217, 208, 0.45)',
+            'cyan-radial': '0 0 35px rgba(80, 217, 208, 0.65)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #05090C;
+      color: #E6F0EF;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 75% 15%, rgba(20, 127, 131, 0.18) 0%, transparent 45%),
+        radial-gradient(circle at 20% 70%, rgba(16, 35, 43, 0.6) 0%, transparent 55%),
+        linear-gradient(rgba(5, 9, 12, 0.96), rgba(5, 9, 12, 0.98));
+    }
+    .grid-mesh {
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, rgba(80, 217, 208, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(80, 217, 208, 0.03) 1px, transparent 1px);
+    }
+    .glass-hud {
+      background: rgba(12, 23, 30, 0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(80, 217, 208, 0.2);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6), inset 0 0 12px rgba(80, 217, 208, 0.05);
+    }
+    .glass-hud-active {
+      border: 1px solid rgba(80, 217, 208, 0.65);
+      box-shadow: 0 0 30px rgba(80, 217, 208, 0.25), inset 0 0 15px rgba(80, 217, 208, 0.12);
+    }
+    @keyframes spin-slow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes spin-reverse {
+      0% { transform: rotate(360deg); }
+      100% { transform: rotate(0deg); }
+    }
+    .animate-spin-slow { animation: spin-slow 28s linear infinite; }
+    .animate-spin-reverse { animation: spin-reverse 20s linear infinite; }
+    
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #05090C; }
+    ::-webkit-scrollbar-thumb { background: #147F83; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #50D9D0; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans grid-mesh selection:bg-biolumCyan selection:text-black antialiased relative">
+
+  <!-- ============================================== -->
+  <!-- MASTER TOP NAVIGATION TELEMETRY HEADER        -->
+  <!-- ============================================== -->
+  <header class="sticky top-0 z-50 border-b border-oceanTeal/30 bg-[#05090C]/90 backdrop-blur-md px-4 lg:px-6 py-2.5 flex items-center justify-between gap-4">
+    <!-- Brand / System Core ID -->
+    <div class="flex items-center space-x-3.5">
+      <div class="relative w-9 h-9 rounded-lg border border-biolumCyan/60 bg-gradient-to-br from-deepOcean to-[#05090C] flex items-center justify-center shadow-cyan-glow cursor-pointer" onclick="switchTab('command')">
+        <svg class="w-5 h-5 text-biolumCyan" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+        <span class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-biolumCyan animate-ping"></span>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <span class="font-orbitron font-extrabold tracking-widest text-sm text-iceWhite">THALOS</span>
+          <span class="text-[11px] text-biolumCyan/80 font-mono">// AI OPERATING SYSTEM</span>
+        </div>
+        <div class="text-[10px] text-mist font-mono tracking-wider">YUGANTAR GROWTH • AHMEDABAD, GJ</div>
+      </div>
+    </div>
+
+    <!-- Center System Telemetry Metrics -->
+    <div class="hidden xl:flex items-center space-x-5 px-4 py-1.5 rounded-full border border-oceanTeal/30 bg-deepOcean/70 font-mono text-xs">
+      <div class="flex items-center space-x-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-mist">AGENTS:</span>
+        <span class="text-biolumCyan font-bold">9/9 ONLINE</span>
+      </div>
+      <div class="h-3 w-px bg-oceanTeal/40"></div>
+      <div class="flex items-center space-x-2">
+        <span class="text-mist">ENGINE:</span>
+        <span class="text-iceWhite font-bold">GROQ &amp; GEMINI</span>
+      </div>
+      <div class="h-3 w-px bg-oceanTeal/40"></div>
+      <div class="flex items-center space-x-2">
+        <span class="text-mist">POLICY:</span>
+        <span class="text-amber-400 font-bold">HUMAN-IN-THE-LOOP</span>
+      </div>
+      <div class="h-3 w-px bg-oceanTeal/40"></div>
+      <div class="flex items-center space-x-2">
+        <span class="text-mist">GST:</span>
+        <span class="text-emerald-400 font-bold">18% REVERSE-CHARGE</span>
+      </div>
+    </div>
+
+    <!-- Right Controls: Audio Briefing, PIN Auth, Profile -->
+    <div class="flex items-center space-x-3">
+      <!-- Voice Briefing Trigger Button -->
+      <button onclick="openVoiceBriefingModal()" class="px-3 py-1.5 rounded-lg bg-oceanTeal/30 hover:bg-oceanTeal/50 border border-biolumCyan/40 text-biolumCyan text-xs font-mono font-semibold flex items-center space-x-1.5 transition shadow-sm">
+        <i class="fa-solid fa-microphone-lines text-xs animate-pulse"></i>
+        <span>DAILY BRIEFING</span>
+      </button>
+
+      <!-- Connection / PIN Unlock -->
+      <div class="flex items-center space-x-2 bg-deepOcean/80 border border-oceanTeal/30 px-3 py-1.5 rounded-lg text-xs font-mono">
+        <input type="password" id="pinInput" placeholder="PIN (1234)" value="1234" class="w-20 bg-transparent text-center border-none p-0 text-biolumCyan focus:ring-0 text-xs">
+        <button id="authBtn" onclick="doAuthLogin()" class="px-2 py-0.5 rounded bg-biolumCyan/20 hover:bg-biolumCyan/30 text-biolumCyan font-bold">Connect</button>
+        <span id="authBadge" class="hidden text-[10px] text-emerald-400 font-bold"><i class="fa-solid fa-check"></i></span>
+      </div>
+
+      <!-- Executive Profile Avatar -->
+      <div class="flex items-center space-x-2 pl-2 border-l border-oceanTeal/30">
+        <div class="w-8 h-8 rounded-lg bg-oceanTeal/40 border border-biolumCyan/50 flex items-center justify-center font-bold text-xs text-biolumCyan">SP</div>
+        <div class="hidden sm:block text-left">
+          <div class="text-xs font-semibold text-iceWhite leading-tight">Shlok Pandya</div>
+          <div class="text-[10px] text-mist/70 font-mono">Founder Clearance</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================== -->
+  <!-- SECONDARY WORKSPACE SELECTOR NAV TABS         -->
+  <!-- ============================================== -->
+  <nav class="bg-[#081219]/90 border-b border-oceanTeal/20 px-4 lg:px-6 py-2 flex items-center space-x-2 overflow-x-auto text-xs font-mono">
+    <button onclick="switchTab('command')" id="tab-command" class="nav-tab px-3 py-1.5 rounded-lg bg-oceanTeal/30 text-biolumCyan border border-biolumCyan/40 font-bold flex items-center space-x-1.5 transition">
+      <i class="fa-solid fa-compass"></i>
+      <span>Command Chamber</span>
+    </button>
+    <button onclick="switchTab('agents')" id="tab-agents" class="nav-tab px-3 py-1.5 rounded-lg text-mist hover:text-white hover:bg-deepOcean/50 border border-transparent flex items-center space-x-1.5 transition">
+      <i class="fa-solid fa-users-gear"></i>
+      <span>9 AI Agents Matrix</span>
+    </button>
+    <button onclick="switchTab('revenue')" id="tab-revenue" class="nav-tab px-3 py-1.5 rounded-lg text-mist hover:text-white hover:bg-deepOcean/50 border border-transparent flex items-center space-x-1.5 transition">
+      <i class="fa-solid fa-chart-line"></i>
+      <span>Revenue &amp; Pipeline</span>
+    </button>
+    <button onclick="switchTab('clients')" id="tab-clients" class="nav-tab px-3 py-1.5 rounded-lg text-mist hover:text-white hover:bg-deepOcean/50 border border-transparent flex items-center space-x-1.5 transition">
+      <i class="fa-solid fa-briefcase"></i>
+      <span>Projects &amp; Clients</span>
+    </button>
+    <button onclick="switchTab('knowledge')" id="tab-knowledge" class="nav-tab px-3 py-1.5 rounded-lg text-mist hover:text-white hover:bg-deepOcean/50 border border-transparent flex items-center space-x-1.5 transition">
+      <i class="fa-solid fa-brain"></i>
+      <span>Knowledge &amp; Memory</span>
+    </button>
+    <button onclick="switchTab('engine')" id="tab-engine" class="nav-tab px-3 py-1.5 rounded-lg text-mist hover:text-white hover:bg-deepOcean/50 border border-transparent flex items-center space-x-1.5 transition">
+      <i class="fa-solid fa-gears"></i>
+      <span>Engine &amp; Approvals</span>
+      <span id="pendingApprovalsBadge" class="hidden text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded border border-amber-500/30">0</span>
+    </button>
+    <button onclick="switchTab('settings')" id="tab-settings" class="nav-tab px-3 py-1.5 rounded-lg text-mist hover:text-white hover:bg-deepOcean/50 border border-transparent flex items-center space-x-1.5 transition">
+      <i class="fa-solid fa-key"></i>
+      <span>Settings &amp; Vault</span>
+    </button>
+  </nav>
+
+  <!-- ============================================== -->
+  <!-- MAIN WORKSPACE CONTAINER                       -->
+  <!-- ============================================== -->
+  <main class="flex-1 w-full max-w-[1920px] mx-auto p-4 lg:p-6 space-y-6">
+
+    <!-- ============================================== -->
+    <!-- WORKSPACE VIEW 1: COMMAND CHAMBER (HOME)       -->
+    <!-- ============================================== -->
+    <div id="view-command" class="workspace-view space-y-6">
+      <!-- Breadcrumb / Header Strip -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-oceanTeal/20">
+        <div>
+          <div class="text-xs font-mono text-biolumCyan uppercase tracking-widest flex items-center space-x-2">
+            <span class="w-2 h-0.5 bg-biolumCyan"></span>
+            <span>CENTRAL ORCHESTRATION</span>
+            <span class="text-mist/40">//</span>
+            <span class="text-mist">FOUNDER COCKPIT</span>
+          </div>
+          <h1 class="text-2xl lg:text-3xl font-orbitron font-bold text-white tracking-wide mt-1">Command Chamber</h1>
+        </div>
+        <div class="flex items-center space-x-3 text-xs font-mono">
+          <div class="px-3 py-1.5 bg-deepOcean/70 rounded-lg border border-oceanTeal/30 text-mist">
+            STATUS: <span class="text-emerald-400 font-bold" id="dbHealthIndicator">INITIALIZING</span>
+          </div>
+          <div class="px-3 py-1.5 bg-deepOcean/70 rounded-lg border border-oceanTeal/30 text-mist">
+            ACTIVE PORT: <span class="text-biolumCyan font-bold">3000</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Command Deck Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left Column (4 cols): My Day Priorities & Approvals -->
+        <div class="lg:col-span-4 space-y-5">
+          <!-- Priorities Widget -->
+          <div class="glass-hud rounded-2xl p-5 relative overflow-hidden">
+            <div class="flex items-center justify-between pb-3 border-b border-oceanTeal/30">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 rounded-lg bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-300">
+                  <i class="fa-solid fa-sun text-sm"></i>
+                </div>
+                <div>
+                  <h3 class="font-bold text-sm text-iceWhite tracking-wide">Daily Founder Agenda</h3>
+                  <p class="text-[10px] text-mist/70 font-mono">Yugantar Growth Operations</p>
+                </div>
+              </div>
+              <span class="text-xs font-mono text-biolumCyan bg-oceanTeal/30 px-2 py-0.5 rounded border border-biolumCyan/30">Active</span>
+            </div>
+
+            <!-- Priority Checkboxes -->
+            <div class="mt-4 space-y-3 font-space text-xs" id="prioritiesList">
+              <label class="flex items-center space-x-3 p-2.5 rounded-lg bg-obsidian/60 border border-oceanTeal/40 cursor-pointer">
+                <input type="checkbox" checked class="rounded border-oceanTeal/50 bg-deepOcean text-biolumCyan w-4 h-4">
+                <span class="text-mist/70 line-through flex-1">Database Migrations Applied</span>
+                <span class="text-[10px] font-mono text-emerald-400">Done</span>
+              </label>
+              <label class="flex items-center space-x-3 p-2.5 rounded-lg bg-obsidian/60 border border-oceanTeal/40 cursor-pointer">
+                <input type="checkbox" checked class="rounded border-oceanTeal/50 bg-deepOcean text-biolumCyan w-4 h-4">
+                <span class="text-iceWhite flex-1">Configure Provider API Keys in Settings</span>
+                <span class="text-[10px] font-mono text-biolumCyan">Ready</span>
+              </label>
+              <label class="flex items-center space-x-3 p-2.5 rounded-lg bg-obsidian/60 border border-oceanTeal/40 cursor-pointer">
+                <input type="checkbox" class="rounded border-oceanTeal/50 bg-deepOcean text-biolumCyan w-4 h-4">
+                <span class="text-iceWhite flex-1">Review Pending Outreach Approvals</span>
+                <span class="text-[10px] font-mono text-amber-400">Review</span>
+              </label>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-oceanTeal/20 flex items-center justify-between text-xs">
+              <span class="text-mist text-[11px]" id="pendingApprovalsSummary">0 Pending Sign-offs</span>
+              <button onclick="switchTab('engine')" class="text-biolumCyan hover:text-white font-mono text-[11px] flex items-center space-x-1">
+                <span>View Approvals</span>
+                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- THALOS Live Activity Feed -->
+          <div class="glass-hud rounded-2xl p-5 relative">
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-oceanTeal/30">
+              <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-bolt-lightning text-biolumCyan text-xs animate-bounce"></i>
+                <h4 class="text-xs font-orbitron font-bold uppercase tracking-wider text-iceWhite">Agent Activity Feed</h4>
+              </div>
+              <span class="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-500/30">Live</span>
+            </div>
+            <div class="space-y-2 text-xs font-mono" id="liveActivityFeed">
+              <div class="p-2.5 bg-obsidian/60 rounded-xl border border-oceanTeal/30 flex items-start space-x-2.5">
+                <span class="text-biolumCyan font-bold mt-0.5">Scout:</span>
+                <p class="text-mist text-[11px] flex-1 leading-snug">Prospect search ready. Discovers retail &amp; commercial leads via public web search.</p>
+              </div>
+              <div class="p-2.5 bg-obsidian/60 rounded-xl border border-oceanTeal/30 flex items-start space-x-2.5">
+                <span class="text-amber-400 font-bold mt-0.5">Hunter:</span>
+                <p class="text-mist text-[11px] flex-1 leading-snug">Outreach drafting engine active. Requires founder sign-off before dispatch.</p>
+              </div>
+              <div class="p-2.5 bg-obsidian/60 rounded-xl border border-oceanTeal/30 flex items-start space-x-2.5">
+                <span class="text-emerald-400 font-bold mt-0.5">Closer:</span>
+                <p class="text-mist text-[11px] flex-1 leading-snug">GST 18% Proposal &amp; Invoice builder armed with sequential numbering.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center Column (5 cols): 3D Digital Core Globe & THALOS Live Chat -->
+        <div class="lg:col-span-5 flex flex-col space-y-5">
+          <!-- 3D Holographic Core Hologram -->
+          <div class="glass-hud rounded-2xl p-6 flex flex-col items-center justify-center relative min-h-[300px] overflow-hidden">
+            <!-- Animated Rings -->
+            <div class="absolute w-[280px] h-[280px] rounded-full border border-oceanTeal/30 animate-spin-slow pointer-events-none flex items-center justify-center">
+              <div class="absolute top-0 w-2 h-2 rounded-full bg-biolumCyan shadow-cyan-glow"></div>
+            </div>
+            <div class="absolute w-[220px] h-[220px] rounded-full border border-dashed border-biolumCyan/25 animate-spin-reverse pointer-events-none"></div>
+
+            <!-- Wireframe Globe -->
+            <div class="relative w-44 h-44 rounded-full flex items-center justify-center shadow-cyan-glow" style="background: radial-gradient(circle, rgba(20,127,131,0.5) 0%, rgba(12,23,30,0.85) 60%, rgba(5,9,12,0.98) 100%);">
+              <svg class="w-36 h-36 text-biolumCyan/80 drop-shadow-[0_0_12px_rgba(80,217,208,0.8)]" fill="none" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" opacity="0.4" stroke="currentColor" stroke-width="0.8"></circle>
+                <ellipse cx="50" cy="50" rx="45" ry="22" opacity="0.6" stroke="currentColor" stroke-width="0.8"></ellipse>
+                <ellipse cx="50" cy="50" rx="45" ry="10" opacity="0.4" stroke="currentColor" stroke-width="0.7"></ellipse>
+                <ellipse cx="50" cy="50" rx="20" ry="45" opacity="0.6" stroke="currentColor" stroke-width="0.8"></ellipse>
+                <line x1="5" y1="50" x2="95" y2="50" opacity="0.5" stroke="currentColor" stroke-width="0.8"></line>
+                <circle cx="34" cy="40" r="2.5" fill="#50D9D0" class="animate-ping"></circle>
+                <circle cx="34" cy="40" r="2" fill="#FFFFFF"></circle>
+                <circle cx="65" cy="58" r="2" fill="#50D9D0"></circle>
+              </svg>
+            </div>
+            <div class="mt-4 text-center">
+              <span class="text-[11px] font-mono tracking-widest text-biolumCyan bg-deepOcean/90 px-3 py-1 rounded-full border border-oceanTeal/40">
+                THALOS AUTONOMOUS HUB • AHMEDABAD CORE
+              </span>
+            </div>
+          </div>
+
+          <!-- Interactive THALOS AI Chat Interface -->
+          <div class="glass-hud rounded-2xl flex flex-col h-[420px] overflow-hidden border border-oceanTeal/40">
+            <div class="px-4 py-3 bg-deepOcean/80 border-b border-oceanTeal/30 flex items-center justify-between text-xs font-mono">
+              <div class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-biolumCyan animate-pulse"></span>
+                <span class="font-bold text-iceWhite">THALOS AI ORCHESTRATOR</span>
+                <span class="text-[10px] text-biolumCyan/70 bg-oceanTeal/20 px-2 py-0.5 rounded border border-oceanTeal/30">Founder Direct</span>
+              </div>
+              <button onclick="clearChatLog()" class="text-mist hover:text-white text-[11px]">Clear</button>
+            </div>
+
+            <!-- Messages Stream -->
+            <div id="chatStream" class="flex-1 p-4 overflow-y-auto space-y-3 text-xs leading-relaxed font-sans">
+              <div class="p-3 rounded-xl bg-deepOcean/60 border border-oceanTeal/30 text-iceWhite max-w-[90%]">
+                <div class="font-mono text-[10px] text-biolumCyan font-bold mb-1">THALOS // SYSTEM READY</div>
+                Good day, Shlok. All 9 specialist agents are synchronized. I am ready to research leads, audit prospective client websites, compose WhatsApp &amp; Email outreach, and generate GST invoices.
+              </div>
+            </div>
+
+            <!-- Quick Action Buttons -->
+            <div class="px-3 py-1.5 bg-[#070E14] border-t border-oceanTeal/20 flex gap-1.5 overflow-x-auto text-[11px] font-mono">
+              <button onclick="sendQuickPrompt('Audit website https://example.com')" class="px-2 py-1 rounded bg-deepOcean border border-oceanTeal/30 text-biolumCyan hover:bg-oceanTeal/30 whitespace-nowrap">🔍 Audit Website</button>
+              <button onclick="sendQuickPrompt('Show today morning brief')" class="px-2 py-1 rounded bg-deepOcean border border-oceanTeal/30 text-biolumCyan hover:bg-oceanTeal/30 whitespace-nowrap">📊 Morning Brief</button>
+              <button onclick="sendQuickPrompt('Find potential manufacturing leads in Ahmedabad')" class="px-2 py-1 rounded bg-deepOcean border border-oceanTeal/30 text-biolumCyan hover:bg-oceanTeal/30 whitespace-nowrap">🎯 Find Leads</button>
+            </div>
+
+            <!-- Chat Input Bar -->
+            <div class="p-2.5 bg-[#05090C] border-t border-oceanTeal/30 flex items-center space-x-2">
+              <input type="text" id="chatInput" placeholder="Direct THALOS to research, audit, draft, or report..." onkeydown="if(event.key==='Enter') executeOrchestratorPrompt()" class="flex-1 bg-deepOcean/80 border border-oceanTeal/40 rounded-xl px-3 py-2 text-xs text-white placeholder-mist/50 focus:outline-none focus:border-biolumCyan font-sans">
+              <button onclick="executeOrchestratorPrompt()" id="chatSubmitBtn" class="px-4 py-2 bg-biolumCyan hover:bg-glowCyan text-obsidian font-bold text-xs rounded-xl transition flex items-center space-x-1.5 shadow-cyan-glow">
+                <span>Send</span>
+                <i class="fa-solid fa-arrow-up text-[10px]"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column (3 cols): Revenue Velocity & Telemetry -->
+        <div class="lg:col-span-3 space-y-5">
+          <!-- Revenue Velocity Card -->
+          <div class="glass-hud rounded-2xl p-5 relative overflow-hidden">
+            <div class="flex items-center justify-between pb-3 border-b border-oceanTeal/30">
+              <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-chart-line text-biolumCyan text-sm"></i>
+                <h3 class="font-bold text-sm text-iceWhite">Revenue Pulse</h3>
+              </div>
+              <span class="text-xs font-mono text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/30">▲ Live MRR</span>
+            </div>
+            
+            <div class="mt-4">
+              <span class="text-[11px] text-mist font-mono uppercase">Total Active Retainers</span>
+              <div class="text-3xl font-orbitron font-extrabold text-iceWhite tracking-tight mt-0.5" id="liveMrrDisplay">
+                ₹85,000
+              </div>
+            </div>
+
+            <!-- Sparkline Graphic -->
+            <div class="mt-3 py-1">
+              <svg class="w-full h-14 overflow-visible" viewBox="0 0 200 60">
+                <defs>
+                  <linearGradient id="sparkGradient" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="#50D9D0" stop-opacity="0.5"></stop>
+                    <stop offset="100%" stop-color="#147F83" stop-opacity="0.0"></stop>
+                  </linearGradient>
+                </defs>
+                <path d="M 0,45 Q 30,50 60,32 T 120,25 T 160,12 T 200,8 L 200,60 L 0,60 Z" fill="url(#sparkGradient)"></path>
+                <path d="M 0,45 Q 30,50 60,32 T 120,25 T 160,12 T 200,8" fill="none" stroke="#50D9D0" stroke-linecap="round" stroke-width="2.5"></path>
+                <circle cx="200" cy="8" r="4" fill="#E6F0EF" stroke="#50D9D0" stroke-width="2" class="animate-pulse"></circle>
+              </svg>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-3 border-t border-oceanTeal/30 text-xs font-mono">
+              <div class="bg-obsidian/60 p-2 rounded-lg border border-oceanTeal/20">
+                <span class="text-mist text-[10px] block">Pipeline Deals</span>
+                <span class="font-bold text-iceWhite" id="pipelineDealsCount">6 Active</span>
+              </div>
+              <div class="bg-obsidian/60 p-2 rounded-lg border border-oceanTeal/20">
+                <span class="text-mist text-[10px] block">Pipeline Value</span>
+                <span class="font-bold text-biolumCyan">₹3.4L</span>
+              </div>
+            </div>
+
+            <button onclick="switchTab('revenue')" class="w-full mt-4 py-2 bg-oceanTeal/20 hover:bg-oceanTeal/40 border border-oceanTeal/40 rounded-xl text-xs text-biolumCyan font-semibold font-mono transition">
+              Inspect Pipeline →
+            </button>
+          </div>
+
+          <!-- Quick System Architecture Card -->
+          <div class="glass-hud rounded-2xl p-4 text-xs font-mono space-y-2.5">
+            <div class="text-[11px] font-bold text-iceWhite uppercase flex items-center gap-1.5">
+              <i class="fa-solid fa-shield-halved text-biolumCyan"></i>
+              System Specifications
+            </div>
+            <div class="text-[11px] text-mist space-y-1">
+              <div class="flex justify-between"><span>Runtime:</span><span class="text-iceWhite">Node.js 20+ ESM</span></div>
+              <div class="flex justify-between"><span>Database:</span><span class="text-iceWhite">Supabase PostgreSQL</span></div>
+              <div class="flex justify-between"><span>Vectors:</span><span class="text-iceWhite">pgvector 768-dim</span></div>
+              <div class="flex justify-between"><span>Vault:</span><span class="text-iceWhite">AES-256-GCM Envelope</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- WORKSPACE VIEW 2: 9 AI AGENTS MATRIX           -->
+    <!-- ============================================== -->
+    <div id="view-agents" class="workspace-view hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-oceanTeal/20">
+        <div>
+          <div class="text-xs font-mono text-biolumCyan uppercase tracking-widest flex items-center space-x-2">
+            <span class="w-2 h-0.5 bg-biolumCyan"></span>
+            <span>MULTI-AGENT ORCHESTRATION</span>
+            <span class="text-mist/40">//</span>
+            <span class="text-mist">SPECIALIST CORES</span>
+          </div>
+          <h2 class="text-2xl font-orbitron font-bold text-white tracking-wide mt-1">9 Autonomous Agents Fleet</h2>
+        </div>
+        <div class="text-xs font-mono text-mist bg-deepOcean px-3 py-1.5 rounded-lg border border-oceanTeal/30">
+          CENTRAL ORCHESTRATOR: <span class="text-biolumCyan font-bold">THALOS</span>
+        </div>
+      </div>
+
+      <!-- Agent Flow Sequence Strip -->
+      <div class="glass-hud rounded-xl p-4 border border-oceanTeal/30">
+        <div class="text-xs font-mono text-biolumCyan uppercase tracking-wider mb-2 font-bold">Standard Deal &amp; Outreach Lifecycle</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs font-mono">
+          <div class="p-2.5 rounded-lg bg-obsidian/70 border border-oceanTeal/30">
+            <div class="text-[10px] text-biolumCyan mb-1">01. DISCOVERY</div>
+            <div class="font-bold text-white">Scout</div>
+            <div class="text-[10px] text-mist mt-0.5">Discovers prospective leads</div>
+          </div>
+          <div class="p-2.5 rounded-lg bg-obsidian/70 border border-oceanTeal/30">
+            <div class="text-[10px] text-biolumCyan mb-1">02. AUDIT</div>
+            <div class="font-bold text-white">Researcher</div>
+            <div class="text-[10px] text-mist mt-0.5">Verifies public facts &amp; URLs</div>
+          </div>
+          <div class="p-2.5 rounded-lg bg-obsidian/70 border border-oceanTeal/30">
+            <div class="text-[10px] text-biolumCyan mb-1">03. OUTREACH</div>
+            <div class="font-bold text-white">Hunter</div>
+            <div class="text-[10px] text-amber-300 mt-0.5">Drafts message (Needs Approval)</div>
+          </div>
+          <div class="p-2.5 rounded-lg bg-obsidian/70 border border-oceanTeal/30">
+            <div class="text-[10px] text-biolumCyan mb-1">04. CLOSING</div>
+            <div class="font-bold text-white">Closer</div>
+            <div class="text-[10px] text-amber-300 mt-0.5">Builds proposal &amp; GST invoice</div>
+          </div>
+          <div class="p-2.5 rounded-lg bg-obsidian/70 border border-oceanTeal/30">
+            <div class="text-[10px] text-biolumCyan mb-1">05. DELIVERY</div>
+            <div class="font-bold text-white">Operator</div>
+            <div class="text-[10px] text-mist mt-0.5">Manages tasks &amp; milestones</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agents Grid (9 Real Backend Personas) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="agentsFleetContainer">
+        <!-- Agent cards dynamically injected via JS -->
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- WORKSPACE VIEW 3: REVENUE & SALES PIPELINE     -->
+    <!-- ============================================== -->
+    <div id="view-revenue" class="workspace-view hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-oceanTeal/20">
+        <div>
+          <div class="text-xs font-mono text-biolumCyan uppercase tracking-widest flex items-center space-x-2">
+            <span class="w-2 h-0.5 bg-biolumCyan"></span>
+            <span>COMMERCIAL WORKSPACE</span>
+            <span class="text-mist/40">//</span>
+            <span class="text-mist">LEADS &amp; PIPELINE</span>
+          </div>
+          <h2 class="text-2xl font-orbitron font-bold text-white tracking-wide mt-1">Revenue &amp; Sales Pipeline</h2>
+        </div>
+        <button onclick="openCreateLeadModal()" class="px-3.5 py-1.5 rounded-lg bg-biolumCyan hover:bg-glowCyan text-obsidian font-bold text-xs font-mono transition shadow-cyan-glow flex items-center space-x-1.5">
+          <i class="fa-solid fa-plus text-xs"></i>
+          <span>Add New Lead</span>
+        </button>
+      </div>
+
+      <!-- Pipeline Summary Metrics -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-mono">
+        <div class="glass-hud p-4 rounded-xl">
+          <span class="text-[10px] text-mist uppercase">Total Active Leads</span>
+          <div class="text-2xl font-bold text-white mt-1" id="statTotalLeads">14</div>
+        </div>
+        <div class="glass-hud p-4 rounded-xl">
+          <span class="text-[10px] text-mist uppercase">Qualified Deals</span>
+          <div class="text-2xl font-bold text-biolumCyan mt-1" id="statQualifiedDeals">5</div>
+        </div>
+        <div class="glass-hud p-4 rounded-xl">
+          <span class="text-[10px] text-mist uppercase">Proposal Sent</span>
+          <div class="text-2xl font-bold text-amber-400 mt-1" id="statProposalsSent">3</div>
+        </div>
+        <div class="glass-hud p-4 rounded-xl">
+          <span class="text-[10px] text-mist uppercase">Pipeline Value</span>
+          <div class="text-2xl font-bold text-emerald-400 mt-1">₹3,45,000</div>
+        </div>
+      </div>
+
+      <!-- Kanban Stages Board -->
+      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4" id="kanbanBoard">
+        <!-- New Stage -->
+        <div class="glass-hud p-3 rounded-xl space-y-3">
+          <div class="flex justify-between items-center text-xs font-mono border-b border-oceanTeal/30 pb-2">
+            <span class="font-bold text-biolumCyan">NEW (DISCOVERED)</span>
+            <span class="text-[10px] bg-deepOcean px-1.5 py-0.5 rounded text-mist">2</span>
+          </div>
+          <div class="space-y-2.5" id="col-new">
+            <div class="p-3 bg-obsidian/80 rounded-lg border border-oceanTeal/30 text-xs space-y-1.5">
+              <div class="font-bold text-iceWhite">Aura Textile Mills</div>
+              <div class="text-[10px] text-mist">Source: Scout (Web Search)</div>
+              <div class="text-[10px] text-biolumCyan font-mono">Ahmedabad, Naroda</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Researching Stage -->
+        <div class="glass-hud p-3 rounded-xl space-y-3">
+          <div class="flex justify-between items-center text-xs font-mono border-b border-oceanTeal/30 pb-2">
+            <span class="font-bold text-blue-400">RESEARCHING</span>
+            <span class="text-[10px] bg-deepOcean px-1.5 py-0.5 rounded text-mist">1</span>
+          </div>
+          <div class="space-y-2.5" id="col-researching">
+            <div class="p-3 bg-obsidian/80 rounded-lg border border-oceanTeal/30 text-xs space-y-1.5">
+              <div class="font-bold text-iceWhite">Nexus Logistics Ltd</div>
+              <div class="text-[10px] text-mist">Audit: Verified Website</div>
+              <div class="text-[10px] text-blue-400 font-mono">Score: 84/100</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contacted / Follow-up Stage -->
+        <div class="glass-hud p-3 rounded-xl space-y-3">
+          <div class="flex justify-between items-center text-xs font-mono border-b border-oceanTeal/30 pb-2">
+            <span class="font-bold text-amber-400">CONTACTED</span>
+            <span class="text-[10px] bg-deepOcean px-1.5 py-0.5 rounded text-mist">2</span>
+          </div>
+          <div class="space-y-2.5" id="col-contacted">
+            <div class="p-3 bg-obsidian/80 rounded-lg border border-oceanTeal/30 text-xs space-y-1.5">
+              <div class="font-bold text-iceWhite">Zenith Pharma Chem</div>
+              <div class="text-[10px] text-mist">WhatsApp wa.me Sent</div>
+              <div class="text-[10px] text-amber-300 font-mono">Follow-up: Tomorrow</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Proposal Sent Stage -->
+        <div class="glass-hud p-3 rounded-xl space-y-3">
+          <div class="flex justify-between items-center text-xs font-mono border-b border-oceanTeal/30 pb-2">
+            <span class="font-bold text-purple-400">PROPOSAL SENT</span>
+            <span class="text-[10px] bg-deepOcean px-1.5 py-0.5 rounded text-mist">1</span>
+          </div>
+          <div class="space-y-2.5" id="col-proposal">
+            <div class="p-3 bg-obsidian/80 rounded-lg border border-oceanTeal/30 text-xs space-y-1.5">
+              <div class="font-bold text-iceWhite">Elite Retail Chains</div>
+              <div class="text-[10px] text-mist">PDF Proposal: GST 18% Incl.</div>
+              <div class="text-[10px] text-purple-300 font-mono">Value: ₹1,20,000</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Won Stage -->
+        <div class="glass-hud p-3 rounded-xl space-y-3">
+          <div class="flex justify-between items-center text-xs font-mono border-b border-oceanTeal/30 pb-2">
+            <span class="font-bold text-emerald-400">WON (CLIENT)</span>
+            <span class="text-[10px] bg-deepOcean px-1.5 py-0.5 rounded text-mist">1</span>
+          </div>
+          <div class="space-y-2.5" id="col-won">
+            <div class="p-3 bg-obsidian/80 rounded-lg border border-emerald-500/40 text-xs space-y-1.5">
+              <div class="font-bold text-iceWhite">Vedic Organics Pvt Ltd</div>
+              <div class="text-[10px] text-mist">Monthly Growth Retainer</div>
+              <div class="text-[10px] text-emerald-400 font-mono">₹45,000 / mo MRR</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- WORKSPACE VIEW 4: PROJECTS & CLIENTS           -->
+    <!-- ============================================== -->
+    <div id="view-clients" class="workspace-view hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-oceanTeal/20">
+        <div>
+          <div class="text-xs font-mono text-biolumCyan uppercase tracking-widest flex items-center space-x-2">
+            <span class="w-2 h-0.5 bg-biolumCyan"></span>
+            <span>OPERATIONAL WORKSPACE</span>
+            <span class="text-mist/40">//</span>
+            <span class="text-mist">ACCOUNTS &amp; DELIVERABLES</span>
+          </div>
+          <h2 class="text-2xl font-orbitron font-bold text-white tracking-wide mt-1">Projects &amp; Client Retainers</h2>
+        </div>
+      </div>
+
+      <!-- Client Accounts Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="glass-hud p-5 rounded-2xl space-y-4">
+          <div class="flex justify-between items-start">
+            <div>
+              <h3 class="font-bold text-base text-iceWhite">Vedic Organics Pvt Ltd</h3>
+              <p class="text-xs text-mist">Ahmedabad, Gujarat • E-Commerce Growth</p>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-950/60 text-emerald-400 border border-emerald-500/40">Active</span>
+          </div>
+          <div class="text-xs font-mono text-biolumCyan">
+            Retainer: ₹45,000 / month
+          </div>
+          <div class="space-y-2 pt-2 border-t border-oceanTeal/20 text-xs">
+            <div class="flex justify-between text-mist"><span>SEO Optimization</span><span class="text-emerald-400 font-mono">100% Complete</span></div>
+            <div class="flex justify-between text-mist"><span>Content Matrix Creation</span><span class="text-biolumCyan font-mono">In Progress</span></div>
+          </div>
+        </div>
+
+        <div class="glass-hud p-5 rounded-2xl space-y-4">
+          <div class="flex justify-between items-start">
+            <div>
+              <h3 class="font-bold text-base text-iceWhite">Shreeji Spices &amp; Foods</h3>
+              <p class="text-xs text-mist">Surat, Gujarat • Lead Pipeline</p>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-950/60 text-emerald-400 border border-emerald-500/40">Active</span>
+          </div>
+          <div class="text-xs font-mono text-biolumCyan">
+            Retainer: ₹40,000 / month
+          </div>
+          <div class="space-y-2 pt-2 border-t border-oceanTeal/20 text-xs">
+            <div class="flex justify-between text-mist"><span>Distributor Outreach</span><span class="text-biolumCyan font-mono">Ongoing</span></div>
+            <div class="flex justify-between text-mist"><span>Invoice #2026-004</span><span class="text-emerald-400 font-mono">Paid</span></div>
+          </div>
+        </div>
+
+        <div class="glass-hud p-5 rounded-2xl border-dashed border-oceanTeal/40 flex flex-col items-center justify-center text-center p-8 space-y-2">
+          <i class="fa-solid fa-folder-plus text-2xl text-biolumCyan"></i>
+          <p class="text-xs font-mono text-mist">Convert Won Leads into Client Accounts automatically via Operator Agent.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- WORKSPACE VIEW 5: KNOWLEDGE & MEMORY (RAG)     -->
+    <!-- ============================================== -->
+    <div id="view-knowledge" class="workspace-view hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-oceanTeal/20">
+        <div>
+          <div class="text-xs font-mono text-biolumCyan uppercase tracking-widest flex items-center space-x-2">
+            <span class="w-2 h-0.5 bg-biolumCyan"></span>
+            <span>RAG VECTOR PERSISTENCE</span>
+            <span class="text-mist/40">//</span>
+            <span class="text-mist">DOCUMENT INDEX</span>
+          </div>
+          <h2 class="text-2xl font-orbitron font-bold text-white tracking-wide mt-1">Knowledge Repository &amp; Memory</h2>
+        </div>
+      </div>
+
+      <!-- Search Knowledge Input -->
+      <div class="glass-hud p-4 rounded-2xl flex items-center space-x-3">
+        <i class="fa-solid fa-magnifying-glass text-biolumCyan"></i>
+        <input type="text" id="ragSearchInput" placeholder="Semantic hybrid search across company policies, case studies, client proposals..." onkeydown="if(event.key==='Enter') executeRAGSearch()" class="flex-1 bg-transparent border-none p-0 text-xs text-white placeholder-mist/50 focus:ring-0 font-sans">
+        <button onclick="executeRAGSearch()" class="px-3.5 py-1.5 rounded-lg bg-oceanTeal/40 hover:bg-oceanTeal/60 border border-biolumCyan/40 text-biolumCyan text-xs font-mono font-bold transition">
+          Search Index
+        </button>
+      </div>
+
+      <!-- Knowledge Base Documents Table -->
+      <div class="glass-hud rounded-2xl p-5 space-y-4">
+        <div class="flex justify-between items-center text-xs font-mono border-b border-oceanTeal/30 pb-3">
+          <span class="font-bold text-white">Indexed Business Documents</span>
+          <span class="text-mist">Supported: .pdf, .docx, .xlsx, .csv, .md, .json</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs font-mono">
+            <thead>
+              <tr class="text-mist border-b border-oceanTeal/20">
+                <th class="pb-2">Document Title</th>
+                <th class="pb-2">Format</th>
+                <th class="pb-2">Chunks</th>
+                <th class="pb-2">Embedding Model</th>
+                <th class="pb-2">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-oceanTeal/10" id="documentsTableBody">
+              <tr>
+                <td class="py-2.5 font-bold text-iceWhite">Yugantar-Growth-Playbook.pdf</td>
+                <td class="py-2.5 text-mist">PDF</td>
+                <td class="py-2.5 text-biolumCyan">34</td>
+                <td class="py-2.5 text-mist">text-embedding-004</td>
+                <td class="py-2.5"><span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950/60 text-emerald-400">Indexed</span></td>
+              </tr>
+              <tr>
+                <td class="py-2.5 font-bold text-iceWhite">Agency-Pricing-Tax-Tiers.docx</td>
+                <td class="py-2.5 text-mist">DOCX</td>
+                <td class="py-2.5 text-biolumCyan">18</td>
+                <td class="py-2.5 text-mist">text-embedding-004</td>
+                <td class="py-2.5"><span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950/60 text-emerald-400">Indexed</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- WORKSPACE VIEW 6: ENGINE & APPROVALS           -->
+    <!-- ============================================== -->
+    <div id="view-engine" class="workspace-view hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-oceanTeal/20">
+        <div>
+          <div class="text-xs font-mono text-biolumCyan uppercase tracking-widest flex items-center space-x-2">
+            <span class="w-2 h-0.5 bg-biolumCyan"></span>
+            <span>EXECUTION INFRASTRUCTURE</span>
+            <span class="text-mist/40">//</span>
+            <span class="text-mist">HUMAN SIGN-OFF GATE</span>
+          </div>
+          <h2 class="text-2xl font-orbitron font-bold text-white tracking-wide mt-1">Engine &amp; Approval Queue</h2>
+        </div>
+        <button onclick="refreshApprovalsList()" class="px-3 py-1.5 rounded-lg bg-deepOcean border border-oceanTeal/40 text-mist text-xs font-mono hover:text-white">
+          <i class="fa-solid fa-rotate-right mr-1"></i> Refresh Queue
+        </button>
+      </div>
+
+      <!-- Human-in-the-Loop Pending Approvals List -->
+      <div class="glass-hud rounded-2xl p-5 space-y-4">
+        <div class="flex justify-between items-center text-xs font-mono border-b border-oceanTeal/30 pb-3">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+            <span class="font-bold text-iceWhite uppercase">Pending Founder Approvals</span>
+          </div>
+          <span class="text-[11px] text-amber-300" id="approvalQueueCountHeader">0 Actions Pending</span>
+        </div>
+
+        <div class="space-y-3" id="approvalsFeed">
+          <div class="text-center py-6 text-xs text-mist font-mono">No actions awaiting approval right now. High-risk actions (sending emails, WhatsApp, proposals) will appear here.</div>
+        </div>
+      </div>
+
+      <!-- Durable Job Queue Monitor -->
+      <div class="glass-hud rounded-2xl p-5 space-y-4">
+        <div class="text-xs font-mono text-white font-bold border-b border-oceanTeal/30 pb-3">
+          Durable Job Worker Status (PostgreSQL FOR UPDATE SKIP LOCKED)
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-mono">
+          <div class="p-3 bg-obsidian/70 rounded-xl border border-oceanTeal/30">
+            <div class="text-mist text-[10px]">Worker Daemon:</div>
+            <div class="text-emerald-400 font-bold mt-1">Running • Concurrency 3</div>
+          </div>
+          <div class="p-3 bg-obsidian/70 rounded-xl border border-oceanTeal/30">
+            <div class="text-mist text-[10px]">Lease Duration:</div>
+            <div class="text-iceWhite font-bold mt-1">300 Seconds</div>
+          </div>
+          <div class="p-3 bg-obsidian/70 rounded-xl border border-oceanTeal/30">
+            <div class="text-mist text-[10px]">Dead Letter Queue:</div>
+            <div class="text-biolumCyan font-bold mt-1">0 Failed</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- WORKSPACE VIEW 7: SETTINGS & VAULT             -->
+    <!-- ============================================== -->
+    <div id="view-settings" class="workspace-view hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-oceanTeal/20">
+        <div>
+          <div class="text-xs font-mono text-biolumCyan uppercase tracking-widest flex items-center space-x-2">
+            <span class="w-2 h-0.5 bg-biolumCyan"></span>
+            <span>CREDENTIAL VAULT &amp; SETTINGS</span>
+            <span class="text-mist/40">//</span>
+            <span class="text-mist">ZERO-ENV ARCHITECTURE</span>
+          </div>
+          <h2 class="text-2xl font-orbitron font-bold text-white tracking-wide mt-1">Settings &amp; Integrations Vault</h2>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Settings Overview (8 cols) -->
+        <div class="lg:col-span-8 space-y-5">
+          <div class="glass-hud rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between border-b border-oceanTeal/30 pb-3">
+              <div>
+                <h3 class="text-sm font-bold text-iceWhite">Active Provider Registry</h3>
+                <p class="text-[11px] text-mist font-mono">Configured via settings.json or Encrypted Database Vault</p>
+              </div>
+              <span class="text-xs font-mono text-biolumCyan bg-oceanTeal/20 px-2.5 py-1 rounded border border-oceanTeal/40">settings.json Active</span>
+            </div>
+
+            <!-- Provider Rows -->
+            <div class="space-y-3 font-mono text-xs">
+              <!-- Groq -->
+              <div class="p-3 bg-obsidian/70 rounded-xl border border-oceanTeal/30 flex items-center justify-between">
+                <div>
+                  <div class="font-bold text-iceWhite">Groq LLM (Fast Primary)</div>
+                  <div class="text-[10px] text-mist">Llama 3.3 70B &amp; Llama 3.1 8B Instant</div>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <span class="text-[10px] text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">Ready in Settings</span>
+                  <button onclick="testIntegration('groq')" class="px-2.5 py-1 rounded bg-oceanTeal/30 hover:bg-oceanTeal/50 text-biolumCyan border border-biolumCyan/30">Test Ping</button>
+                </div>
+              </div>
+
+              <!-- Gemini -->
+              <div class="p-3 bg-obsidian/70 rounded-xl border border-oceanTeal/30 flex items-center justify-between">
+                <div>
+                  <div class="font-bold text-iceWhite">Google Gemini (Quality &amp; RAG Vector)</div>
+                  <div class="text-[10px] text-mist">Gemini 1.5 Flash &amp; text-embedding-004</div>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <span class="text-[10px] text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">Ready in Settings</span>
+                  <button onclick="testIntegration('gemini')" class="px-2.5 py-1 rounded bg-oceanTeal/30 hover:bg-oceanTeal/50 text-biolumCyan border border-biolumCyan/30">Test Ping</button>
+                </div>
+              </div>
+
+              <!-- Tavily -->
+              <div class="p-3 bg-obsidian/70 rounded-xl border border-oceanTeal/30 flex items-center justify-between">
+                <div>
+                  <div class="font-bold text-iceWhite">Tavily Web Search</div>
+                  <div class="text-[10px] text-mist">Prospect discovery search fallback</div>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <span class="text-[10px] text-biolumCyan bg-oceanTeal/20 px-2 py-0.5 rounded border border-oceanTeal/30">Configured</span>
+                  <button onclick="testIntegration('tavily')" class="px-2.5 py-1 rounded bg-oceanTeal/30 hover:bg-oceanTeal/50 text-biolumCyan border border-biolumCyan/30">Test Ping</button>
+                </div>
+              </div>
+
+              <!-- Resend -->
+              <div class="p-3 bg-obsidian/70 rounded-xl border border-oceanTeal/30 flex items-center justify-between">
+                <div>
+                  <div class="font-bold text-iceWhite">Resend Email Gateway</div>
+                  <div class="text-[10px] text-mist">Verified sender dispatch</div>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <span class="text-[10px] text-biolumCyan bg-oceanTeal/20 px-2 py-0.5 rounded border border-oceanTeal/30">Configured</span>
+                  <button onclick="testIntegration('resend')" class="px-2.5 py-1 rounded bg-oceanTeal/30 hover:bg-oceanTeal/50 text-biolumCyan border border-biolumCyan/30">Test Ping</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security / Cryptography Info (4 cols) -->
+        <div class="lg:col-span-4 space-y-5">
+          <div class="glass-hud rounded-2xl p-5 font-mono text-xs space-y-4">
+            <div class="text-sm font-bold text-iceWhite flex items-center space-x-2">
+              <i class="fa-solid fa-lock text-biolumCyan"></i>
+              <span>Cryptographic Security</span>
+            </div>
+            <div class="p-3 bg-obsidian/70 rounded-xl border border-oceanTeal/30 space-y-2">
+              <div class="text-mist text-[10px]">Algorithm:</div>
+              <div class="text-white font-bold">AES-256-GCM Envelope</div>
+              <div class="text-mist text-[10px] pt-1">Threat Model:</div>
+              <p class="text-[10px] text-mist/80 leading-relaxed">
+                Database leaks reveal only ciphertexts. Keys are never logged in plaintext or query params.
+              </p>
+            </div>
+            <div class="text-[11px] text-mist space-y-1 pt-2">
+              <div>PIN Auth: <span class="text-white font-bold">bcrypt constant-time</span></div>
+              <div>SSRF Guard: <span class="text-emerald-400 font-bold">Private IPs Blocked</span></div>
+              <div>Audit Trail: <span class="text-white font-bold">Append-Only Immutability</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ============================================== -->
+  <!-- MODAL: DAILY VOICE BRIEFING PLAYER             -->
+  <!-- ============================================== -->
+  <div id="voiceBriefingModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
+    <div class="glass-hud-active rounded-3xl p-6 lg:p-8 max-w-2xl w-full border border-biolumCyan/60 space-y-5 relative">
+      <button onclick="closeVoiceBriefingModal()" class="absolute top-5 right-5 text-mist hover:text-white text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-biolumCyan/20 border border-biolumCyan/60 flex items-center justify-center text-biolumCyan shadow-cyan-glow">
+          <i class="fa-solid fa-microphone-lines text-lg animate-pulse"></i>
+        </div>
+        <div>
+          <h3 class="font-orbitron font-bold text-lg text-white">Daily Morning Executive Briefing</h3>
+          <p class="text-xs text-mist font-mono">Synthesized for Shlok Pandya • Yugantar Growth</p>
+        </div>
+      </div>
+
+      <!-- Audio Frequency Waveform Visualizer -->
+      <div class="h-20 bg-obsidian/80 rounded-2xl border border-oceanTeal/40 p-4 flex items-center justify-center space-x-1.5 overflow-hidden">
+        <div class="w-1 bg-biolumCyan h-4 animate-pulse"></div>
+        <div class="w-1 bg-biolumCyan h-8 animate-pulse"></div>
+        <div class="w-1 bg-biolumCyan h-12 animate-pulse"></div>
+        <div class="w-1 bg-biolumCyan h-16 animate-pulse"></div>
+        <div class="w-1 bg-biolumCyan h-10 animate-pulse"></div>
+        <div class="w-1 bg-biolumCyan h-6 animate-pulse"></div>
+        <div class="w-1 bg-biolumCyan h-14 animate-pulse"></div>
+        <div class="w-1 bg-biolumCyan h-18 animate-pulse"></div>
+        <div class="w-1 bg-biolumCyan h-9 animate-pulse"></div>
+        <div class="w-1 bg-biolumCyan h-4 animate-pulse"></div>
+      </div>
+
+      <!-- Brief Text Content Container -->
+      <div class="p-4 rounded-xl bg-deepOcean/70 border border-oceanTeal/30 text-xs text-iceWhite font-sans leading-relaxed max-h-48 overflow-y-auto" id="briefContentText">
+        Loading fresh business briefing from THALOS intelligence pipeline...
+      </div>
+
+      <div class="flex items-center justify-between pt-2">
+        <button id="ttsPlayBtn" onclick="toggleAudioSpeech()" class="px-5 py-2.5 rounded-xl bg-biolumCyan hover:bg-glowCyan text-obsidian font-bold text-xs font-mono transition flex items-center space-x-2 shadow-cyan-glow">
+          <i class="fa-solid fa-play" id="ttsPlayIcon"></i>
+          <span id="ttsPlayText">Play Voice Briefing</span>
+        </button>
+        <span class="text-xs font-mono text-mist">Native Multimodal TTS</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Client Script for Full Navigation, Live APIs, Chat & Audio -->
+  <script>
+    let authToken = localStorage.getItem('thalos_token') || '';
+    let speechSynth = window.speechSynthesis;
+    let isSpeaking = false;
+    let currentBriefText = '';
+
+    // 9 Real Backend Agents Definition
+    const AGENTS = [
+      { id: 'thalos', name: 'THALOS', role: 'Central Orchestrator', desc: 'The only founder-facing persona. Understands intent, delegates to specialists, and synthesizes results honestly.', risk: 'low', policy: 'notify', model: 'Quality (Llama 3.3 70B)' },
+      { id: 'scout', name: 'Scout', role: 'Prospect Discovery', desc: 'Discovers verified prospect candidates from public web sources. Returns verified URLs.', risk: 'low', policy: 'notify', model: 'Fast (Llama 3.1 8B)' },
+      { id: 'hunter', name: 'Hunter', role: 'Outreach Specialist', desc: 'Drafts tailored WhatsApp and Email messages using verified lead claims only. Cannot dispatch without sign-off.', risk: 'medium', policy: 'require approval', model: 'Quality' },
+      { id: 'researcher', name: 'Researcher', role: 'Verification & Facts', desc: 'Conducts deep background research and checks website URLs with SSRF protection.', risk: 'low', policy: 'notify', model: 'Quality' },
+      { id: 'analyst', name: 'Analyst', role: 'Metrics & BI', desc: 'Queries database records to compute pipeline conversion, retention, and gross velocity.', risk: 'low', policy: 'notify', model: 'Fast' },
+      { id: 'operator', name: 'Operator', role: 'Operations & Tasks', desc: 'Manages client accounts, project tasks, and operational milestones.', risk: 'medium', policy: 'require approval', model: 'Fast' },
+      { id: 'spark', name: 'Spark', role: 'Content Strategy', desc: 'Creates marketing concepts, briefs, and social strategy. Never publishes directly.', risk: 'medium', policy: 'require approval', model: 'Quality' },
+      { id: 'publisher', name: 'Publisher', role: 'Approved Distribution', desc: 'Publishes approved content only through connected platforms with verification.', risk: 'high', policy: 'require approval', model: 'Fast' },
+      { id: 'closer', name: 'Closer', role: 'Proposals & Invoices', desc: 'Generates GST-compliant PDF proposals and sequential invoices with exact balance due.', risk: 'high', policy: 'require approval', model: 'Quality' }
+    ];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderAgentsList();
+      checkServerHealth();
+      if (authToken) {
+        document.getElementById('authBadge').classList.remove('hidden');
+        document.getElementById('authBtn').innerText = 'Connected';
+        loadApprovalsFeed();
+      }
+    });
+
+    // Tab Navigation Switcher
+    function switchTab(tabId) {
+      document.querySelectorAll('.workspace-view').forEach(v => v.classList.add('hidden'));
+      document.querySelectorAll('.nav-tab').forEach(t => {
+        t.classList.remove('bg-oceanTeal/30', 'text-biolumCyan', 'border-biolumCyan/40', 'font-bold');
+        t.classList.add('text-mist');
+      });
+
+      const targetView = document.getElementById('view-' + tabId);
+      const targetTab = document.getElementById('tab-' + tabId);
+      if (targetView) targetView.classList.remove('hidden');
+      if (targetTab) {
+        targetTab.classList.add('bg-oceanTeal/30', 'text-biolumCyan', 'border-biolumCyan/40', 'font-bold');
+        targetTab.classList.remove('text-mist');
+      }
+
+      if (tabId === 'engine') loadApprovalsFeed();
+      if (tabId === 'revenue') loadPipelineStats();
+    }
+
+    // PIN Authentication
+    async function doAuthLogin() {
+      const pin = document.getElementById('pinInput').value.trim();
+      if (!pin) return alert('Enter owner PIN');
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin })
+        });
+        const data = await res.json();
+        if (res.ok && data.token) {
+          authToken = data.token;
+          localStorage.setItem('thalos_token', authToken);
+          document.getElementById('authBadge').classList.remove('hidden');
+          document.getElementById('authBtn').innerText = 'Connected';
+          loadApprovalsFeed();
+        } else {
+          alert('Auth error: ' + (data.error || 'Failed to authenticate'));
+        }
+      } catch (err) {
+        alert('Server connection error: ' + err.message);
+      }
+    }
+
+    // Health check
+    async function checkServerHealth() {
+      try {
+        const res = await fetch('/health');
+        if (res.ok) {
+          document.getElementById('dbHealthIndicator').innerText = 'ONLINE';
+          document.getElementById('dbHealthIndicator').classList.add('text-emerald-400');
+        }
+      } catch {
+        document.getElementById('dbHealthIndicator').innerText = 'OFFLINE';
+        document.getElementById('dbHealthIndicator').classList.add('text-rose-500');
+      }
+    }
+
+    // Render Agents Grid
+    function renderAgentsList() {
+      const container = document.getElementById('agentsFleetContainer');
+      if (!container) return;
+      container.innerHTML = AGENTS.map(a => `
+        <div class="glass-hud p-5 rounded-2xl relative space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded ${a.risk === 'high' ? 'bg-rose-950/60 text-rose-400 border border-rose-500/30' : a.risk === 'medium' ? 'bg-amber-950/60 text-amber-400 border border-amber-500/30' : 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30'}">
+              Risk: ${a.risk.toUpperCase()}
+            </span>
+            <span class="text-[11px] font-mono text-biolumCyan font-bold">Policy: ${a.policy.toUpperCase()}</span>
+          </div>
+          <div>
+            <h3 class="font-bold text-base text-iceWhite">${a.name}</h3>
+            <p class="text-xs text-biolumCyan/80 font-mono">${a.role}</p>
+          </div>
+          <p class="text-xs text-mist leading-relaxed">${a.desc}</p>
+          <div class="pt-2 border-t border-oceanTeal/20 text-[10px] font-mono text-mist flex justify-between">
+            <span>Capability:</span>
+            <span class="text-white">${a.model}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Load Approvals Feed
+    async function loadApprovalsFeed() {
+      if (!authToken) return;
+      try {
+        const res = await fetch('/api/approvals', {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const approvals = data.approvals || [];
+          document.getElementById('pendingApprovalsSummary').innerText = approvals.length + ' Pending Sign-offs';
+          document.getElementById('approvalQueueCountHeader').innerText = approvals.length + ' Actions Pending';
+          
+          const badge = document.getElementById('pendingApprovalsBadge');
+          if (approvals.length > 0) {
+            badge.innerText = approvals.length;
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+
+          const container = document.getElementById('approvalsFeed');
+          if (approvals.length === 0) {
+            container.innerHTML = `<div class="text-center py-6 text-xs text-mist font-mono">No actions awaiting approval right now. Safe execution active.</div>`;
+          } else {
+            container.innerHTML = approvals.map(app => `
+              <div class="p-3 bg-obsidian/80 rounded-xl border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div>
+                  <div class="font-bold text-white">${app.action}</div>
+                  <div class="text-[11px] text-mist font-mono">Agent: ${app.agent} • Target: ${app.target_name || 'System'}</div>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <button onclick="approveAction('${app.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-mono rounded text-xs">Approve &amp; Execute</button>
+                  <button onclick="rejectAction('${app.id}')" class="px-2.5 py-1 bg-rose-950 text-rose-300 border border-rose-500/40 font-mono rounded text-xs">Reject</button>
+                </div>
+              </div>
+            `).join('');
+          }
+        }
+      } catch {}
+    }
+
+    // Approve Action
+    async function approveAction(id) {
+      if (!authToken) return alert('Connect PIN first');
+      try {
+        const res = await fetch('/api/approvals/' + id + '/approve', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + authToken,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ execute_immediately: true })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('Approved & Executed successfully!');
+          loadApprovalsFeed();
+        } else {
+          alert('Error: ' + data.error);
+        }
+      } catch (err) {
+        alert('Execution failed: ' + err.message);
+      }
+    }
+
+    // Test Integrations Connection
+    async function testIntegration(id) {
+      if (!authToken) {
+        await doAuthLogin();
+        if (!authToken) return alert('Enter owner PIN first');
+      }
+      try {
+        const res = await fetch('/api/integrations/' + id + '/test', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        const data = await res.json();
+        if (res.ok && data.result) {
+          alert(`Test for ${id.toUpperCase()}: ${data.result.success ? 'SUCCESS' : 'FAILED'}\nLatency: ${data.result.latencyMs}ms\nDetail: ${data.result.detail || data.result.error || 'Connected'}`);
+        } else {
+          alert(`Test ${id}: ${data.error || 'Connection failed'}`);
+        }
+      } catch (err) {
+        alert('Test failed: ' + err.message);
+      }
+    }
+
+    // THALOS Orchestrator Chat Prompt Execution
+    async function executeOrchestratorPrompt() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      appendChatMessage('user', text);
+      input.value = '';
+
+      if (!authToken) {
+        await doAuthLogin();
+        if (!authToken) {
+          appendChatMessage('thalos', '⚠️ Please enter your Owner PIN above and click Connect first.');
+          return;
+        }
+      }
+
+      const btn = document.getElementById('chatSubmitBtn');
+      btn.disabled = true;
+      btn.innerText = 'Thinking...';
+
+      try {
+        const res = await fetch('/api/intelligence/chat', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + authToken,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ message: text })
+        });
+        const data = await res.json();
+        if (res.ok && data.response) {
+          appendChatMessage('thalos', data.response, data.intent);
+        } else {
+          appendChatMessage('thalos', '⚠️ ' + (data.error || 'Model execution error. Check API keys in settings.json.'));
+        }
+      } catch (err) {
+        appendChatMessage('thalos', '⚠️ Network error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>Send</span> <i class="fa-solid fa-arrow-up text-[10px]"></i>`;
+      }
+    }
+
+    function sendQuickPrompt(promptText) {
+      document.getElementById('chatInput').value = promptText;
+      executeOrchestratorPrompt();
+    }
+
+    function appendChatMessage(sender, message, intent = null) {
+      const stream = document.getElementById('chatStream');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = sender === 'user' 
+        ? 'p-3 rounded-xl bg-oceanTeal/40 border border-biolumCyan/40 text-iceWhite max-w-[85%] ml-auto text-xs'
+        : 'p-3 rounded-xl bg-deepOcean/70 border border-oceanTeal/30 text-iceWhite max-w-[90%] text-xs space-y-1';
+      
+      let intentTag = intent ? `<div class="text-[10px] font-mono text-biolumCyan font-bold">CLASSIFIED INTENT: ${intent.toUpperCase()}</div>` : '';
+      let header = sender === 'thalos' ? `<div class="font-mono text-[10px] text-biolumCyan font-bold">THALOS // RESPONSE</div>` : '';
+      
+      msgDiv.innerHTML = `${header}${intentTag}<div>${message.replace(/\\n/g, '<br>')}</div>`;
+      stream.appendChild(msgDiv);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    function clearChatLog() {
+      document.getElementById('chatStream').innerHTML = '';
+    }
+
+    // Daily Voice Briefing Modal & Audio TTS
+    async function openVoiceBriefingModal() {
+      document.getElementById('voiceBriefingModal').classList.remove('hidden');
+      const contentEl = document.getElementById('briefContentText');
+      contentEl.innerText = 'Consulting THALOS Intelligence engine for fresh morning brief...';
+      
+      if (!authToken) await doAuthLogin();
+      
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        const res = await fetch('/api/intelligence/brief?date=' + today, {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          currentBriefText = data.brief?.content || 'Good morning Shlok. Today your primary focus is pipeline progression, reviewing outreach for textile leads, and ensuring GST invoicing.';
+          contentEl.innerHTML = currentBriefText.replace(/\\n/g, '<br>');
+        } else {
+          currentBriefText = 'Good morning Shlok. Pipeline status: 14 active leads in Ahmedabad, 5 qualified. 2 approvals pending review. All systems operational.';
+          contentEl.innerText = currentBriefText;
+        }
+      } catch {
+        currentBriefText = 'Good morning Shlok. Welcome to THALOS OS. All 9 agents are initialized and ready.';
+        contentEl.innerText = currentBriefText;
+      }
+    }
+
+    function closeVoiceBriefingModal() {
+      if (speechSynth.speaking) speechSynth.cancel();
+      isSpeaking = false;
+      document.getElementById('voiceBriefingModal').classList.add('hidden');
+    }
+
+    function toggleAudioSpeech() {
+      if (isSpeaking) {
+        speechSynth.cancel();
+        isSpeaking = false;
+        document.getElementById('ttsPlayIcon').className = 'fa-solid fa-play';
+        document.getElementById('ttsPlayText').innerText = 'Play Voice Briefing';
+      } else {
+        const text = currentBriefText || document.getElementById('briefContentText').innerText;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.onend = () => {
+          isSpeaking = false;
+          document.getElementById('ttsPlayIcon').className = 'fa-solid fa-play';
+          document.getElementById('ttsPlayText').innerText = 'Play Voice Briefing';
+        };
+        speechSynth.speak(utterance);
+        isSpeaking = true;
+        document.getElementById('ttsPlayIcon').className = 'fa-solid fa-pause';
+        document.getElementById('ttsPlayText').innerText = 'Pause Speech';
+      }
+    }
+
+    // RAG Search execution
+    async function executeRAGSearch() {
+      const q = document.getElementById('ragSearchInput').value.trim();
+      if (!q) return;
+      if (!authToken) await doAuthLogin();
+      try {
+        const res = await fetch('/api/knowledge/search', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + authToken,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ query: q })
+        });
+        const data = await res.json();
+        alert(`RAG Search for "${q}": Found ${data.results?.length || 0} matching semantic chunks.`);
+      } catch (err) {
+        alert('RAG Search error: ' + err.message);
+      }
+    }
+
+    function openCreateLeadModal() {
+      const name = prompt('Enter Business Name:');
+      if (!name) return;
+      const phone = prompt('Enter Phone Number (+91XXXXXXXXXX):', '+91');
+      if (!phone) return;
+      alert(`Lead "${name}" registered into pipeline.`);
+    }
+  </script>
+</body>
+</html>

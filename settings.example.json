@@ -1,0 +1,51 @@
+{
+  "supabase": {
+    "url": "https://your-project.supabase.co",
+    "serviceRoleKey": "your-service-role-key",
+    "anonKey": ""
+  },
+  "auth": {
+    "pin": "1234",
+    "ownerPinHash": "$2b$10$oyDvkHdiVuqw.Ghzr.DTDuT7OAbovKJ1LppoZ4/x6lDWr.CdQVnM2",
+    "jwtSecret": "thalos-super-secret-jwt-token-key-change-in-production-min32chars",
+    "tokenExpirySeconds": 86400
+  },
+  "encryption": {
+    "masterKey": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  },
+  "integrations": {
+    "groq": {
+      "apiKey": ""
+    },
+    "gemini": {
+      "apiKey": ""
+    },
+    "cloudflare": {
+      "accountId": "",
+      "apiKey": ""
+    },
+    "tavily": {
+      "apiKey": ""
+    },
+    "resend": {
+      "apiKey": "",
+      "fromEmail": "THALOS <noreply@yugantar.in>"
+    },
+    "searxng": {
+      "baseUrl": "http://localhost:8080",
+      "secret": ""
+    }
+  },
+  "runtime": {
+    "nodeEnv": "development",
+    "port": 3000,
+    "workerPort": 3001,
+    "workerPollIntervalMs": 5000,
+    "workerMaxConcurrency": 3,
+    "allowedOrigins": [
+      "http://localhost:5173",
+      "http://localhost:3000"
+    ],
+    "logLevel": "info"
+  }
+}

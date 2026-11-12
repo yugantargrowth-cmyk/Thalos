@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title>THALOS — Agentic AI Business Operating System</title>
+<!-- Tailwind CSS CDN with Forms & Container Queries plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration for THALOS Sci-Fi Design System -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            thalos: {
+              obsidian: '#080D12',
+              deepOcean: '#0B171F',
+              panel: '#10232B',
+              panelHover: '#162F3A',
+              border: '#147F83',
+              borderLight: '#1E4D53',
+              cyan: '#50D9D0',
+              cyanGlow: '#2AE8DA',
+              mist: '#A5C7C8',
+              ice: '#E6F0EF',
+              warning: '#F59E0B',
+              danger: '#EF4444'
+            }
+          },
+          fontFamily: {
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+            sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif']
+          },
+          animation: {
+            'pulse-slow': 'pulse 3.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'spin-slow': 'spin 20s linear infinite',
+            'reverse-spin': 'spinReverse 25s linear infinite'
+          },
+          keyframes: {
+            spinReverse: {
+              '0%': { transform: 'rotate(360deg)' },
+              '100%': { transform: 'rotate(0deg)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom Styles for Sci-Fi Aesthetics & Hologram FX -->
+<style data-purpose="glow-effects">
+    .thalos-glow-cyan {
+      box-shadow: 0 0 20px -3px rgba(80, 217, 208, 0.35), 0 0 8px 0 rgba(80, 217, 208, 0.25);
+    }
+    .thalos-glow-pill {
+      box-shadow: 0 0 16px -2px rgba(80, 217, 208, 0.3);
+    }
+    .thalos-card-border {
+      border: 1px solid rgba(20, 127, 131, 0.45);
+      background: linear-gradient(135deg, rgba(16, 35, 43, 0.85) 0%, rgba(11, 23, 31, 0.95) 100%);
+      backdrop-filter: blur(12px);
+    }
+    .thalos-card-highlight {
+      border: 1px solid rgba(80, 217, 208, 0.4);
+    }
+    /* Dynamic soundwave animation */
+    @keyframes soundwave {
+      0%, 100% { height: 4px; }
+      50% { height: 16px; }
+    }
+    .wave-bar-1 { animation: soundwave 1s ease-in-out infinite 0.1s; }
+    .wave-bar-2 { animation: soundwave 1.2s ease-in-out infinite 0.25s; }
+    .wave-bar-3 { animation: soundwave 0.8s ease-in-out infinite 0.05s; }
+    .wave-bar-4 { animation: soundwave 1.4s ease-in-out infinite 0.35s; }
+  </style>
+<style data-purpose="radial-drawer-transitions">
+    /* Slide in/out transition for the right edge half-radial navigation panel */
+    #radial-drawer {
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    }
+    .radial-hidden {
+      transform: translateX(100%);
+      pointer-events: none;
+      opacity: 0;
+    }
+    .radial-visible {
+      transform: translateX(0);
+      pointer-events: auto;
+      opacity: 1;
+    }
+  </style>
+<!-- END: Custom Styles -->
+</head>
+<body class="bg-[#080D12] text-thalos-ice font-sans antialiased selection:bg-thalos-cyan selection:text-thalos-obsidian min-h-screen relative overflow-x-hidden pb-32">
+<!-- BEGIN: Ambient Deep-Ocean Background Grid & Fog -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden" data-purpose="background-mesh">
+<!-- Grid overlay -->
+<div class="absolute inset-0 opacity-[0.04]" style="background-image: linear-gradient(#50D9D0 1px, transparent 1px), linear-gradient(90deg, #50D9D0 1px, transparent 1px); background-size: 32px 32px;"></div>
+<!-- Cyan glow top spotlight -->
+<div class="absolute -top-24 left-1/2 -translate-x-1/2 w-80 h-80 bg-thalos-cyan/15 rounded-full blur-[100px]"></div>
+<!-- Ambient bottom depth light -->
+<div class="absolute -bottom-20 right-0 w-72 h-72 bg-[#147F83]/15 rounded-full blur-[90px]"></div>
+</div>
+<!-- END: Ambient Deep-Ocean Background Grid & Fog -->
+<!-- BEGIN: Mobile Top Status Bar & Header -->
+<header class="sticky top-0 z-40 bg-[#080D12]/90 backdrop-blur-md border-b border-thalos-border/40 px-4 pt-3 pb-3">
+<!-- iOS Native Status Telemetry -->
+<div class="flex justify-between items-center text-xs tracking-wider font-mono text-thalos-mist mb-2.5">
+<span class="font-semibold text-thalos-ice tracking-tight">9:41</span>
+<div class="flex items-center space-x-1.5">
+<svg class="w-3.5 h-3.5 fill-current text-thalos-cyan" viewbox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.35 19.67 10.63 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 15c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"></path></svg>
+<svg class="w-3.5 h-3.5 fill-current text-thalos-cyan" viewbox="0 0 24 24"><path d="M12 4C7.31 4 3.07 5.9 0 8.98L12 21 24 8.98C20.93 5.9 16.69 4 12 4zm0 3.5c3.5 0 6.69 1.4 9.02 3.68L12 18.25 2.98 11.18C5.31 8.9 8.5 7.5 12 7.5z"></path></svg>
+<span class="inline-block w-4 h-2.5 border border-thalos-mist rounded-sm p-0.5 relative">
+<span class="block h-full bg-thalos-cyan w-3/4 rounded-2xs"></span>
+</span>
+</div>
+</div>
+<!-- Executive Greeting & Brand Bar -->
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-2.5">
+<!-- Glowing THALOS Glyph Icon -->
+<div class="w-8 h-8 rounded-lg bg-thalos-panel border border-thalos-cyan/60 flex items-center justify-center shadow-[0_0_12px_rgba(80,217,208,0.3)]">
+<svg class="w-5 h-5 text-thalos-cyan" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24">
+<polygon points="12 2 2 22 22 22 12 2"></polygon>
+<polyline points="7 14 12 6 17 14"></polyline>
+</svg>
+</div>
+<div>
+<div class="flex items-center space-x-1.5">
+<span class="text-[10px] uppercase font-mono tracking-widest text-thalos-cyan font-bold">THALOS OS</span>
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+</div>
+<h1 class="text-sm font-semibold text-white tracking-tight leading-none">Good Morning, Boss!</h1>
+</div>
+</div>
+<!-- Quick Actions: Search, Alert & Avatar -->
+<div class="flex items-center space-x-2">
+<button aria-label="Search" class="w-8 h-8 rounded-full bg-thalos-panel/80 border border-thalos-border/60 flex items-center justify-center text-thalos-mist hover:text-thalos-cyan transition">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line></svg>
+</button>
+<!-- Notification Bell with Pending Count -->
+<button aria-label="Notifications" class="w-8 h-8 rounded-full bg-thalos-panel/80 border border-thalos-border/60 flex items-center justify-center text-thalos-mist relative">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+<span class="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-thalos-cyan text-thalos-obsidian text-[9px] font-bold rounded-full flex items-center justify-center font-mono">2</span>
+</button>
+<!-- Executive Avatar (Yugantar Leader) -->
+<div class="w-8 h-8 rounded-full border border-thalos-cyan/70 overflow-hidden p-0.5 bg-thalos-panel">
+<div class="w-full h-full rounded-full bg-gradient-to-tr from-thalos-border to-thalos-cyan flex items-center justify-center text-[10px] font-bold text-thalos-obsidian">
+            YL
+          </div>
+</div>
+</div>
+</div>
+<!-- Date, Time & Environment Telemetry Ribbon -->
+<div class="mt-2.5 flex items-center justify-between text-[11px] font-mono text-thalos-mist bg-thalos-deepOcean/70 px-2.5 py-1 rounded-md border border-thalos-border/30">
+<span class="flex items-center space-x-1">
+<span class="text-thalos-cyan">●</span>
+<span>Mon, Apr 28</span>
+<span class="text-thalos-border">|</span>
+<span class="text-thalos-ice">09:41 AM IST</span>
+</span>
+<span class="text-[10px] text-thalos-cyan uppercase tracking-wider">Yugantar Node</span>
+</div>
+</header>
+<!-- END: Mobile Top Status Bar & Header -->
+<!-- BEGIN: Main Scrollable Content Area -->
+<main class="px-4 py-3 space-y-4 relative z-10">
+<!-- BEGIN: Central Holographic Synapse Globe & Telemetry -->
+<section class="thalos-card-border rounded-2xl p-4 relative overflow-hidden text-center" data-purpose="holographic-synapse">
+<!-- Glow backlight backdrop -->
+<div class="absolute inset-0 bg-radial from-thalos-cyan/10 via-transparent to-transparent pointer-events-none"></div>
+<!-- Telemetry Header -->
+<div class="flex justify-between items-center text-[10px] font-mono text-thalos-mist mb-2">
+<span class="text-thalos-cyan flex items-center space-x-1">
+<span class="w-1.5 h-1.5 rounded-full bg-thalos-cyan inline-block animate-ping"></span>
+<span class="font-bold tracking-wider">GLOBAL SYNAPSE</span>
+</span>
+<span class="bg-thalos-panel/80 border border-thalos-border/50 px-1.5 py-0.5 rounded text-thalos-ice">ACTIVE • 12 REGIONS</span>
+</div>
+<!-- Wireframe / Hologram Globe Visualization -->
+<div class="relative w-44 h-44 mx-auto my-2 flex items-center justify-center">
+<!-- Outer Orbit Ring 1 -->
+<div class="absolute inset-0 rounded-full border border-dashed border-thalos-cyan/30 animate-spin-slow"></div>
+<!-- Outer Orbit Ring 2 with Marker -->
+<div class="absolute inset-2 rounded-full border border-thalos-border/60 animate-reverse-spin">
+<div class="w-2 h-2 rounded-full bg-thalos-cyan shadow-[0_0_8px_#50D9D0] -top-1 left-1/2 -translate-x-1/2 absolute"></div>
+</div>
+<!-- Inner Wireframe Globe Sphere -->
+<div class="w-32 h-32 rounded-full border-2 border-thalos-cyan/50 shadow-[inset_0_0_24px_rgba(80,217,208,0.25),0_0_20px_rgba(80,217,208,0.3)] relative flex items-center justify-center overflow-hidden bg-[#0A1A22]/50">
+<!-- Latitude and Longitude Rings Simulation -->
+<div class="absolute inset-0 rounded-full border border-thalos-cyan/20 scale-x-50"></div>
+<div class="absolute inset-0 rounded-full border border-thalos-cyan/20 scale-y-50"></div>
+<div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-thalos-cyan/40"></div>
+<!-- Pulsing core node -->
+<div class="w-8 h-8 rounded-full bg-thalos-cyan/20 border border-thalos-cyan flex items-center justify-center shadow-[0_0_12px_#50D9D0]">
+<div class="w-2.5 h-2.5 rounded-full bg-thalos-ice animate-ping"></div>
+</div>
+</div>
+<!-- Telemetry Floating Coordinates -->
+<div class="absolute bottom-1 right-2 text-[9px] font-mono text-thalos-cyan/80 bg-thalos-obsidian/80 px-1 rounded border border-thalos-border/40">
+          28.61° N, 77.20° E
+        </div>
+</div>
+<!-- Micro Synapse Status Summary -->
+<div class="mt-2 text-xs font-mono text-thalos-mist flex items-center justify-center space-x-3">
+<span>Autonomous Agents: <strong class="text-thalos-cyan">08 Online</strong></span>
+<span>•</span>
+<span>Workflows: <strong class="text-thalos-ice">99.8% Sync</strong></span>
+</div>
+</section>
+<!-- END: Central Holographic Synapse Globe -->
+<!-- BEGIN: Command Chamber / My Day Widget -->
+<section class="thalos-card-border rounded-2xl p-4 relative" data-purpose="command-chamber-widget">
+<div class="flex items-center justify-between pb-3 border-b border-thalos-border/30">
+<div class="flex items-center space-x-2">
+<div class="w-7 h-7 rounded-lg bg-thalos-panel flex items-center justify-center border border-amber-400/40 text-amber-400">
+<!-- Sun / My Day Icon -->
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" x2="12" y1="1" y2="3"></line><line x1="12" x2="12" y1="21" y2="23"></line><line x1="4.22" x2="5.64" y1="4.22" y2="5.64"></line><line x1="18.36" x2="19.78" y1="18.36" y2="19.78"></line><line x1="1" x2="3" y1="12" y2="12"></line><line x1="21" x2="23" y1="12" y2="12"></line><line x1="4.22" x2="5.64" y1="19.78" y2="18.36"></line><line x1="18.36" x2="19.78" y1="5.64" y2="4.22"></line></svg>
+</div>
+<div>
+<h2 class="text-sm font-semibold text-white tracking-wide">My Day</h2>
+<p class="text-[10px] font-mono text-thalos-mist">Command Chamber Protocol</p>
+</div>
+</div>
+<div class="flex items-center space-x-1.5 text-[10px] font-mono">
+<span class="px-2 py-0.5 rounded bg-thalos-cyan/15 text-thalos-cyan border border-thalos-cyan/30">3 Priorities</span>
+<span class="px-2 py-0.5 rounded bg-amber-400/15 text-amber-300 border border-amber-400/30">2 Approvals</span>
+</div>
+</div>
+<!-- Actionable Priorities List -->
+<div class="mt-3 space-y-2.5">
+<!-- Item 1: Completed Task -->
+<div class="flex items-center justify-between p-2.5 rounded-xl bg-thalos-panel/50 border border-thalos-border/20 text-xs">
+<div class="flex items-center space-x-2.5">
+<span class="w-4 h-4 rounded-full border border-thalos-cyan bg-thalos-cyan/20 flex items-center justify-center text-thalos-cyan">
+<svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+</span>
+<span class="text-thalos-mist line-through">Review Q2 Revenue Plan</span>
+</div>
+<span class="text-[10px] font-mono text-thalos-cyan uppercase">Done</span>
+</div>
+<!-- Item 2: Critical Approval with Value -->
+<div class="flex items-center justify-between p-2.5 rounded-xl bg-[#14262E] border border-amber-400/40 text-xs thalos-card-highlight">
+<div class="flex items-center space-x-2.5">
+<span class="w-4 h-4 rounded-full border-2 border-amber-400 animate-pulse"></span>
+<div>
+<p class="font-medium text-thalos-ice">Approve Client Proposal</p>
+<p class="text-[10px] font-mono text-amber-400">Critical • Value ₹6,00,000</p>
+</div>
+</div>
+<button class="px-2 py-1 bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/60 rounded-md text-[10px] font-mono font-semibold transition">
+            Review
+          </button>
+</div>
+<!-- Item 3: Automated Agent Task -->
+<div class="flex items-center justify-between p-2.5 rounded-xl bg-thalos-panel/50 border border-thalos-border/20 text-xs">
+<div class="flex items-center space-x-2.5">
+<span class="w-4 h-4 rounded-full border border-thalos-border flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-thalos-cyan"></span>
+</span>
+<span class="text-thalos-ice">Check Agent Progress</span>
+</div>
+<span class="text-[10px] font-mono text-thalos-mist bg-thalos-obsidian px-1.5 py-0.5 rounded border border-thalos-border/40">Auto</span>
+</div>
+</div>
+<!-- Action Footer -->
+<div class="mt-3 pt-2 text-right">
+<a class="inline-flex items-center space-x-1 text-xs font-mono text-thalos-cyan hover:underline" href="#view-chamber">
+<span>View Command Details</span>
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+</a>
+</div>
+</section>
+<!-- END: Command Chamber / My Day Widget -->
+<!-- BEGIN: Revenue Pulse Widget -->
+<section class="thalos-card-border rounded-2xl p-4 relative" data-purpose="revenue-pulse-widget">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center space-x-2">
+<div class="w-7 h-7 rounded-lg bg-thalos-panel flex items-center justify-center border border-thalos-cyan/40 text-thalos-cyan">
+<!-- Growth Pulse Icon -->
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+</div>
+<span class="text-xs uppercase font-mono tracking-wider text-thalos-cyan font-semibold">Revenue Pulse</span>
+</div>
+<span class="text-[10px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center space-x-1">
+<span>▲</span>
+<span>+12% vs last week</span>
+</span>
+</div>
+<!-- Primary Velocity Metric -->
+<div class="mt-2 flex items-baseline justify-between">
+<div>
+<p class="text-[10px] font-mono text-thalos-mist uppercase">Gross Velocity</p>
+<div class="text-2xl font-bold tracking-tight text-white font-mono flex items-center space-x-1">
+<span>₹42,500</span>
+<span class="text-xs text-thalos-cyan font-normal font-sans">/ day</span>
+</div>
+</div>
+<!-- Inline Glowing Sparkline Vector Chart -->
+<div class="w-32 h-10">
+<svg class="w-full h-full" fill="none" viewbox="0 0 120 40">
+<defs>
+<lineargradient id="cyanSparkGlow" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#50D9D0" stop-opacity="0.35"></stop>
+<stop offset="100%" stop-color="#50D9D0" stop-opacity="0.0"></stop>
+</lineargradient>
+</defs>
+<path d="M0 32 L20 28 L40 33 L60 18 L80 22 L100 8 L120 12 L120 40 L0 40 Z" fill="url(#cyanSparkGlow)"></path>
+<path d="M0 32 L20 28 L40 33 L60 18 L80 22 L100 8 L120 12" stroke="#50D9D0" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"></path>
+<circle cx="120" cy="12" fill="#E6F0EF" r="2.5" stroke="#50D9D0" stroke-width="1.5"></circle>
+</svg>
+</div>
+</div>
+<!-- Secondary Telemetry Split -->
+<div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-thalos-border/30">
+<div class="bg-thalos-panel/60 p-2 rounded-xl border border-thalos-border/30">
+<p class="text-[10px] font-mono text-thalos-mist">Active Deals</p>
+<p class="text-sm font-semibold text-thalos-ice font-mono">4 In Progress</p>
+</div>
+<div class="bg-thalos-panel/60 p-2 rounded-xl border border-thalos-border/30">
+<p class="text-[10px] font-mono text-thalos-mist">Total Pipeline</p>
+<p class="text-sm font-semibold text-thalos-cyan font-mono">₹12.5L</p>
+</div>
+</div>
+<!-- Action Button -->
+<button class="mt-3 w-full py-1.5 px-3 rounded-xl bg-thalos-deepOcean border border-thalos-cyan/40 text-thalos-cyan text-xs font-mono hover:bg-thalos-cyan/10 transition flex items-center justify-center space-x-1.5">
+<span>Inspect Pipeline</span>
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+</section>
+<!-- END: Revenue Pulse Widget -->
+<!-- BEGIN: THALOS Activity Stream -->
+<section class="thalos-card-border rounded-2xl p-4" data-purpose="agent-activity-stream">
+<div class="flex items-center justify-between mb-2.5">
+<div class="flex items-center space-x-2">
+<!-- Pulse Dot -->
+<div class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>
+<h2 class="text-xs uppercase font-mono tracking-wider text-thalos-ice font-semibold">THALOS Activity Stream</h2>
+</div>
+<span class="text-[9px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded uppercase">● Live</span>
+</div>
+<!-- Agent Activity Item 1 -->
+<div class="flex items-start space-x-3 p-2.5 rounded-xl bg-thalos-panel/40 border border-thalos-border/30 mb-2">
+<div class="w-6 h-6 rounded-lg bg-thalos-cyan/20 border border-thalos-cyan/50 text-thalos-cyan flex items-center justify-center shrink-0 mt-0.5">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"></path><circle cx="12" cy="14" r="4"></circle><line x1="12" x2="12" y1="18" y2="22"></line></svg>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<p class="text-xs font-semibold text-white">Research Agent</p>
+<span class="text-[9px] font-mono text-thalos-mist">3m ago</span>
+</div>
+<p class="text-[11px] text-thalos-mist mt-0.5 leading-snug">
+            Completed research dossier on <strong class="text-thalos-ice">12 enterprise prospects</strong> for Q2 campaign.
+          </p>
+</div>
+</div>
+<!-- Agent Activity Item 2 -->
+<div class="flex items-start space-x-3 p-2.5 rounded-xl bg-thalos-panel/40 border border-thalos-border/30">
+<div class="w-6 h-6 rounded-lg bg-amber-400/20 border border-amber-400/50 text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<p class="text-xs font-semibold text-white">Execution Engine</p>
+<span class="text-[9px] font-mono text-thalos-mist">11m ago</span>
+</div>
+<p class="text-[11px] text-thalos-mist mt-0.5 leading-snug">
+            Dispatched proposal draft to <strong class="text-thalos-ice">NexGen Systems</strong> awaiting sign-off.
+          </p>
+</div>
+</div>
+</section>
+<!-- END: THALOS Activity Stream -->
+</main>
+<!-- END: Main Scrollable Content Area -->
+<!-- BEGIN: Right-Side Mobile Radial Navigation Anchor & Drawer -->
+<!-- Micro Guide Badge on the right edge -->
+<aside class="fixed right-0 top-1/2 -translate-y-1/2 z-50" data-purpose="radial-navigation-container">
+<!-- Summon Trigger Handle (Always Visible on Edge) -->
+<button aria-label="Summon Radial Navigation Menu" class="group relative -mr-2 bg-[#0B171F] border-2 border-r-0 border-thalos-cyan rounded-l-full py-4 pl-3.5 pr-2.5 flex items-center shadow-[0_0_20px_rgba(80,217,208,0.4)] active:scale-95 transition-all" data-purpose="summon-trigger" id="radial-summon-btn" onclick="toggleRadialMenu()">
+<div class="flex flex-col items-center space-y-1">
+<!-- Glowing Cyan THALOS Core Chevron/Glyph -->
+<svg class="w-5 h-5 text-thalos-cyan animate-pulse" fill="none" stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24">
+<path d="M15 18l-6-6 6-6"></path>
+</svg>
+<span class="text-[8px] font-mono uppercase tracking-widest text-thalos-cyan -rotate-90 origin-center my-2 font-bold">NAV</span>
+</div>
+<!-- Bioluminescent aura ring -->
+<span class="absolute inset-0 rounded-l-full bg-thalos-cyan/15 blur-sm -z-10"></span>
+</button>
+</aside>
+<!-- Full Half-Circle Radial Drawer Overlay (emerging from right edge) -->
+<div class="radial-hidden fixed inset-y-0 right-0 w-80 bg-gradient-to-l from-[#080D12]/95 via-[#0B171F]/95 to-transparent backdrop-blur-xl z-50 flex items-center justify-end pr-3" data-purpose="radial-wheel-modal" id="radial-drawer">
+<!-- Tap outside / backdrop close layer -->
+<div class="absolute inset-0 -left-[100vw] bg-black/60 backdrop-blur-xs" onclick="toggleRadialMenu()"></div>
+<!-- The Radial Navigation Hub -->
+<div class="relative w-72 h-72 rounded-full border border-thalos-cyan/40 bg-thalos-obsidian/90 shadow-[0_0_35px_rgba(80,217,208,0.25)] flex items-center justify-center translate-x-12">
+<!-- Close icon button top left of wheel -->
+<button class="absolute top-4 left-4 z-20 w-7 h-7 rounded-full bg-thalos-panel border border-thalos-border text-thalos-mist hover:text-white flex items-center justify-center" onclick="toggleRadialMenu()">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><line x1="18" x2="6" y1="6" y2="18"></line><line x1="6" x2="18" y1="6" y2="18"></line></svg>
+</button>
+<!-- Center THALOS Core Button -->
+<button class="relative z-10 w-24 h-24 rounded-full bg-gradient-to-b from-[#147F83] to-[#0A1A22] border-2 border-thalos-cyan flex flex-col items-center justify-center text-center shadow-[0_0_25px_#50D9D0] active:scale-95 transition" onclick="executeRadialSelection('Command Center')">
+<svg class="w-8 h-8 text-thalos-ice mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polygon points="12 2 2 22 22 22 12 2"></polygon>
+<polyline points="7 14 12 6 17 14"></polyline>
+</svg>
+<span class="text-[10px] font-mono font-bold tracking-widest text-thalos-ice uppercase">OPEN</span>
+</button>
+<!-- Radial Environment Nodes placed on circumference arc -->
+<!-- Node: Digital World -->
+<button class="absolute left-6 top-8 w-11 h-11 rounded-full bg-thalos-panel border border-thalos-cyan/60 flex items-center justify-center text-thalos-cyan shadow-md active:bg-thalos-cyan active:text-thalos-obsidian transition" onclick="executeRadialSelection('Digital World')" title="Digital World">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" x2="22" y1="12" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+</button>
+<!-- Node: AI Team -->
+<button class="absolute left-1 top-24 w-11 h-11 rounded-full bg-thalos-panel border border-thalos-cyan/60 flex items-center justify-center text-thalos-cyan shadow-md active:bg-thalos-cyan active:text-thalos-obsidian transition" onclick="executeRadialSelection('AI Team')" title="AI Team">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+</button>
+<!-- Node: Revenue Engine -->
+<button class="absolute left-2 bottom-20 w-11 h-11 rounded-full bg-thalos-panel border border-thalos-cyan/60 flex items-center justify-center text-thalos-cyan shadow-md active:bg-thalos-cyan active:text-thalos-obsidian transition" onclick="executeRadialSelection('Revenue Pulse')" title="Revenue">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><line x1="12" x2="12" y1="1" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+</button>
+<!-- Node: Knowledge Graph -->
+<button class="absolute left-12 bottom-6 w-11 h-11 rounded-full bg-thalos-panel border border-thalos-cyan/60 flex items-center justify-center text-thalos-cyan shadow-md active:bg-thalos-cyan active:text-thalos-obsidian transition" onclick="executeRadialSelection('Knowledge Base')" title="Knowledge">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+</button>
+<!-- Node: Execution & Actions -->
+<button class="absolute top-1 right-20 w-10 h-10 rounded-full bg-thalos-panel border border-thalos-border flex items-center justify-center text-thalos-mist shadow-md" onclick="executeRadialSelection('Execution')" title="Execution">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+</button>
+<!-- Node: System Settings -->
+<button class="absolute bottom-2 right-20 w-10 h-10 rounded-full bg-thalos-panel border border-thalos-border flex items-center justify-center text-thalos-mist shadow-md" onclick="executeRadialSelection('Settings')" title="Settings">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+</button>
+<!-- Connecting Orbit Arc Lines -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none stroke-thalos-cyan/30" fill="none" viewbox="0 0 288 288">
+<circle cx="144" cy="144" r="110" stroke-dasharray="4 6" stroke-width="1.5"></circle>
+</svg>
+</div>
+<!-- Radial Navigation Step Guide Footer -->
+<div class="absolute bottom-6 left-6 right-6 text-center">
+<div class="inline-block bg-[#080D12]/90 border border-thalos-border/40 px-3 py-1.5 rounded-full text-[10px] font-mono text-thalos-mist">
+<span class="text-thalos-cyan">1. Tap Node</span> → <span class="text-thalos-ice">2. Tap Core to Enter</span>
+</div>
+</div>
+</div>
+<!-- END: Right-Side Mobile Radial Navigation -->
+<!-- BEGIN: Bottom Persistent Voice & Command Capsule -->
+<div class="fixed bottom-0 inset-x-0 z-40 p-3 bg-gradient-to-t from-[#080D12] via-[#080D12]/95 to-transparent pb-6 pt-4" data-purpose="bottom-command-capsule-container">
+<!-- Floating Voice & Command Pill -->
+<div class="max-w-md mx-auto bg-thalos-deepOcean/90 border border-thalos-cyan/50 rounded-full px-3 py-2 flex items-center justify-between shadow-[0_0_24px_rgba(80,217,208,0.25)] backdrop-blur-md">
+<!-- Audio Waveform Live Indicator -->
+<button aria-label="Activate Voice" class="flex items-center space-x-1 pl-1 pr-2 py-1 text-thalos-cyan hover:opacity-80 transition">
+<span class="w-1 bg-thalos-cyan rounded-full wave-bar-1"></span>
+<span class="w-1 bg-thalos-cyan rounded-full wave-bar-2"></span>
+<span class="w-1 bg-thalos-cyan rounded-full wave-bar-3"></span>
+<span class="w-1 bg-thalos-cyan rounded-full wave-bar-4"></span>
+</button>
+<!-- Interactive Input field -->
+<input class="bg-transparent border-0 focus:ring-0 text-xs font-sans text-thalos-ice placeholder-thalos-mist/60 flex-1 px-2 py-0 focus:outline-none" id="thalos-command-input" placeholder="Ask THALOS anything..." type="text"/>
+<!-- Circular Submit / Transmit Button -->
+<button aria-label="Send Directive" class="w-8 h-8 rounded-full bg-thalos-cyan text-thalos-obsidian flex items-center justify-center font-bold shadow-[0_0_12px_#50D9D0] active:scale-90 transition" onclick="submitCommand()">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24">
+<line x1="12" x2="12" y1="19" y2="5"></line>
+<polyline points="5 12 12 5 19 12"></polyline>
+</svg>
+</button>
+</div>
+<!-- Operating System Status Telemetry Footer Bar -->
+<div class="mt-2 text-center flex items-center justify-center space-x-2 text-[9px] font-mono text-thalos-mist">
+<span class="text-thalos-cyan">THALOS OS</span>
+<span>•</span>
+<span>Latency: 14ms</span>
+<span>•</span>
+<span class="text-emerald-400">Quantum-Ready</span>
+<span>•</span>
+<span>Status: Optimal</span>
+</div>
+</div>
+<!-- END: Bottom Persistent Voice & Command Capsule -->
+<!-- BEGIN: Interactive Control Scripts -->
+<script data-purpose="radial-menu-handler">
+    // Toggle Radial Navigation Drawer
+    function toggleRadialMenu() {
+      const drawer = document.getElementById('radial-drawer');
+      const summonBtn = document.getElementById('radial-summon-btn');
+      
+      if (drawer.classList.contains('radial-hidden')) {
+        drawer.classList.remove('radial-hidden');
+        drawer.classList.add('radial-visible');
+        if (summonBtn) summonBtn.classList.add('opacity-0');
+      } else {
+        drawer.classList.add('radial-hidden');
+        drawer.classList.remove('radial-visible');
+        if (summonBtn) summonBtn.classList.remove('opacity-0');
+      }
+    }
+
+    // Execute Selection from Radial Menu
+    function executeRadialSelection(nodeName) {
+      const input = document.getElementById('thalos-command-input');
+      if (input) {
+        input.value = `Switching environment to ${nodeName}...`;
+        setTimeout(() => {
+          input.value = '';
+        }, 2200);
+      }
+      toggleRadialMenu();
+    }
+
+    // Voice & Command Input Dispatch
+    function submitCommand() {
+      const input = document.getElementById('thalos-command-input');
+      if (!input || !input.value.trim()) return;
+      const query = input.value;
+      input.value = `Processing: "${query}"...`;
+      setTimeout(() => {
+        input.value = '';
+      }, 1800);
+    }
+  </script>
+<!-- END: Interactive Control Scripts -->
+</body></html>

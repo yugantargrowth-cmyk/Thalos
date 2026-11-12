@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>THALOS — Revenue &amp; Sales Pipeline Engine</title>
+<!-- Google Fonts for High-Tech / Cybernetic Aesthetics -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Orbitron:wght@500;600;700;800;900&amp;family=Rajdhani:wght@500;600;700&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Custom Configuration -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            obsidian: {
+              DEFAULT: '#060B0E',
+              900: '#060B0E',
+              850: '#080D12',
+              800: '#0B141B',
+              700: '#0F1E28'
+            },
+            cyanGlow: {
+              DEFAULT: '#50D9D0',
+              bright: '#76FFF5',
+              dark: '#147F83',
+              muted: 'rgba(80, 217, 208, 0.15)'
+            },
+            neonEmerald: '#00FFC2',
+            gateAmber: '#FFB347',
+            iceMist: '#A5C7C8',
+            iceWhite: '#E6F0EF'
+          },
+          fontFamily: {
+            orbitron: ['Orbitron', 'sans-serif'],
+            rajdhani: ['Rajdhani', 'sans-serif'],
+            space: ['Space Grotesk', 'sans-serif'],
+            inter: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+<!-- Custom CSS for Bioluminescent HUD & Glows -->
+<style data-purpose="hud-styling">
+    body {
+      background-color: #060B0E;
+      color: #E6F0EF;
+      font-family: 'Space Grotesk', sans-serif;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 82% 40%, rgba(20, 127, 131, 0.16) 0%, transparent 45%),
+        radial-gradient(circle at 18% 20%, rgba(80, 217, 208, 0.08) 0%, transparent 35%),
+        radial-gradient(circle at 50% 90%, rgba(0, 255, 194, 0.05) 0%, transparent 40%);
+    }
+
+    /* Scanline Subtle Effect */
+    .scanline-grid {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(80, 217, 208, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(80, 217, 208, 0.03) 1px, transparent 1px);
+    }
+
+    /* Glass Panels */
+    .hud-glass-panel {
+      background: linear-gradient(135deg, rgba(11, 23, 30, 0.85) 0%, rgba(6, 15, 21, 0.92) 100%);
+      border: 1px solid rgba(80, 217, 208, 0.22);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6), inset 0 0 12px 0 rgba(80, 217, 208, 0.05);
+      backdrop-filter: blur(12px);
+    }
+
+    .hud-glass-panel-glow {
+      border: 1px solid rgba(80, 217, 208, 0.45);
+      box-shadow: 0 0 25px rgba(80, 217, 208, 0.18), inset 0 0 15px rgba(80, 217, 208, 0.08);
+    }
+
+    /* Cyber Glow Text */
+    .text-glow-cyan {
+      text-shadow: 0 0 10px rgba(80, 217, 208, 0.7), 0 0 20px rgba(80, 217, 208, 0.4);
+    }
+
+    .text-glow-emerald {
+      text-shadow: 0 0 10px rgba(0, 255, 194, 0.7);
+    }
+
+    .text-glow-amber {
+      text-shadow: 0 0 10px rgba(255, 179, 71, 0.7);
+    }
+
+    /* Pulsing animations */
+    @keyframes pulseRing {
+      0% { transform: scale(0.96); opacity: 0.7; }
+      50% { transform: scale(1.04); opacity: 1; filter: drop-shadow(0 0 12px #50D9D0); }
+      100% { transform: scale(0.96); opacity: 0.7; }
+    }
+
+    .pulse-ring {
+      animation: pulseRing 3.5s infinite ease-in-out;
+    }
+
+    /* Custom Scrollbar for Terminals and Kanban */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(6, 11, 14, 0.8);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(80, 217, 208, 0.25);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(80, 217, 208, 0.6);
+    }
+  </style>
+</head>
+<body class="min-h-screen scanline-grid relative selection:bg-cyanGlow selection:text-obsidian-900 pb-24">
+<!-- BEGIN: TopBar -->
+<header class="sticky top-0 z-40 w-full border-b border-cyanGlow/20 bg-obsidian-900/90 backdrop-blur-md px-6 py-2.5">
+<div class="flex items-center justify-between gap-4">
+<!-- Brand & Version Identity -->
+<div class="flex items-center space-x-3.5 min-w-max">
+<div class="relative w-9 h-9 flex items-center justify-center rounded-lg border border-cyanGlow bg-obsidian-800 shadow-[0_0_15px_rgba(80,217,208,0.4)]">
+<svg class="w-6 h-6 text-cyanGlow" fill="none" stroke="currentColor" stroke-width="2.2" viewbox="0 0 24 24">
+<polygon points="12 2 2 22 22 22 12 7" stroke-linejoin="round"></polygon>
+<line stroke-linecap="round" x1="8" x2="16" y1="17" y2="17"></line>
+</svg>
+</div>
+<div>
+<div class="flex items-baseline space-x-2">
+<span class="font-orbitron font-extrabold tracking-widest text-lg text-white text-glow-cyan">THALOS</span>
+<span class="text-[11px] font-mono tracking-wider text-cyanGlow uppercase font-semibold">OS v4.8 AUTONOMOUS</span>
+</div>
+<p class="text-[10px] font-mono tracking-tight text-iceMist uppercase">
+            // REVENUE &amp; SALES PIPELINE ENGINE | YUGANTAR GROWTH CORE
+          </p>
+</div>
+</div>
+<!-- Center Telemetry Diagnostic Ribbon -->
+<div class="hidden xl:flex items-center space-x-1 px-4 py-1.5 rounded-full border border-cyanGlow/30 bg-obsidian-800/80 text-xs font-mono">
+<div class="flex items-center space-x-2 px-3 border-r border-cyanGlow/20">
+<span class="w-2 h-2 rounded-full bg-neonEmerald animate-ping"></span>
+<span class="text-iceMist">VELOCITY:</span>
+<span class="text-white font-bold text-glow-cyan">₹42,500/day</span>
+</div>
+<div class="flex items-center space-x-2 px-3 border-r border-cyanGlow/20">
+<span class="text-iceMist">PIPELINE:</span>
+<span class="text-white font-bold">₹18.5L</span>
+</div>
+<div class="flex items-center space-x-2 px-3 border-r border-cyanGlow/20">
+<span class="text-iceMist">WIN RATE:</span>
+<span class="text-neonEmerald font-bold">68.4%</span>
+</div>
+<div class="flex items-center space-x-2 px-3">
+<span class="text-iceMist">AUTONOMY:</span>
+<span class="text-cyanGlow-bright font-bold">98.4%</span>
+</div>
+</div>
+<!-- Controls & Executive Clearance Profile -->
+<div class="flex items-center space-x-4">
+<!-- View Density Pills -->
+<div class="flex items-center bg-obsidian-800 border border-cyanGlow/20 rounded-lg p-0.5 text-xs font-mono">
+<button class="px-2.5 py-1 text-iceMist hover:text-white transition">FOCUS</button>
+<button class="px-3 py-1 bg-cyanGlow/20 text-cyanGlow-bright border border-cyanGlow/40 rounded font-semibold shadow-[0_0_8px_rgba(80,217,208,0.3)]">SPATIAL</button>
+<button class="px-2.5 py-1 text-iceMist hover:text-white transition">IMMERSIVE</button>
+</div>
+<!-- Notification Bell with Count -->
+<button aria-label="Notifications" class="relative p-2 rounded-lg border border-cyanGlow/20 bg-obsidian-800/80 text-iceMist hover:text-cyanGlow transition">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="absolute -top-1 -right-1 w-4 h-4 bg-gateAmber text-obsidian-900 font-bold text-[9px] rounded-full flex items-center justify-center ring-2 ring-obsidian-900">2</span>
+</button>
+<!-- Executive Avatar Capsule -->
+<div class="flex items-center space-x-2.5 pl-2 border-l border-cyanGlow/20">
+<div class="relative w-8 h-8 rounded-full border border-cyanGlow flex items-center justify-center bg-cyanGlow/10 text-cyanGlow font-orbitron font-bold text-xs shadow-[0_0_10px_rgba(80,217,208,0.4)]">
+            YL
+            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-neonEmerald border-2 border-obsidian-900"></span>
+</div>
+<div class="hidden md:block leading-tight">
+<div class="text-xs font-semibold text-iceWhite">Yugantar Leader</div>
+<div class="text-[9px] font-mono text-cyanGlow tracking-wider">CLEARANCE L7</div>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- END: TopBar -->
+<!-- BEGIN: MainSpatialLayout -->
+<div class="w-full px-6 pt-5 flex gap-6 items-start">
+<!-- Workspace Main Stream (Left / Center Area) -->
+<main class="flex-1 space-y-6 max-w-[calc(100%-380px)]">
+<!-- BEGIN: TelemetryPulseRow -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-4" data-purpose="telemetry-cards">
+<!-- Card 1: Gross Velocity -->
+<div class="hud-glass-panel rounded-xl p-4 relative overflow-hidden">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center space-x-2">
+<span class="p-1 rounded bg-cyanGlow/10 text-cyanGlow border border-cyanGlow/30">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</span>
+<span class="text-xs font-mono uppercase tracking-wider text-iceMist">Gross Velocity Pulse</span>
+</div>
+<span class="text-[11px] font-mono text-neonEmerald bg-neonEmerald/10 px-2 py-0.5 rounded border border-neonEmerald/30">
+              ▲ +14.2% wk
+            </span>
+</div>
+<div class="flex items-baseline space-x-2 mt-1">
+<h2 class="text-2xl font-orbitron font-bold text-white text-glow-cyan">₹42,500</h2>
+<span class="text-xs text-iceMist font-mono">/ target day</span>
+</div>
+<!-- Neon Glow SVG Sparkline -->
+<div class="mt-3 relative h-12 w-full">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 260 50">
+<defs>
+<lineargradient id="cyanSparkGrad" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#50D9D0" stop-opacity="0.4"></stop>
+<stop offset="100%" stop-color="#50D9D0" stop-opacity="0.0"></stop>
+</lineargradient>
+</defs>
+<path d="M0,42 Q30,35 60,38 T120,20 T180,25 T220,10 L260,8 L260,50 L0,50 Z" fill="url(#cyanSparkGrad)"></path>
+<path d="M0,42 Q30,35 60,38 T120,20 T180,25 T220,10 L260,8" fill="none" stroke="#50D9D0" stroke-width="2.5"></path>
+</svg>
+</div>
+<div class="mt-2 pt-2 border-t border-cyanGlow/10 flex justify-between text-[11px] font-mono text-iceMist">
+<span>6 Closures In Flight</span>
+<span class="text-cyanGlow">Avg. Cycle: 4.2 Days</span>
+</div>
+</div>
+<!-- Card 2: Total Pipeline Capitalization -->
+<div class="hud-glass-panel rounded-xl p-4 relative overflow-hidden">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center space-x-2">
+<span class="p-1 rounded bg-cyanGlow/10 text-cyanGlow border border-cyanGlow/30">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</span>
+<span class="text-xs font-mono uppercase tracking-wider text-iceMist">Pipeline Capitalization</span>
+</div>
+<span class="text-[11px] font-mono text-cyanGlow bg-cyanGlow/10 px-2 py-0.5 rounded border border-cyanGlow/30">
+              5 Funnel Stages
+            </span>
+</div>
+<div class="flex items-baseline space-x-2 mt-1">
+<h2 class="text-2xl font-orbitron font-bold text-white">₹18,50,000</h2>
+<span class="text-xs text-iceMist font-mono">Gross Pipeline</span>
+</div>
+<div class="mt-3 space-y-2">
+<div class="flex justify-between text-xs font-mono">
+<span class="text-iceMist">Weighted Forecast:</span>
+<span class="text-cyanGlow-bright font-bold">₹13,20,000</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full bg-obsidian-900 rounded-full h-2 overflow-hidden border border-cyanGlow/20">
+<div class="bg-gradient-to-r from-cyanGlow to-neonEmerald h-full w-[72%] rounded-full shadow-[0_0_8px_#50D9D0]"></div>
+</div>
+</div>
+<div class="mt-2 pt-2 border-t border-cyanGlow/10 flex justify-between text-[11px] font-mono text-iceMist">
+<span>Algorithmic Confidence:</span>
+<span class="text-neonEmerald font-semibold">94.6% Predictive Match</span>
+</div>
+</div>
+<!-- Card 3: Urgent Executive Sign-Off Gate -->
+<div class="hud-glass-panel hud-glass-panel-glow rounded-xl p-4 relative overflow-hidden border-gateAmber/40">
+<div class="absolute -right-6 -top-6 w-20 h-20 bg-gateAmber/10 rounded-full blur-xl pointer-events-none"></div>
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center space-x-2">
+<span class="w-2.5 h-2.5 rounded-full bg-gateAmber animate-pulse"></span>
+<span class="text-xs font-mono uppercase tracking-wider text-gateAmber font-bold">Urgent Executive Gate</span>
+</div>
+<span class="text-[10px] font-mono uppercase bg-gateAmber/20 text-gateAmber px-2 py-0.5 rounded border border-gateAmber/40 font-bold">
+              Action Required
+            </span>
+</div>
+<h3 class="text-base font-orbitron font-bold text-white truncate">Acme Corp SLA Contract</h3>
+<p class="text-xs text-iceMist font-mono mt-0.5">Value: <span class="text-gateAmber font-bold">₹6,00,000</span> • Multi-Agent SLA Tier 1</p>
+<div class="mt-3 flex items-center gap-2">
+<button class="flex-1 py-1.5 px-3 rounded bg-cyanGlow text-obsidian-900 font-rajdhani font-bold text-xs uppercase tracking-wider hover:bg-cyanGlow-bright transition shadow-[0_0_12px_rgba(80,217,208,0.5)]">
+              Approve &amp; Dispatch SLA
+            </button>
+<button class="py-1.5 px-2.5 rounded border border-cyanGlow/30 hover:border-cyanGlow text-iceMist hover:text-white text-xs font-mono transition">
+              Inspect Diff
+            </button>
+</div>
+<div class="mt-2 pt-2 border-t border-cyanGlow/10 flex justify-between text-[10px] font-mono text-iceMist">
+<span>Agents: Deal Architect + Compliance</span>
+<span class="text-gateAmber">PII Cleared</span>
+</div>
+</div>
+</section>
+<!-- END: TelemetryPulseRow -->
+<!-- BEGIN: SalesPipelineKanban -->
+<section class="space-y-3" data-purpose="pipeline-kanban">
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-3">
+<h2 class="text-sm font-orbitron font-bold uppercase tracking-widest text-cyanGlow-bright">
+              Autonomous Sales Pipeline Matrix
+            </h2>
+<span class="text-xs font-mono text-iceMist">// 4 Execution Horizons Active</span>
+</div>
+<div class="flex items-center space-x-2 text-xs font-mono text-iceMist">
+<span>Auto-Nudge: <span class="text-neonEmerald">ENGAGED</span></span>
+<span>•</span>
+<span>Sync: <span class="text-cyanGlow">0.4s ago</span></span>
+</div>
+</div>
+<!-- 4 Columns Container -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">
+<!-- STAGE 1 -->
+<div class="hud-glass-panel rounded-xl p-3 flex flex-col justify-between min-h-[460px]">
+<div>
+<div class="flex items-center justify-between border-b border-cyanGlow/20 pb-2 mb-3">
+<div class="flex items-center space-x-2">
+<span class="w-2 h-2 rounded-full bg-cyanGlow"></span>
+<span class="text-xs font-orbitron font-bold text-white uppercase">Prospect Intel (4)</span>
+</div>
+<span class="text-xs font-mono font-bold text-cyanGlow">₹3.20L</span>
+</div>
+<!-- Prospect Card 1 -->
+<div class="rounded-lg bg-obsidian-800/90 border border-cyanGlow/20 p-2.5 mb-2.5 hover:border-cyanGlow/50 transition">
+<div class="flex items-start justify-between">
+<div>
+<h4 class="text-xs font-bold text-white">NexGen Systems</h4>
+<span class="text-[10px] font-mono text-cyanGlow">Fintech SaaS</span>
+</div>
+<span class="text-xs font-mono font-bold text-white">₹1,80,000</span>
+</div>
+<div class="mt-2 space-y-1 text-[11px] font-mono text-iceMist">
+<div class="flex justify-between">
+<span>Enrichment Score:</span>
+<span class="text-neonEmerald font-bold">98% ICP</span>
+</div>
+<div class="flex justify-between">
+<span>Contact:</span>
+<span class="text-iceWhite">Arjun M. (CTO)</span>
+</div>
+</div>
+<div class="mt-2.5 pt-2 border-t border-cyanGlow/10 flex items-center justify-between">
+<span class="text-[10px] font-mono text-iceMist">By: Research Agent</span>
+<button class="text-[10px] font-mono bg-cyanGlow/20 hover:bg-cyanGlow text-cyanGlow-bright hover:text-obsidian-900 px-2 py-0.5 rounded border border-cyanGlow/30 transition">
+                    Run Sequence
+                  </button>
+</div>
+</div>
+<!-- Prospect Card 2 -->
+<div class="rounded-lg bg-obsidian-800/90 border border-cyanGlow/20 p-2.5 hover:border-cyanGlow/50 transition">
+<div class="flex items-start justify-between">
+<div>
+<h4 class="text-xs font-bold text-white">CloudScale AI</h4>
+<span class="text-[10px] font-mono text-cyanGlow">Compute Infra</span>
+</div>
+<span class="text-xs font-mono font-bold text-white">₹1,40,000</span>
+</div>
+<div class="mt-2 text-[11px] font-mono text-iceMist">
+<p class="leading-relaxed">3 Inbound replies detected. Intent score high.</p>
+</div>
+<div class="mt-2.5 pt-2 border-t border-cyanGlow/10 flex items-center justify-between text-[10px] font-mono">
+<span class="text-neonEmerald">● Outreach Active</span>
+<span class="text-iceMist">22m ago</span>
+</div>
+</div>
+</div>
+<button class="w-full mt-3 py-1.5 rounded border border-dashed border-cyanGlow/30 text-[11px] font-mono text-iceMist hover:text-cyanGlow hover:border-cyanGlow transition">
+              + Ingest Lead Vector
+            </button>
+</div>
+<!-- STAGE 2 -->
+<div class="hud-glass-panel rounded-xl p-3 flex flex-col justify-between min-h-[460px]">
+<div>
+<div class="flex items-center justify-between border-b border-cyanGlow/20 pb-2 mb-3">
+<div class="flex items-center space-x-2">
+<span class="w-2 h-2 rounded-full bg-cyanGlow-bright"></span>
+<span class="text-xs font-orbitron font-bold text-white uppercase">Qualification (3)</span>
+</div>
+<span class="text-xs font-mono font-bold text-cyanGlow">₹4.50L</span>
+</div>
+<!-- Card 1 -->
+<div class="rounded-lg bg-obsidian-800/90 border border-cyanGlow/20 p-2.5 mb-2.5 hover:border-cyanGlow/50 transition">
+<div class="flex items-start justify-between">
+<div>
+<h4 class="text-xs font-bold text-white">Hyperion Logistics</h4>
+<span class="text-[10px] font-mono text-cyanGlow">Supply Chain</span>
+</div>
+<span class="text-xs font-mono font-bold text-white">₹2,50,000</span>
+</div>
+<div class="mt-2 space-y-1 text-[11px] font-mono text-iceMist">
+<div>Autonomous SDR: <span class="text-neonEmerald">Complete</span></div>
+<div>Need: Multi-agent warehouse routing</div>
+</div>
+<div class="mt-2.5 pt-2 border-t border-cyanGlow/10 flex items-center justify-between text-[10px] font-mono">
+<span class="text-cyanGlow-bright">Discovery Doc Ready</span>
+<button class="text-cyanGlow underline hover:text-white">Review</button>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="rounded-lg bg-obsidian-800/90 border border-cyanGlow/20 p-2.5 hover:border-cyanGlow/50 transition">
+<div class="flex items-start justify-between">
+<div>
+<h4 class="text-xs font-bold text-white">VectorSphere</h4>
+<span class="text-[10px] font-mono text-cyanGlow">Data Lakehouse</span>
+</div>
+<span class="text-xs font-mono font-bold text-white">₹2,00,000</span>
+</div>
+<div class="mt-2 text-[11px] font-mono text-iceMist">
+<span class="px-1.5 py-0.5 rounded bg-cyanGlow/10 border border-cyanGlow/30 text-cyanGlow text-[10px]">Grade A ICP</span>
+<p class="mt-1">Evaluating compute cost reduction.</p>
+</div>
+<div class="mt-2.5 pt-2 border-t border-cyanGlow/10 flex items-center justify-between text-[10px] font-mono text-iceMist">
+<span>AI SDR: Marcus</span>
+<span class="text-cyanGlow">Follow-up in 2h</span>
+</div>
+</div>
+</div>
+<button class="w-full mt-3 py-1.5 rounded border border-dashed border-cyanGlow/30 text-[11px] font-mono text-iceMist hover:text-cyanGlow hover:border-cyanGlow transition">
+              + Trigger SDR Scan
+            </button>
+</div>
+<!-- STAGE 3 -->
+<div class="hud-glass-panel rounded-xl p-3 flex flex-col justify-between min-h-[460px] border-gateAmber/30">
+<div>
+<div class="flex items-center justify-between border-b border-gateAmber/30 pb-2 mb-3">
+<div class="flex items-center space-x-2">
+<span class="w-2 h-2 rounded-full bg-gateAmber animate-pulse"></span>
+<span class="text-xs font-orbitron font-bold text-white uppercase">SLA Formulation (2)</span>
+</div>
+<span class="text-xs font-mono font-bold text-gateAmber">₹8.50L</span>
+</div>
+<!-- Acme Corp Card -->
+<div class="rounded-lg bg-obsidian-800/90 border border-gateAmber/40 p-2.5 mb-2.5 shadow-[0_0_10px_rgba(255,179,71,0.1)]">
+<div class="flex items-start justify-between">
+<div>
+<h4 class="text-xs font-bold text-white">Acme Corp Enterprise</h4>
+<span class="text-[10px] font-mono text-gateAmber">Contract Tier 1</span>
+</div>
+<span class="text-xs font-mono font-bold text-gateAmber">₹6,00,000</span>
+</div>
+<p class="mt-2 text-[11px] font-mono text-iceMist">
+                  18-page custom AI Operating Blueprint formulated. 78.4% gross margin.
+                </p>
+<div class="mt-2.5 p-1.5 bg-gateAmber/10 rounded border border-gateAmber/20 flex items-center justify-between">
+<span class="text-[10px] font-mono text-gateAmber font-bold">GATE: EXEC APPROVAL</span>
+<span class="text-[10px] font-mono text-iceWhite">Ready</span>
+</div>
+</div>
+<!-- ZenData Bio Card -->
+<div class="rounded-lg bg-obsidian-800/90 border border-cyanGlow/20 p-2.5 hover:border-cyanGlow/50 transition">
+<div class="flex items-start justify-between">
+<div>
+<h4 class="text-xs font-bold text-white">ZenData Bio</h4>
+<span class="text-[10px] font-mono text-cyanGlow">Clinical Analytics</span>
+</div>
+<span class="text-xs font-mono font-bold text-white">₹2,50,000</span>
+</div>
+<div class="mt-2 text-[11px] font-mono text-iceMist">
+<p>Proposal dispatched. Client legal reviewing SOC2 compliance annex.</p>
+</div>
+<div class="mt-2.5 pt-2 border-t border-cyanGlow/10 flex items-center justify-between text-[10px] font-mono text-iceMist">
+<span>Sign-off: 82% likely</span>
+<span class="text-neonEmerald">In Progress</span>
+</div>
+</div>
+</div>
+<button class="w-full mt-3 py-1.5 rounded border border-dashed border-gateAmber/30 text-[11px] font-mono text-gateAmber hover:bg-gateAmber/10 transition">
+              + Generate Blueprint
+            </button>
+</div>
+<!-- STAGE 4 -->
+<div class="hud-glass-panel rounded-xl p-3 flex flex-col justify-between min-h-[460px] border-neonEmerald/30">
+<div>
+<div class="flex items-center justify-between border-b border-neonEmerald/30 pb-2 mb-3">
+<div class="flex items-center space-x-2">
+<span class="w-2 h-2 rounded-full bg-neonEmerald"></span>
+<span class="text-xs font-orbitron font-bold text-white uppercase">Closed &amp; Won (3)</span>
+</div>
+<span class="text-xs font-mono font-bold text-neonEmerald">₹5.80L MTD</span>
+</div>
+<!-- Card 1 -->
+<div class="rounded-lg bg-obsidian-800/90 border border-neonEmerald/30 p-2.5 mb-2.5">
+<div class="flex items-start justify-between">
+<div>
+<h4 class="text-xs font-bold text-white">Aura Health Core</h4>
+<span class="text-[10px] font-mono text-neonEmerald">Annual Enterprise</span>
+</div>
+<span class="text-xs font-mono font-bold text-neonEmerald">₹3,20,000</span>
+</div>
+<div class="mt-2 text-[11px] font-mono text-iceMist space-y-1">
+<div class="flex items-center space-x-1.5 text-neonEmerald">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24">
+<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span>Stripe Webhook Verified</span>
+</div>
+<p class="text-[10px]">Developer Agent auto-provisioned tenant nodes.</p>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="rounded-lg bg-obsidian-800/90 border border-neonEmerald/30 p-2.5">
+<div class="flex items-start justify-between">
+<div>
+<h4 class="text-xs font-bold text-white">BlueHorizon Retail</h4>
+<span class="text-[10px] font-mono text-neonEmerald">Growth Tier</span>
+</div>
+<span class="text-xs font-mono font-bold text-neonEmerald">₹2,60,000</span>
+</div>
+<div class="mt-2 text-[11px] font-mono text-iceMist space-y-1">
+<div class="flex items-center space-x-1.5 text-neonEmerald">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24">
+<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span>DocuSign Webhook Executed</span>
+</div>
+<p class="text-[10px]">Onboarding sequence initiated autonomously.</p>
+</div>
+</div>
+</div>
+<div class="mt-3 p-2 bg-neonEmerald/10 rounded border border-neonEmerald/20 text-center">
+<span class="text-[11px] font-mono text-neonEmerald font-bold tracking-wider">
+                100% QUOTA PACING
+              </span>
+</div>
+</div>
+</div>
+</section>
+<!-- END: SalesPipelineKanban -->
+<!-- BEGIN: TerminalActivityStream -->
+<section class="hud-glass-panel rounded-xl p-4" data-purpose="live-ai-terminal">
+<div class="flex items-center justify-between border-b border-cyanGlow/20 pb-2 mb-3">
+<div class="flex items-center space-x-2">
+<span class="w-2.5 h-2.5 rounded-full bg-cyanGlow animate-ping"></span>
+<span class="text-xs font-orbitron font-bold text-white uppercase tracking-wider">
+              Deal Architect &amp; Inbound Outreach Live Stream
+            </span>
+</div>
+<span class="text-[10px] font-mono text-cyanGlow bg-cyanGlow/10 px-2 py-0.5 rounded border border-cyanGlow/30">
+            CONSOLE ACTIVE • 4 AGENTS ONLINE
+          </span>
+</div>
+<div class="space-y-2 font-mono text-xs max-h-32 overflow-y-auto pr-2">
+<div class="flex items-start space-x-2">
+<span class="text-iceMist/60">[10:14:02]</span>
+<span class="text-cyanGlow font-semibold">[Deal Architect Agent]:</span>
+<span class="text-iceWhite">Auto-calculated profit margin for Acme Corp: 78.4%. Staged contract for Yugantar sign-off.</span>
+</div>
+<div class="flex items-start space-x-2">
+<span class="text-iceMist/60">[10:15:28]</span>
+<span class="text-neonEmerald font-semibold">[Outreach Agent]:</span>
+<span class="text-iceWhite">Inbound reply received from NexGen CTO: "Let's schedule dynamic demo for Thursday." Sentiment: 0.94 Positive.</span>
+</div>
+<div class="flex items-start space-x-2">
+<span class="text-iceMist/60">[10:16:11]</span>
+<span class="text-gateAmber font-semibold">[Compliance Agent]:</span>
+<span class="text-iceWhite">PII scan verified on Acme Corp SLA v2. Zero PII leaks detected. Cryptographic hash stamped: 0x9f8...bc4.</span>
+</div>
+</div>
+</section>
+<!-- END: TerminalActivityStream -->
+</main>
+<!-- BEGIN: RadialNavigationMatrix (Right Dedicated Wheel) -->
+<aside class="w-[360px] sticky top-20 flex flex-col items-center" data-purpose="right-radial-navigation">
+<!-- Radial Navigation Container -->
+<div class="hud-glass-panel hud-glass-panel-glow rounded-3xl p-6 w-full flex flex-col items-center relative overflow-hidden">
+<!-- Background Ambient Rings -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
+<div class="w-72 h-72 rounded-full border border-cyanGlow/30 pulse-ring"></div>
+<div class="absolute w-56 h-56 rounded-full border border-dashed border-cyanGlow/40"></div>
+<div class="absolute w-40 h-40 rounded-full border border-cyanGlow/20"></div>
+</div>
+<!-- Wheel Title Tag -->
+<div class="text-center z-10 mb-2">
+<div class="text-[10px] font-mono uppercase tracking-widest text-cyanGlow">SPATIAL NAVIGATION DECK</div>
+<h3 class="text-sm font-orbitron font-bold text-white tracking-wider">THALOS RADIAL MATRIX</h3>
+</div>
+<!-- Interactive SVG Radial Orbital Canvas Area -->
+<div class="relative w-64 h-64 my-4 flex items-center justify-center">
+<!-- Connecting Orbital Lines -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none">
+<circle cx="128" cy="128" fill="none" r="92" stroke="rgba(80, 217, 208, 0.25)" stroke-dasharray="4 4" stroke-width="1.5"></circle>
+<!-- Active locked highlight ray to Revenue node -->
+<line class="filter drop-shadow-[0_0_8px_#50D9D0]" stroke="#50D9D0" stroke-linecap="round" stroke-width="2" x1="128" x2="208" y1="128" y2="82"></line>
+</svg>
+<!-- Center Glowing THALOS Core Button -->
+<button class="relative z-20 w-20 h-20 rounded-full bg-gradient-to-tr from-obsidian-800 to-obsidian-700 border-2 border-cyanGlow flex flex-col items-center justify-center shadow-[0_0_30px_rgba(80,217,208,0.7)] group hover:scale-105 transition-all" data-purpose="core-center-button">
+<div class="absolute inset-1 rounded-full border border-cyanGlow/40 animate-spin" style="animation-duration: 18s;"></div>
+<svg class="w-7 h-7 text-cyanGlow group-hover:text-cyanGlow-bright transition" fill="none" stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24">
+<polygon points="12 2 2 22 22 22 12 7" stroke-linejoin="round"></polygon>
+</svg>
+<span class="text-[9px] font-orbitron font-extrabold text-cyanGlow tracking-wider mt-0.5">THALOS</span>
+</button>
+<!-- ORBITAL NODES (Clockwise distribution) -->
+<!-- 1. Node: My Day (Top-Left) -->
+<button class="absolute top-4 left-10 z-20 flex flex-col items-center group" title="My Day">
+<div class="w-9 h-9 rounded-full bg-obsidian-800 border border-cyanGlow/40 flex items-center justify-center text-iceMist group-hover:text-cyanGlow group-hover:border-cyanGlow group-hover:scale-110 transition shadow-md">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="5"></circle>
+<path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+</svg>
+</div>
+<span class="text-[9px] font-mono text-iceMist group-hover:text-white mt-1">My Day</span>
+</button>
+<!-- 2. Node: Digital World (Top-Center) -->
+<button class="absolute -top-1 left-28 z-20 flex flex-col items-center group" title="Digital World">
+<div class="w-9 h-9 rounded-full bg-obsidian-800 border border-cyanGlow/40 flex items-center justify-center text-iceMist group-hover:text-cyanGlow group-hover:border-cyanGlow group-hover:scale-110 transition shadow-md">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"></path>
+</svg>
+</div>
+<span class="text-[9px] font-mono text-iceMist group-hover:text-white mt-1">World</span>
+</button>
+<!-- 3. Node: REVENUE (Active & Locked - Top Right) -->
+<div class="absolute top-6 right-3 z-30 flex flex-col items-center">
+<div class="relative">
+<!-- Glow ring indicator -->
+<div class="absolute -inset-1.5 rounded-full bg-cyanGlow/40 blur-sm animate-pulse"></div>
+<button class="relative w-11 h-11 rounded-full bg-cyanGlow text-obsidian-900 font-bold flex items-center justify-center shadow-[0_0_20px_#50D9D0] transform scale-110 ring-2 ring-white">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24">
+<path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+<!-- Active locked badge -->
+<span class="text-[10px] font-orbitron font-bold text-cyanGlow text-glow-cyan mt-1.5 bg-obsidian-900/90 px-2 py-0.5 rounded-full border border-cyanGlow">
+              Revenue (Active)
+            </span>
+</div>
+<!-- 4. Node: AI Team (Mid-Right) -->
+<button class="absolute top-28 -right-2 z-20 flex flex-col items-center group" title="AI Team">
+<div class="w-9 h-9 rounded-full bg-obsidian-800 border border-cyanGlow/40 flex items-center justify-center text-iceMist group-hover:text-cyanGlow group-hover:border-cyanGlow group-hover:scale-110 transition shadow-md">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<span class="text-[9px] font-mono text-iceMist group-hover:text-white mt-1">AI Team</span>
+</button>
+<!-- 5. Node: Knowledge (Bottom-Right) -->
+<button class="absolute bottom-5 right-5 z-20 flex flex-col items-center group" title="Knowledge Base">
+<div class="w-9 h-9 rounded-full bg-obsidian-800 border border-cyanGlow/40 flex items-center justify-center text-iceMist group-hover:text-cyanGlow group-hover:border-cyanGlow group-hover:scale-110 transition shadow-md">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<span class="text-[9px] font-mono text-iceMist group-hover:text-white mt-1">Knowledge</span>
+</button>
+<!-- 6. Node: Execution (Bottom-Center) -->
+<button class="absolute -bottom-2 left-28 z-20 flex flex-col items-center group" title="Execution">
+<div class="w-9 h-9 rounded-full bg-obsidian-800 border border-cyanGlow/40 flex items-center justify-center text-iceMist group-hover:text-cyanGlow group-hover:border-cyanGlow group-hover:scale-110 transition shadow-md">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<span class="text-[9px] font-mono text-iceMist group-hover:text-white mt-1">Execution</span>
+</button>
+<!-- 7. Node: Settings (Bottom-Left) -->
+<button class="absolute bottom-5 left-6 z-20 flex flex-col items-center group" title="Settings">
+<div class="w-9 h-9 rounded-full bg-obsidian-800 border border-cyanGlow/40 flex items-center justify-center text-iceMist group-hover:text-cyanGlow group-hover:border-cyanGlow group-hover:scale-110 transition shadow-md">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round"></path>
+<circle cx="12" cy="12" r="3"></circle>
+</svg>
+</div>
+<span class="text-[9px] font-mono text-iceMist group-hover:text-white mt-1">Settings</span>
+</button>
+</div>
+<!-- Radial Deck Metadata Footer -->
+<div class="w-full mt-3 pt-3 border-t border-cyanGlow/20 text-center">
+<p class="text-[10px] font-mono text-cyanGlow tracking-wider">
+            THALOS RADIAL MATRIX • Spatial Navigation Deck • Revenue Locked
+          </p>
+<div class="mt-2 flex items-center justify-center space-x-2 text-[10px] font-mono text-iceMist">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-cyanGlow"></span>
+<span>Haptic Dial Ready</span>
+<span>•</span>
+<span>Spatial Depth: 3D Layer</span>
+</div>
+</div>
+</div>
+<!-- Quick Executive Agent Status Card -->
+<div class="hud-glass-panel rounded-2xl p-4 w-full mt-4 text-xs font-mono space-y-2 border-cyanGlow/20">
+<div class="flex items-center justify-between text-iceMist">
+<span>Active SDR Agent:</span>
+<span class="text-neonEmerald font-bold">Marcus-v4</span>
+</div>
+<div class="flex items-center justify-between text-iceMist">
+<span>Proposal Architect:</span>
+<span class="text-cyanGlow font-bold">Thalos-Core-Deal</span>
+</div>
+<div class="flex items-center justify-between text-iceMist">
+<span>Contract SLA Guard:</span>
+<span class="text-gateAmber font-bold">Audit-Engine 9</span>
+</div>
+</div>
+</aside>
+<!-- END: RadialNavigationMatrix -->
+</div>
+<!-- END: MainSpatialLayout -->
+<!-- BEGIN: FloatingBottomCommandCapsule -->
+<aside class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-full max-w-3xl px-4" data-purpose="floating-command-capsule">
+<div class="hud-glass-panel hud-glass-panel-glow rounded-full px-4 py-2.5 flex items-center space-x-3.5 shadow-[0_10px_40px_rgba(0,0,0,0.8)] border border-cyanGlow/50">
+<!-- Voice Waveform / Mic Glyph -->
+<button aria-label="Voice Command Input" class="p-2 rounded-full bg-cyanGlow/20 text-cyanGlow-bright border border-cyanGlow/50 hover:bg-cyanGlow hover:text-obsidian-900 transition flex items-center justify-center">
+<svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<!-- Simulated Dynamic Voice Bars -->
+<div class="hidden sm:flex items-center space-x-1 h-4 px-1">
+<span class="w-0.5 h-3 bg-cyanGlow rounded-full animate-bounce"></span>
+<span class="w-0.5 h-5 bg-cyanGlow-bright rounded-full animate-bounce" style="animation-delay: 0.15s"></span>
+<span class="w-0.5 h-2 bg-cyanGlow rounded-full animate-bounce" style="animation-delay: 0.3s"></span>
+<span class="w-0.5 h-4 bg-cyanGlow-bright rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+</div>
+<!-- Autonomous Agent Command Input -->
+<div class="flex-1">
+<input class="w-full bg-transparent border-0 text-white placeholder-iceMist/50 text-xs sm:text-sm font-space focus:ring-0 focus:outline-none" placeholder="Ask THALOS or direct Deal Architect (e.g. 'Generate proposal for Hyperion Logistics', 'Simulate Q3 revenue forecast')..." type="text"/>
+</div>
+<!-- Execute Command Trigger Button -->
+<button aria-label="Dispatch Command" class="w-8 h-8 rounded-full bg-cyanGlow hover:bg-cyanGlow-bright text-obsidian-900 flex items-center justify-center shadow-[0_0_15px_#50D9D0] transition transform hover:scale-105">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24">
+<path d="M5 10l7-7m0 0l7 7m-7-7v18" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+</aside>
+<!-- END: FloatingBottomCommandCapsule -->
+</body></html>

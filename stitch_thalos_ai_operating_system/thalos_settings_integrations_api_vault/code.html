@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-[#05090D] text-[#E6F0EF] antialiased" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>THALOS — All Environments Unified Overview / Holo-Matrix Deck</title>
+<!-- Tailwind CSS v3 with Forms & Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Custom Configuration -->
+<script id="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            thalos: {
+              obsidian: '#05090D',
+              deep: '#080D12',
+              card: '#0B1921',
+              cardLight: '#10232B',
+              border: '#163542',
+              cyan: '#50D9D0',
+              cyanDark: '#1E626B',
+              muted: '#5C8996',
+              amber: '#F59E0B',
+              ice: '#E6F0EF'
+            }
+          },
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+            sans: ['"Inter"', 'ui-sans-serif', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+<meta content="web_dashboard" name="shell-type"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/></head>
+<body class="min-h-full font-mono bg-[#05090D] text-[#E6F0EF] selection:bg-[#50D9D0]/30 selection:text-white flex flex-col justify-between p-3 lg:p-4 space-y-3 overflow-x-hidden border-box">
+<!-- BEGIN: MasterHeader -->
+<header class="w-full bg-[#080D12] border border-[#163542] rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-[0_0_20px_rgba(80,217,208,0.05)]" data-purpose="master-system-header">
+<!-- Brand & System Identity -->
+<div class="flex items-center space-x-3.5">
+<div class="relative w-9 h-9 rounded-lg border border-[#50D9D0]/50 bg-[#0B1921] flex items-center justify-center shadow-[0_0_15px_rgba(80,217,208,0.25)]">
+<svg class="w-5 h-5 text-[#50D9D0]" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polygon points="12 2 2 22 22 22 12 2"></polygon>
+<line x1="12" x2="12" y1="11" y2="17"></line>
+</svg>
+<span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#50D9D0] rounded-full animate-ping"></span>
+<span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#50D9D0] rounded-full"></span>
+</div>
+<div>
+<div class="flex items-center space-x-2">
+<span class="text-sm font-bold tracking-wider text-white">THALOS OS <span class="text-[#50D9D0] text-xs font-normal">v4.8 AUTONOMOUS</span></span>
+<span class="px-2 py-0.5 text-[10px] uppercase font-semibold tracking-wider text-[#50D9D0] bg-[#50D9D0]/10 border border-[#50D9D0]/40 rounded-full">
+            7 ENVIRONMENTS ONLINE // ALL MESHED
+          </span>
+</div>
+<p class="text-[11px] text-[#5C8996] tracking-tight uppercase">// MULTI-ENVIRONMENT HOLO-MATRIX DECK // YUGANTAR GROWTH CORE</p>
+</div>
+</div>
+<!-- Center System Telemetry Metrics -->
+<div class="hidden xl:flex items-center space-x-4 text-[11px] bg-[#05090D] border border-[#163542] px-3.5 py-1.5 rounded-lg text-[#5C8996]">
+<div class="flex items-center space-x-1.5">
+<span class="text-white font-medium">TOTAL LOAD:</span>
+<span class="text-[#50D9D0] font-semibold">42.8 GFLOPs</span>
+</div>
+<span class="text-[#163542]">|</span>
+<div class="flex items-center space-x-1.5">
+<span class="text-white font-medium">NEURAL SYNC:</span>
+<span class="text-[#50D9D0] font-semibold">99.8%</span>
+</div>
+<span class="text-[#163542]">|</span>
+<div class="flex items-center space-x-1.5">
+<span class="text-white font-medium">CROSS-ENV LATENCY:</span>
+<span class="text-[#50D9D0] font-semibold">4ms</span>
+</div>
+<span class="text-[#163542]">|</span>
+<div class="flex items-center space-x-1.5">
+<span class="text-white font-medium">ACTIVE AGENTS:</span>
+<span class="text-emerald-400 font-semibold">9/9 ONLINE</span>
+</div>
+</div>
+<!-- Navigation Modes & Profile Badge -->
+<div class="flex items-center space-x-3">
+<!-- Deck Mode Switcher -->
+<div class="flex items-center bg-[#0B1921] border border-[#163542] rounded-lg p-0.5 text-[11px]">
+<button class="px-2.5 py-1 rounded text-[#5C8996] hover:text-white transition">FOCUS</button>
+<button class="px-2.5 py-1 rounded bg-[#50D9D0]/20 text-[#50D9D0] border border-[#50D9D0]/40 font-semibold shadow-[0_0_10px_rgba(80,217,208,0.2)]">SPATIAL</button>
+<button class="px-2.5 py-1 rounded text-[#5C8996] hover:text-white transition">IMMERSIVE</button>
+</div>
+<!-- Notification Trigger -->
+<button class="relative p-2 bg-[#0B1921] border border-[#163542] hover:border-[#50D9D0]/40 rounded-lg text-[#5C8996] hover:text-[#50D9D0] transition">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#F59E0B] rounded-full"></span>
+</button>
+<!-- Executive Profile Badge -->
+<div class="flex items-center space-x-2.5 pl-2 border-l border-[#163542]">
+<div class="w-8 h-8 rounded-lg bg-[#50D9D0]/10 border border-[#50D9D0]/50 flex items-center justify-center text-[#50D9D0] font-bold text-xs">
+          YL
+        </div>
+<div class="text-left hidden sm:block">
+<div class="text-[12px] font-semibold text-white leading-tight">Yugantar Leader</div>
+<div class="text-[10px] text-[#5C8996] flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Executive Clearance
+          </div>
+</div>
+</div>
+</div>
+</header>
+<!-- END: MasterHeader -->
+<!-- BEGIN: MainDashboardGrid -->
+<main class="w-full flex-grow grid grid-cols-1 xl:grid-cols-12 gap-3.5"><div class="flex flex-col w-full">
+<!-- Layout Wrapper that bridges shell to bespoke THALOS HUD -->
+<div class="w-full space-y-4 font-mono text-[#E6F0EF]">
+<!-- EXECUTIVE TELEMETRY HUD STRIP -->
+<section class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-12 gap-3" data-purpose="executive-telemetry-row">
+<!-- Vault Security & HSM Health (col 4) -->
+<div class="xl:col-span-4 bg-[#081219]/90 backdrop-blur-md rounded-xl p-4 shadow-[0_4px_24px_rgba(0,0,0,0.45)] relative overflow-hidden group">
+<div class="absolute -right-12 -top-12 w-36 h-36 bg-[#00F0FF]/10 rounded-full blur-2xl group-hover:bg-[#00F0FF]/20 transition-all duration-700 pointer-events-none"></div>
+<div class="flex items-start justify-between">
+<div class="flex items-center space-x-2">
+<span class="w-2.5 h-2.5 rounded-full bg-[#10B981] shadow-[0_0_8px_#10B981] animate-pulse"></span>
+<span class="text-[11px] font-bold tracking-wider text-[#00F0FF] uppercase">HSM Vault &amp; Cryptographic Core</span>
+</div>
+<span class="text-[10px] px-2 py-0.5 rounded bg-[#10B981]/15 text-[#10B981] font-semibold">100% ENCRYPTED</span>
+</div>
+<div class="mt-3 flex items-baseline space-x-3">
+<div class="text-2xl font-bold text-white tracking-tight">AES-256-GCM</div>
+<span class="text-[11px] text-[#5C8996]">AWS CloudHSM FIPS 140-3 L3</span>
+</div>
+<div class="mt-4 grid grid-cols-2 gap-2 text-[11px] pt-3 bg-[#050C11]/50 rounded-lg p-2.5">
+<div>
+<div class="text-[#5C8996] text-[10px] uppercase">Automated Key Rotation</div>
+<div class="text-white font-semibold mt-0.5 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-[#00F0FF]">sync</span>
+              In 12 Days (T-288h)
+            </div>
+</div>
+<div>
+<div class="text-[#5C8996] text-[10px] uppercase">Entropy Source / Leaks</div>
+<div class="text-[#10B981] font-semibold mt-0.5 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-[#10B981]">verified_user</span>
+              Zero Leaks Detected
+            </div>
+</div>
+</div>
+</div>
+<!-- Compute & LLM Gateway Spend (col 4) -->
+<div class="xl:col-span-4 bg-[#081219]/90 backdrop-blur-md rounded-xl p-4 shadow-[0_4px_24px_rgba(0,0,0,0.45)] relative overflow-hidden">
+<div class="flex items-start justify-between">
+<div class="flex items-center space-x-2">
+<span class="w-2.5 h-2.5 rounded-full bg-[#00F0FF] shadow-[0_0_8px_#00F0FF]"></span>
+<span class="text-[11px] font-bold tracking-wider text-[#00F0FF] uppercase">LLM Gateways &amp; Inference Burn</span>
+</div>
+<span class="text-[10px] px-2 py-0.5 rounded bg-[#00F0FF]/15 text-[#00F0FF] font-semibold">MTD CYCLE 56.8%</span>
+</div>
+<div class="mt-3 flex items-baseline justify-between">
+<div class="flex items-baseline space-x-2">
+<span class="text-2xl font-bold text-white tracking-tight">$1,420.80</span>
+<span class="text-[11px] text-[#5C8996]">/ $2,500.00 CAP</span>
+</div>
+<div class="text-[11px] text-[#10B981] font-semibold flex items-center">
+<span class="material-symbols-outlined text-[14px] mr-0.5">trending_up</span>
+            48.2M tok/day
+          </div>
+</div>
+<!-- Budget Gauge -->
+<div class="mt-3 w-full bg-[#050C11] rounded-full h-2 overflow-hidden relative">
+<div class="bg-gradient-to-r from-[#00F0FF] via-[#22D3EE] to-[#F59E0B] h-full rounded-full transition-all duration-1000" style="width: 56.83%;"></div>
+</div>
+<div class="mt-2.5 flex items-center justify-between text-[10px] text-[#5C8996]">
+<span>p95 Inference Latency: <strong class="text-white">184ms</strong></span>
+<span>14/14 Gateway Clusters Hot</span>
+</div>
+</div>
+<!-- Critical Action Gate / Key Expiration Warning (col 4) -->
+<div class="xl:col-span-4 bg-[#081219]/90 backdrop-blur-md rounded-xl p-4 shadow-[0_4px_24px_rgba(0,0,0,0.45)] relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-[#F59E0B] shadow-[0_0_12px_#F59E0B]"></div>
+<div class="flex items-start justify-between pl-1">
+<div class="flex items-center space-x-2">
+<span class="w-2.5 h-2.5 rounded-full bg-[#F59E0B] shadow-[0_0_8px_#F59E0B] animate-ping"></span>
+<span class="text-[11px] font-bold tracking-wider text-[#F59E0B] uppercase">Zero-Trust Action Required</span>
+</div>
+<span class="text-[10px] px-2 py-0.5 rounded bg-[#F59E0B]/20 text-[#F59E0B] font-bold">EXPIRING IN 48H</span>
+</div>
+<div class="mt-2.5 pl-1">
+<div class="text-sm font-semibold text-white truncate">Stripe Production Webhook Secret v2</div>
+<p class="text-[11px] text-[#5C8996] mt-0.5">Automated rolling cutoff scheduled. Failure to renew triggers billing circuit fallback.</p>
+</div>
+<div class="mt-3 pl-1 flex items-center space-x-2">
+<button class="flex-1 px-3 py-1.5 bg-[#F59E0B] hover:bg-amber-300 text-[#05090D] font-bold text-[11px] rounded-lg shadow-[0_0_12px_rgba(245,158,11,0.4)] transition flex items-center justify-center space-x-1.5 cursor-pointer">
+<span class="material-symbols-outlined text-[14px]">key</span>
+<span>Rotate Webhook Key</span>
+</button>
+<button class="px-3 py-1.5 bg-[#0B1E28] hover:bg-[#122A38] text-[#00F0FF] text-[11px] font-semibold rounded-lg transition flex items-center space-x-1 cursor-pointer">
+<span class="material-symbols-outlined text-[14px]">manage_search</span>
+<span>Audit</span>
+</button>
+</div>
+</div>
+</section>
+<!-- CORE WORKSPACE: 3-COLUMN INTEGRATION MATRIX + RADIAL CONTROL DECK -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+<!-- LEFT & CENTER: SETTINGS MATRIX (8 COLS) -->
+<div class="xl:col-span-8 space-y-4">
+<!-- SECTION 01: MODEL GATEWAYS & INFERENCE ORCHESTRATION -->
+<section class="bg-[#081219]/90 backdrop-blur-md rounded-xl p-4 shadow-[0_4px_24px_rgba(0,0,0,0.45)] relative overflow-hidden" data-purpose="model-gateways-hub">
+<div class="flex flex-wrap items-center justify-between pb-3 mb-3 bg-[#050C11]/50 -mx-4 -mt-4 px-4 pt-4">
+<div class="flex items-center space-x-3">
+<div class="w-7 h-7 rounded-lg bg-[#00F0FF]/10 text-[#00F0FF] flex items-center justify-center shadow-[0_0_10px_rgba(0,240,255,0.3)]">
+<span class="material-symbols-outlined text-[18px]">psychology</span>
+</div>
+<div>
+<h2 class="text-sm font-bold text-white tracking-wide">01 // Model Gateways &amp; Inference Orchestration</h2>
+<p class="text-[10px] text-[#5C8996] uppercase">Autonomous Model Routing // Failover Mesh // Multi-Agent Consensus</p>
+</div>
+</div>
+<div class="flex items-center space-x-2 text-[10px]">
+<span class="text-[#5C8996]">TOTAL ROUTED TOKENS:</span>
+<span class="text-[#00F0FF] font-bold">1,894,204,112</span>
+<button class="ml-2 px-2 py-1 rounded bg-[#00F0FF]/15 text-[#00F0FF] hover:bg-[#00F0FF]/25 transition font-semibold">
+                + Provision Provider
+              </button>
+</div>
+</div>
+<!-- Gateway Grid -->
+<div class="space-y-2">
+<!-- Row 1: Claude 3.5 Sonnet -->
+<div class="bg-[#050C11] rounded-lg p-3 hover:bg-[#0B1E28]/60 transition flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+<div class="flex items-center space-x-3 min-w-0">
+<div class="w-8 h-8 rounded-md bg-[#D97706]/10 text-[#F59E0B] flex items-center justify-center font-bold text-xs shrink-0">
+<span class="material-symbols-outlined text-[18px]">neurology</span>
+</div>
+<div class="min-w-0">
+<div class="flex items-center space-x-2 truncate">
+<span class="text-xs font-bold text-white truncate">Anthropic Claude 3.5 Sonnet</span>
+<span class="px-1.5 py-0.5 rounded text-[9px] bg-[#10B981]/20 text-[#10B981] font-semibold">PRIMARY COGNITIVE</span>
+</div>
+<div class="text-[10px] text-[#5C8996] truncate">Attached: Deal Architect, DevAgent-X, Executive Briefing Engine</div>
+</div>
+</div>
+<div class="flex items-center space-x-4 text-[11px] justify-between sm:justify-end shrink-0">
+<div class="text-right">
+<span class="text-[9px] text-[#5C8996] block">RATE LIMIT (TPM)</span>
+<span class="text-white font-semibold">400k / 400k</span>
+</div>
+<div class="text-right">
+<span class="text-[9px] text-[#5C8996] block">UPTIME</span>
+<span class="text-[#10B981] font-bold">99.98%</span>
+</div>
+<div class="flex items-center space-x-1.5 pl-2">
+<span class="w-2 h-2 rounded-full bg-[#10B981] shadow-[0_0_6px_#10B981]"></span>
+<span class="text-[10px] text-white font-semibold">ACTIVE</span>
+</div>
+</div>
+</div>
+<!-- Row 2: OpenAI GPT-4o & O3-mini -->
+<div class="bg-[#050C11] rounded-lg p-3 hover:bg-[#0B1E28]/60 transition flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+<div class="flex items-center space-x-3 min-w-0">
+<div class="w-8 h-8 rounded-md bg-[#10B981]/10 text-[#10B981] flex items-center justify-center font-bold text-xs shrink-0">
+<span class="material-symbols-outlined text-[18px]">hub</span>
+</div>
+<div class="min-w-0">
+<div class="flex items-center space-x-2 truncate">
+<span class="text-xs font-bold text-white truncate">OpenAI GPT-4o &amp; O3-Mini Cluster</span>
+<span class="px-1.5 py-0.5 rounded text-[9px] bg-[#00F0FF]/20 text-[#00F0FF] font-semibold">SYNTHESIS &amp; AUDIT</span>
+</div>
+<div class="text-[10px] text-[#5C8996] truncate">Attached: Cross-Agent Consensus, Financial Ledger Verification</div>
+</div>
+</div>
+<div class="flex items-center space-x-4 text-[11px] justify-between sm:justify-end shrink-0">
+<div class="text-right">
+<span class="text-[9px] text-[#5C8996] block">p95 LATENCY</span>
+<span class="text-white font-semibold">120ms</span>
+</div>
+<div class="text-right">
+<span class="text-[9px] text-[#5C8996] block">EST. MTD BURN</span>
+<span class="text-[#00F0FF] font-bold">$612.40</span>
+</div>
+<div class="flex items-center space-x-1.5 pl-2">
+<span class="w-2 h-2 rounded-full bg-[#10B981] shadow-[0_0_6px_#10B981]"></span>
+<span class="text-[10px] text-white font-semibold">ACTIVE</span>
+</div>
+</div>
+</div>
+<!-- Row 3: ElevenLabs Voice Synthesis -->
+<div class="bg-[#050C11] rounded-lg p-3 hover:bg-[#0B1E28]/60 transition flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+<div class="flex items-center space-x-3 min-w-0">
+<div class="w-8 h-8 rounded-md bg-[#8B5CF6]/10 text-[#A78BFA] flex items-center justify-center font-bold text-xs shrink-0">
+<span class="material-symbols-outlined text-[18px]">graphic_eq</span>
+</div>
+<div class="min-w-0">
+<div class="flex items-center space-x-2 truncate">
+<span class="text-xs font-bold text-white truncate">ElevenLabs Voice Synthesizer v3</span>
+<span class="px-1.5 py-0.5 rounded text-[9px] bg-[#A78BFA]/20 text-[#A78BFA] font-semibold">AUDIO DISPATCH</span>
+</div>
+<div class="text-[10px] text-[#5C8996] truncate">Attached: Executive Intelligence Briefings, Voice Command Relay</div>
+</div>
+</div>
+<div class="flex items-center space-x-4 text-[11px] justify-between sm:justify-end shrink-0">
+<div class="text-right">
+<span class="text-[9px] text-[#5C8996] block">CUSTOM PROFILES</span>
+<span class="text-white font-semibold">4 Neural Clones</span>
+</div>
+<div class="text-right">
+<span class="text-[9px] text-[#5C8996] block">SYNTHESIS QUEUE</span>
+<span class="text-[#10B981] font-bold">0 Pending</span>
+</div>
+<div class="flex items-center space-x-1.5 pl-2">
+<span class="w-2 h-2 rounded-full bg-[#10B981] shadow-[0_0_6px_#10B981]"></span>
+<span class="text-[10px] text-white font-semibold">READY</span>
+</div>
+</div>
+</div>
+<!-- Row 4: Perplexity & Tavily Research APIs -->
+<div class="bg-[#050C11] rounded-lg p-3 hover:bg-[#0B1E28]/60 transition flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+<div class="flex items-center space-x-3 min-w-0">
+<div class="w-8 h-8 rounded-md bg-[#00F0FF]/10 text-[#00F0FF] flex items-center justify-center font-bold text-xs shrink-0">
+<span class="material-symbols-outlined text-[18px]">travel_explore</span>
+</div>
+<div class="min-w-0">
+<div class="flex items-center space-x-2 truncate">
+<span class="text-xs font-bold text-white truncate">Perplexity Pro &amp; Tavily Deep Search</span>
+<span class="px-1.5 py-0.5 rounded text-[9px] bg-[#00F0FF]/20 text-[#00F0FF] font-semibold">LIVE RECON</span>
+</div>
+<div class="text-[10px] text-[#5C8996] truncate">Autonomous Lead Scraping, Competitive Dossiers &amp; Regulatory Intel</div>
+</div>
+</div>
+<div class="flex items-center space-x-4 text-[11px] justify-between sm:justify-end shrink-0">
+<div class="text-right">
+<span class="text-[9px] text-[#5C8996] block">CALLS (MTD)</span>
+<span class="text-white font-semibold">8,240 calls</span>
+</div>
+<div class="text-right">
+<span class="text-[9px] text-[#5C8996] block">CACHE HIT</span>
+<span class="text-[#00F0FF] font-bold">78.4%</span>
+</div>
+<div class="flex items-center space-x-1.5 pl-2">
+<span class="w-2 h-2 rounded-full bg-[#10B981] shadow-[0_0_6px_#10B981]"></span>
+<span class="text-[10px] text-white font-semibold">ONLINE</span>
+</div>
+</div>
+</div>
+<!-- Row 5: DeepSeek-V3 / OpenRouter Standby -->
+<div class="bg-[#050C11] rounded-lg p-3 hover:bg-[#0B1E28]/60 transition flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+<div class="flex items-center space-x-3 min-w-0">
+<div class="w-8 h-8 rounded-md bg-[#5C8996]/15 text-[#5C8996] flex items-center justify-center font-bold text-xs shrink-0">
+<span class="material-symbols-outlined text-[18px]">electrical_services</span>
+</div>
+<div class="min-w-0">
+<div class="flex items-center space-x-2 truncate">
+<span class="text-xs font-bold text-white truncate">DeepSeek-V3 / OpenRouter Circuit</span>
+<span class="px-1.5 py-0.5 rounded text-[9px] bg-[#5C8996]/20 text-[#5C8996] font-semibold">FAILOVER MATRIX</span>
+</div>
+<div class="text-[10px] text-[#5C8996] truncate">Auto-failover fallback engine if primary gateway latency &gt; 900ms</div>
+</div>
+</div>
+<div class="flex items-center space-x-4 text-[11px] justify-between sm:justify-end shrink-0">
+<div class="text-right">
+<span class="text-[9px] text-[#5C8996] block">CIRCUIT BREAKER</span>
+<span class="text-[#10B981] font-semibold">Armed (0 trips)</span>
+</div>
+<div class="text-right">
+<span class="text-[9px] text-[#5C8996] block">HOT STANDBY</span>
+<span class="text-white font-semibold">100% Synced</span>
+</div>
+<div class="flex items-center space-x-1.5 pl-2">
+<span class="w-2 h-2 rounded-full bg-[#00F0FF] shadow-[0_0_6px_#00F0FF]"></span>
+<span class="text-[10px] text-white font-semibold">STANDBY</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 02 & SECTION 03: TWO COLUMN SUBGRID -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- SECTION 02: Core Business Integrations & Webhooks -->
+<section class="bg-[#081219]/90 backdrop-blur-md rounded-xl p-4 shadow-[0_4px_24px_rgba(0,0,0,0.45)] relative overflow-hidden" data-purpose="business-integrations">
+<div class="flex items-center justify-between pb-3 mb-3 bg-[#050C11]/50 -mx-4 -mt-4 px-4 pt-4">
+<div class="flex items-center space-x-2.5">
+<div class="w-6 h-6 rounded bg-[#00F0FF]/10 text-[#00F0FF] flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]">sync_alt</span>
+</div>
+<h3 class="text-xs font-bold text-white tracking-wide uppercase">02 // Business Integrations &amp; Webhooks</h3>
+</div>
+<span class="text-[10px] text-[#10B981] font-semibold">4 CONNECTED</span>
+</div>
+<div class="space-y-2.5">
+<!-- Stripe -->
+<div class="p-2.5 bg-[#050C11] rounded-lg flex items-center justify-between">
+<div class="flex items-center space-x-2.5">
+<span class="w-2 h-2 rounded-full bg-[#10B981]"></span>
+<div>
+<div class="text-xs font-bold text-white">Stripe Custom Billing</div>
+<div class="text-[10px] text-[#5C8996]">Webhook Ingest: 42 events/sec nominal</div>
+</div>
+</div>
+<button class="px-2 py-1 bg-[#0B1E28] hover:bg-[#122A38] text-[10px] text-[#00F0FF] rounded font-semibold transition">
+                  Configure
+                </button>
+</div>
+<!-- GitHub Enterprise -->
+<div class="p-2.5 bg-[#050C11] rounded-lg flex items-center justify-between">
+<div class="flex items-center space-x-2.5">
+<span class="w-2 h-2 rounded-full bg-[#10B981]"></span>
+<div>
+<div class="text-xs font-bold text-white">GitHub Enterprise v4</div>
+<div class="text-[10px] text-[#5C8996]">SSH Deploy Keys Verified // 18 PRs Autonomous</div>
+</div>
+</div>
+<button class="px-2 py-1 bg-[#0B1E28] hover:bg-[#122A38] text-[10px] text-[#00F0FF] rounded font-semibold transition">
+                  Manage
+                </button>
+</div>
+<!-- Notion & Slack Knowledge Bus -->
+<div class="p-2.5 bg-[#050C11] rounded-lg flex items-center justify-between">
+<div class="flex items-center space-x-2.5">
+<span class="w-2 h-2 rounded-full bg-[#10B981]"></span>
+<div>
+<div class="text-xs font-bold text-white">Notion &amp; Slack Pipeline</div>
+<div class="text-[10px] text-[#5C8996]">Continuous bi-directional vector memory feed</div>
+</div>
+</div>
+<button class="px-2 py-1 bg-[#0B1E28] hover:bg-[#122A38] text-[10px] text-[#00F0FF] rounded font-semibold transition">
+                  Sync
+                </button>
+</div>
+<!-- DocuSign SLA Gateway -->
+<div class="p-2.5 bg-[#050C11] rounded-lg flex items-center justify-between">
+<div class="flex items-center space-x-2.5">
+<span class="w-2 h-2 rounded-full bg-[#10B981]"></span>
+<div>
+<div class="text-xs font-bold text-white">DocuSign SLA Gateway</div>
+<div class="text-[10px] text-[#5C8996]">Automated legal NDA / Master Service Agreements</div>
+</div>
+</div>
+<button class="px-2 py-1 bg-[#0B1E28] hover:bg-[#122A38] text-[10px] text-[#00F0FF] rounded font-semibold transition">
+                  Audit Key
+                </button>
+</div>
+</div>
+</section>
+<!-- SECTION 03: Zero-Trust PII Redaction & Data Boundary -->
+<section class="bg-[#081219]/90 backdrop-blur-md rounded-xl p-4 shadow-[0_4px_24px_rgba(0,0,0,0.45)] relative overflow-hidden" data-purpose="pii-boundary-guardrails">
+<div class="flex items-center justify-between pb-3 mb-3 bg-[#050C11]/50 -mx-4 -mt-4 px-4 pt-4">
+<div class="flex items-center space-x-2.5">
+<div class="w-6 h-6 rounded bg-[#10B981]/10 text-[#10B981] flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]">shield</span>
+</div>
+<h3 class="text-xs font-bold text-white tracking-wide uppercase">03 // Zero-Trust PII &amp; Boundary Guardrails</h3>
+</div>
+<span class="text-[10px] text-[#10B981] font-semibold">SOC2 COMPLIANT</span>
+</div>
+<div class="space-y-2.5">
+<!-- PII Redactor Toggle -->
+<div class="p-2.5 bg-[#050C11] rounded-lg">
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-[16px] text-[#00F0FF]">fingerprint</span>
+<span class="text-xs font-bold text-white">Transformer PII Scrub</span>
+</div>
+<span class="text-[10px] px-2 py-0.5 rounded bg-[#10B981]/20 text-[#10B981] font-bold">ACTIVE FILTER</span>
+</div>
+<p class="text-[10px] text-[#5C8996] mt-1">Automatic Regex + Transformer entity scrub for client Aadhaar, PAN, SSN, and Credit Cards before model inference.</p>
+<div class="mt-2 text-[10px] text-[#00F0FF] font-semibold flex items-center justify-between">
+<span>9,420 entities scrubbed MTD</span>
+<span>0% leak incidence</span>
+</div>
+</div>
+<!-- Vector Namespace Isolation -->
+<div class="p-2.5 bg-[#050C11] rounded-lg">
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-[16px] text-[#00F0FF]">folder_data</span>
+<span class="text-xs font-bold text-white">Silo Namespace Isolation</span>
+</div>
+<span class="text-[10px] text-[#10B981] font-semibold">ENFORCED</span>
+</div>
+<p class="text-[10px] text-[#5C8996] mt-1">Multi-tenant client vector memories strictly segregated by cryptographic salt keys.</p>
+</div>
+<!-- RBAC Agent Matrix -->
+<div class="p-2.5 bg-[#050C11] rounded-lg flex items-center justify-between">
+<div>
+<div class="text-xs font-bold text-white">Agent RBAC Policy Engine</div>
+<div class="text-[10px] text-[#5C8996]">9/9 Agents restricted to assigned memory silos</div>
+</div>
+<button class="px-2 py-1 bg-[#00F0FF]/15 hover:bg-[#00F0FF]/25 text-[10px] text-[#00F0FF] rounded font-semibold transition">
+                  Edit ACL
+                </button>
+</div>
+</div>
+</section>
+</div>
+<!-- SECTION 04: Environment & Infrastructure Config -->
+<section class="bg-[#081219]/90 backdrop-blur-md rounded-xl p-4 shadow-[0_4px_24px_rgba(0,0,0,0.45)] relative overflow-hidden" data-purpose="infrastructure-config">
+<div class="flex items-center justify-between pb-3 mb-3 bg-[#050C11]/50 -mx-4 -mt-4 px-4 pt-4">
+<div class="flex items-center space-x-2.5">
+<div class="w-6 h-6 rounded bg-[#00F0FF]/10 text-[#00F0FF] flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]">dns</span>
+</div>
+<h3 class="text-xs font-bold text-white tracking-wide uppercase">04 // Environment Infrastructure &amp; Cold Storage</h3>
+</div>
+<div class="text-[10px] text-[#5C8996] flex items-center space-x-2">
+<span>HOURLY SNAPSHOTS:</span>
+<span class="text-[#10B981] font-bold">ONLINE (LAST: 48m ago)</span>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[11px]">
+<!-- Celery Fleets -->
+<div class="p-3 bg-[#050C11] rounded-lg">
+<div class="flex items-center justify-between text-[#5C8996] text-[10px]">
+<span>CELERY FLEET</span>
+<span class="text-[#10B981] font-bold">12 NODES</span>
+</div>
+<div class="mt-1 font-bold text-white">Redis Broker</div>
+<div class="mt-2 flex items-center justify-between text-[10px]">
+<span class="text-[#5C8996]">Ping:</span>
+<span class="text-[#00F0FF] font-semibold">1.2ms</span>
+</div>
+<div class="w-full bg-[#081219] rounded-full h-1 mt-1.5 overflow-hidden">
+<div class="bg-[#10B981] h-full" style="width: 24%;"></div>
+</div>
+</div>
+<!-- Vector Cluster (Pinecone + Qdrant) -->
+<div class="p-3 bg-[#050C11] rounded-lg">
+<div class="flex items-center justify-between text-[#5C8996] text-[10px]">
+<span>VECTOR DB</span>
+<span class="text-[#00F0FF] font-bold">1.42M CHUNKS</span>
+</div>
+<div class="mt-1 font-bold text-white">Qdrant + Pinecone VPC</div>
+<div class="mt-2 flex items-center justify-between text-[10px]">
+<span class="text-[#5C8996]">Query p99:</span>
+<span class="text-[#00F0FF] font-semibold">8.4ms</span>
+</div>
+<div class="w-full bg-[#081219] rounded-full h-1 mt-1.5 overflow-hidden">
+<div class="bg-[#00F0FF] h-full" style="width: 68%;"></div>
+</div>
+</div>
+<!-- Automated Backups -->
+<div class="p-3 bg-[#050C11] rounded-lg">
+<div class="flex items-center justify-between text-[#5C8996] text-[10px]">
+<span>S3 COLD VAULT</span>
+<span class="text-[#10B981] font-bold">ENCRYPTED</span>
+</div>
+<div class="mt-1 font-bold text-white">Immutable Snapshots</div>
+<div class="mt-2 flex items-center justify-between text-[10px]">
+<span class="text-[#5C8996]">Retention:</span>
+<span class="text-white font-semibold">365 Days</span>
+</div>
+<div class="w-full bg-[#081219] rounded-full h-1 mt-1.5 overflow-hidden">
+<div class="bg-[#10B981] h-full" style="width: 95%;"></div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- RIGHT: RADIAL ENVIRONMENT MATRIX & ORBITAL HUD DECK (4 COLS) -->
+<aside class="xl:col-span-4 space-y-4" data-purpose="radial-navigation-deck">
+<!-- RADIAL NAVIGATION HOLO-DISK (Key UI feature matching visual identity) -->
+<div class="bg-[#081219]/90 backdrop-blur-md rounded-xl p-4 shadow-[0_4px_30px_rgba(0,240,255,0.08)] relative overflow-hidden flex flex-col items-center">
+<div class="w-full flex items-center justify-between pb-2 mb-2 bg-[#050C11]/50 -mx-4 -mt-4 px-4 pt-4">
+<span class="text-[10px] text-[#00F0FF] font-bold tracking-widest uppercase">7-ENVIRONMENT RADIAL DECK</span>
+<span class="text-[9px] px-1.5 py-0.5 rounded bg-[#00F0FF]/15 text-[#00F0FF] font-semibold">NODE 07 ACTIVE</span>
+</div>
+<!-- Interactive Radial Orbital Graphic -->
+<div class="relative w-64 h-64 my-2 flex items-center justify-center">
+<!-- Outermost Glow Ring -->
+<div class="absolute inset-0 rounded-full bg-gradient-to-tr from-[#00F0FF]/10 via-transparent to-[#00F0FF]/5 animate-spin" style="animation-duration: 40s;"></div>
+<!-- Outer Dial Tracks -->
+<div class="absolute inset-3 rounded-full border border-dashed border-[#00F0FF]/30"></div>
+<div class="absolute inset-8 rounded-full border border-[#163542]"></div>
+<!-- Central Holographic Core with THALOS Emblem -->
+<div class="relative z-10 w-24 h-24 rounded-full bg-[#050C11] border-2 border-[#00F0FF] shadow-[0_0_25px_rgba(0,240,255,0.6)] flex flex-col items-center justify-center cursor-pointer group">
+<div class="absolute inset-1 rounded-full bg-[#00F0FF]/10 animate-pulse"></div>
+<svg class="w-9 h-9 text-[#00F0FF] transform group-hover:scale-110 transition duration-300" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polygon points="12 2 2 22 22 22 12 2"></polygon>
+<line x1="12" x2="12" y1="2" y2="17"></line>
+</svg>
+<span class="text-[8px] tracking-widest font-extrabold text-white mt-0.5">THALOS</span>
+</div>
+<!-- Orbital Node 1: My Day (Top) -->
+<button class="absolute top-1 left-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-[#081219] border border-[#163542] hover:border-[#00F0FF] flex items-center justify-center text-[#5C8996] hover:text-[#00F0FF] transition shadow hover:shadow-[0_0_12px_#00F0FF]" title="Environment 01: My Day / Command Chamber">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+</button>
+<!-- Orbital Node 2: Digital World (Top-Right) -->
+<button class="absolute top-10 right-4 w-9 h-9 rounded-full bg-[#081219] border border-[#163542] hover:border-[#00F0FF] flex items-center justify-center text-[#5C8996] hover:text-[#00F0FF] transition shadow hover:shadow-[0_0_12px_#00F0FF]" title="Environment 02: Digital World / Projects">
+<span class="material-symbols-outlined text-[16px]">language</span>
+</button>
+<!-- Orbital Node 3: AI Team (Right-Center) -->
+<button class="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-[#081219] border border-[#163542] hover:border-[#00F0FF] flex items-center justify-center text-[#5C8996] hover:text-[#00F0FF] transition shadow hover:shadow-[0_0_12px_#00F0FF]" title="Environment 03: AI Team / Agents">
+<span class="material-symbols-outlined text-[16px]">groups</span>
+</button>
+<!-- Orbital Node 4: Revenue (Bottom-Right) -->
+<button class="absolute bottom-10 right-4 w-9 h-9 rounded-full bg-[#081219] border border-[#163542] hover:border-[#00F0FF] flex items-center justify-center text-[#5C8996] hover:text-[#00F0FF] transition shadow hover:shadow-[0_0_12px_#00F0FF]" title="Environment 04: Revenue &amp; Sales">
+<span class="material-symbols-outlined text-[16px]">query_stats</span>
+</button>
+<!-- Orbital Node 5: Knowledge (Bottom-Center) -->
+<button class="absolute bottom-1 left-1/2 -translate-x-1/2 translate-y-1/2 w-9 h-9 rounded-full bg-[#081219] border border-[#163542] hover:border-[#00F0FF] flex items-center justify-center text-[#5C8996] hover:text-[#00F0FF] transition shadow hover:shadow-[0_0_12px_#00F0FF]" title="Environment 05: Knowledge &amp; Memory Vault">
+<span class="material-symbols-outlined text-[16px]">psychology_alt</span>
+</button>
+<!-- Orbital Node 6: Execution (Bottom-Left) -->
+<button class="absolute bottom-10 left-4 w-9 h-9 rounded-full bg-[#081219] border border-[#163542] hover:border-[#00F0FF] flex items-center justify-center text-[#5C8996] hover:text-[#00F0FF] transition shadow hover:shadow-[0_0_12px_#00F0FF]" title="Environment 06: Autonomous Execution">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+</button>
+<!-- Orbital Node 7: SETTINGS & VAULT (ACTIVE / ILLUMINATED - Top-Left) -->
+<button class="absolute top-10 left-4 w-11 h-11 rounded-full bg-[#00F0FF] border-2 border-white flex items-center justify-center text-[#05090D] shadow-[0_0_20px_#00F0FF] font-bold z-20 animate-pulse" title="Environment 07: Settings &amp; API Vault (CURRENT ACTIVE NODE)">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+</button>
+</div>
+<!-- Active Environment Indicator Card -->
+<div class="w-full bg-[#050C11] rounded-lg p-3 mt-2 border-l-2 border-[#00F0FF]">
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-1.5">
+<span class="w-2 h-2 rounded-full bg-[#00F0FF]"></span>
+<span class="text-xs font-bold text-white tracking-wide">ENV 07: SETTINGS &amp; VAULT</span>
+</div>
+<span class="text-[9px] text-[#00F0FF] uppercase tracking-wider font-semibold">SYSTEM CONTEXT</span>
+</div>
+<p class="text-[10px] text-[#5C8996] mt-1">Full root admin access authorized. Executive Yugantar Leader clearance verified.</p>
+</div>
+<!-- Rapid Switcher Pills -->
+<div class="w-full grid grid-cols-4 gap-1.5 mt-3 text-[9px] text-center">
+<span class="p-1 rounded bg-[#050C11] text-[#5C8996] hover:text-white cursor-pointer transition">1. My Day</span>
+<span class="p-1 rounded bg-[#050C11] text-[#5C8996] hover:text-white cursor-pointer transition">2. Projects</span>
+<span class="p-1 rounded bg-[#050C11] text-[#5C8996] hover:text-white cursor-pointer transition">3. AI Team</span>
+<span class="p-1 rounded bg-[#050C11] text-[#5C8996] hover:text-white cursor-pointer transition">4. Revenue</span>
+<span class="p-1 rounded bg-[#050C11] text-[#5C8996] hover:text-white cursor-pointer transition">5. Memory</span>
+<span class="p-1 rounded bg-[#050C11] text-[#5C8996] hover:text-white cursor-pointer transition">6. Execute</span>
+<span class="col-span-2 p-1 rounded bg-[#00F0FF]/20 text-[#00F0FF] font-bold cursor-default">7. Settings (Active)</span>
+</div>
+</div>
+<!-- VAULT SECURITY AUDIT PASSPORT -->
+<div class="bg-[#081219]/90 backdrop-blur-md rounded-xl p-4 shadow-[0_4px_24px_rgba(0,0,0,0.45)] relative overflow-hidden" data-purpose="security-passport">
+<div class="flex items-center justify-between pb-2 mb-2 bg-[#050C11]/50 -mx-4 -mt-4 px-4 pt-4">
+<span class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-[#10B981]">encrypted</span>
+              KMS Envelope Verification
+            </span>
+<span class="text-[9px] px-1.5 py-0.5 rounded bg-[#10B981]/20 text-[#10B981] font-bold">HARDENED</span>
+</div>
+<div class="space-y-2 mt-2 text-[10px]">
+<div class="flex items-center justify-between">
+<span class="text-[#5C8996]">Master HSM ARN:</span>
+<span class="text-white font-mono truncate max-w-[170px]">arn:aws:kms:ap-south-1:...</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-[#5C8996]">DEK Rotation Cipher:</span>
+<span class="text-[#00F0FF] font-semibold">ChaCha20-Poly1305</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-[#5C8996]">Zero-Knowledge Verifier:</span>
+<span class="text-[#10B981] font-semibold">zk-SNARK Enclave</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-[#5C8996]">Active Vault Secrets:</span>
+<span class="text-white font-bold">48 Keys / 14 Webhooks</span>
+</div>
+</div>
+<div class="mt-4 pt-3 bg-[#050C11]/50 rounded-lg p-2.5 flex items-center justify-between">
+<div>
+<div class="text-[9px] text-[#5C8996] uppercase">Emergency Lock</div>
+<div class="text-xs font-bold text-[#E6F0EF]">Flush Token Bus</div>
+</div>
+<button class="px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded text-[10px] font-bold transition">
+              Revoke All
+            </button>
+</div>
+</div>
+</aside>
+</div>
+<!-- LIVE CRYPTOGRAPHIC AUDIT & EVENT TERMINAL (BOTTOM) -->
+<section class="bg-[#081219]/90 backdrop-blur-md rounded-xl p-3.5 shadow-[0_4px_24px_rgba(0,0,0,0.45)]" data-purpose="live-audit-terminal">
+<div class="flex flex-wrap items-center justify-between pb-2 mb-2 bg-[#050C11]/50 -mx-3.5 -mt-3.5 px-3.5 pt-3">
+<div class="flex items-center space-x-2">
+<span class="w-2 h-2 rounded-full bg-[#00F0FF] animate-ping"></span>
+<span class="text-[11px] font-bold text-white uppercase tracking-wider">
+            CRYPTOGRAPHIC AUDIT &amp; MODEL ACCESS TERMINAL // REAL-TIME DISPATCH LOG
+          </span>
+</div>
+<div class="flex items-center space-x-3 text-[10px] text-[#5C8996]">
+<span>STREAM ID: #THALOS-VAULT-LIVE</span>
+<span>LATENCY: 1.8ms</span>
+<span class="text-[#10B981] font-bold">● CONTINUOUS VERIFICATION</span>
+</div>
+</div>
+<!-- Log Entries -->
+<div class="font-mono text-[10px] space-y-1.5 text-gray-300">
+<div class="flex flex-wrap items-center space-x-2 truncate">
+<span class="text-[#5C8996]">[10:49:12.804]</span>
+<span class="px-1.5 py-0.2 rounded bg-[#00F0FF]/15 text-[#00F0FF] font-semibold text-[9px]">TOKEN-DEK</span>
+<span class="text-white">Decrypted Anthropic API ephemeral token for agent:</span>
+<span class="text-[#00F0FF] font-semibold">DevAgent-X</span>
+<span class="text-[#5C8996]">| Nonce: #8f921a | Verified by AWS KMS</span>
+</div>
+<div class="flex flex-wrap items-center space-x-2 truncate">
+<span class="text-[#5C8996]">[10:49:08.120]</span>
+<span class="px-1.5 py-0.2 rounded bg-[#10B981]/15 text-[#10B981] font-semibold text-[9px]">PII-SCRUB</span>
+<span class="text-white">Transformer entity boundary masked 1 Aadhaar + 1 Credit Card token for prompt:</span>
+<span class="text-[#10B981] font-semibold">Acme SLA Synthesis</span>
+<span class="text-[#5C8996]">| Zero unmasked payload reached LLM</span>
+</div>
+<div class="flex flex-wrap items-center space-x-2 truncate">
+<span class="text-[#5C8996]">[10:48:54.671]</span>
+<span class="px-1.5 py-0.2 rounded bg-[#F59E0B]/15 text-[#F59E0B] font-semibold text-[9px]">WARN-TTL</span>
+<span class="text-[#F59E0B]">Stripe Production Webhook secret v2 TTL &lt; 48 hours. Auto-rotation task staged for:</span>
+<span class="text-white font-semibold">2025-04-30 00:00 UTC</span>
+</div>
+<div class="flex flex-wrap items-center space-x-2 truncate">
+<span class="text-[#5C8996]">[10:48:32.402]</span>
+<span class="px-1.5 py-0.2 rounded bg-[#8B5CF6]/15 text-[#A78BFA] font-semibold text-[9px]">VEC-INGEST</span>
+<span class="text-white">Pinecone namespace client_vault_yugantar verified with SHA-512 seal:</span>
+<span class="text-[#50D9D0]">1,420 chunks locked</span>
+</div>
+</div>
+</section>
+</div>
+</div></main>
+<!-- END: MainDashboardGrid -->
+<!-- BEGIN: BottomTelemetryStream -->
+<section class="w-full bg-[#080D12] border border-[#163542] rounded-xl px-3.5 py-2" data-purpose="multi-env-synapse-stream">
+<div class="flex items-center justify-between text-[11px] mb-1.5 border-b border-[#163542]/60 pb-1">
+<div class="flex items-center space-x-2">
+<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+<span class="font-bold text-white uppercase tracking-wider text-[10px]">
+          GLOBAL SYNAPSE TELEMETRY // MULTI-ENVIRONMENT AUDIT STREAM
+        </span>
+</div>
+<div class="flex items-center space-x-3 text-[10px] text-[#5C8996]">
+<span>AGGREGATED STREAM</span>
+<span>BUFFER: 512/512 KB</span>
+</div>
+</div>
+<!-- Real-time Multi-Environment Logs -->
+<div class="font-mono text-[10px] space-y-1 text-gray-300">
+<div class="flex items-baseline space-x-2 truncate">
+<span class="text-[#5C8996]">[10:48:02]</span>
+<span class="text-[#50D9D0] font-semibold">[Env:AI-Team]</span>
+<span>DevAgent-X committed PR #142 to 'NexGen Systems' staging branch. E2E pipeline nominal.</span>
+</div>
+<div class="flex items-baseline space-x-2 truncate">
+<span class="text-[#5C8996]">[10:48:19]</span>
+<span class="text-amber-400 font-semibold">[Env:Revenue]</span>
+<span>Deal Architect generated custom SLA v2 for Acme Corp (₹6,00,000). Awaiting Executive clearance.</span>
+</div>
+<div class="flex items-baseline space-x-2 truncate">
+<span class="text-[#5C8996]">[10:48:44]</span>
+<span class="text-emerald-400 font-semibold">[Env:Knowledge]</span>
+<span>Qdrant vector cluster merged 1,420 legal precedent embeddings. Semantic drift: 0.01%.</span>
+</div>
+</div>
+</section>
+<!-- END: BottomTelemetryStream -->
+<!-- BEGIN: PersistentOmniCommandCapsule -->
+<footer class="w-full max-w-4xl mx-auto" data-purpose="omni-command-capsule">
+<div class="bg-[#080D12] border border-[#50D9D0]/40 rounded-full px-4 py-2 flex items-center justify-between gap-3 shadow-[0_0_25px_rgba(80,217,208,0.2)]">
+<!-- Microphone & Waveform Indicator -->
+<div class="flex items-center space-x-2.5 pl-1">
+<button class="w-7 h-7 rounded-full bg-[#0B1921] border border-[#50D9D0]/50 hover:bg-[#50D9D0]/20 flex items-center justify-center text-[#50D9D0] transition">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 02-3-3V5a3 3 0 116 0v6a3 3 0 02-3 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<!-- Simulated Voice Waveform Bars -->
+<div class="flex items-center space-x-0.5 h-3.5">
+<span class="w-0.5 h-2 bg-[#50D9D0] rounded-full animate-pulse"></span>
+<span class="w-0.5 h-3.5 bg-[#50D9D0] rounded-full animate-pulse" style="animation-delay: 150ms;"></span>
+<span class="w-0.5 h-1.5 bg-[#50D9D0] rounded-full animate-pulse" style="animation-delay: 300ms;"></span>
+<span class="w-0.5 h-3 bg-[#50D9D0] rounded-full animate-pulse" style="animation-delay: 75ms;"></span>
+<span class="w-0.5 h-2 bg-[#50D9D0] rounded-full animate-pulse" style="animation-delay: 200ms;"></span>
+</div>
+</div>
+<!-- Natural Language Command Input -->
+<div class="flex-grow">
+<input class="w-full bg-transparent border-none text-[11px] text-[#E6F0EF] placeholder-[#5C8996] focus:ring-0 focus:outline-none" placeholder="Broadcast command across all 7 THALOS environments or ask THALOS (e.g. 'Synthesize sprint velocity with Q2 revenue forecast')..." type="text"/>
+</div>
+<!-- Action & Dispatch -->
+<div class="flex items-center space-x-2 pr-1">
+<kbd class="hidden md:inline-block px-1.5 py-0.5 text-[9px] font-mono text-[#5C8996] bg-[#05090D] border border-[#163542] rounded">
+          ⌘K
+        </kbd>
+<button class="w-7 h-7 rounded-full bg-[#50D9D0] text-[#05090D] hover:bg-white flex items-center justify-center font-bold transition shadow-[0_0_10px_#50D9D0]">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<line x1="12" x2="12" y1="19" y2="5"></line>
+<polyline points="5 12 12 5 19 12"></polyline>
+</svg>
+</button>
+</div>
+</div>
+</footer>
+<!-- END: PersistentOmniCommandCapsule -->
+</body></html>

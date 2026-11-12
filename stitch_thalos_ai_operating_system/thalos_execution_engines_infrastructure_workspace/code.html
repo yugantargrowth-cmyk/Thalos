@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-[#05090D] text-[#E6F0EF] antialiased" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>THALOS — All Environments Unified Overview / Holo-Matrix Deck</title>
+<!-- Tailwind CSS v3 with Forms & Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Custom Configuration -->
+<script id="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            thalos: {
+              obsidian: '#05090D',
+              deep: '#080D12',
+              card: '#0B1921',
+              cardLight: '#10232B',
+              border: '#163542',
+              cyan: '#50D9D0',
+              cyanDark: '#1E626B',
+              muted: '#5C8996',
+              amber: '#F59E0B',
+              ice: '#E6F0EF'
+            }
+          },
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+            sans: ['"Inter"', 'ui-sans-serif', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+<meta content="web_dashboard" name="shell-type"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/></head>
+<body class="min-h-full font-mono bg-[#05090D] text-[#E6F0EF] selection:bg-[#50D9D0]/30 selection:text-white flex flex-col justify-between p-3 lg:p-4 space-y-3 overflow-x-hidden border-box">
+<!-- BEGIN: MasterHeader -->
+<header class="w-full bg-[#080D12] border border-[#163542] rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-[0_0_20px_rgba(80,217,208,0.05)]" data-purpose="master-system-header">
+<!-- Brand & System Identity -->
+<div class="flex items-center space-x-3.5">
+<div class="relative w-9 h-9 rounded-lg border border-[#50D9D0]/50 bg-[#0B1921] flex items-center justify-center shadow-[0_0_15px_rgba(80,217,208,0.25)]">
+<svg class="w-5 h-5 text-[#50D9D0]" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polygon points="12 2 2 22 22 22 12 2"></polygon>
+<line x1="12" x2="12" y1="11" y2="17"></line>
+</svg>
+<span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#50D9D0] rounded-full animate-ping"></span>
+<span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#50D9D0] rounded-full"></span>
+</div>
+<div>
+<div class="flex items-center space-x-2">
+<span class="text-sm font-bold tracking-wider text-white">THALOS OS <span class="text-[#50D9D0] text-xs font-normal">v4.8 AUTONOMOUS</span></span>
+<span class="px-2 py-0.5 text-[10px] uppercase font-semibold tracking-wider text-[#50D9D0] bg-[#50D9D0]/10 border border-[#50D9D0]/40 rounded-full">
+            7 ENVIRONMENTS ONLINE // ALL MESHED
+          </span>
+</div>
+<p class="text-[11px] text-[#5C8996] tracking-tight uppercase">// MULTI-ENVIRONMENT HOLO-MATRIX DECK // YUGANTAR GROWTH CORE</p>
+</div>
+</div>
+<!-- Center System Telemetry Metrics -->
+<div class="hidden xl:flex items-center space-x-4 text-[11px] bg-[#05090D] border border-[#163542] px-3.5 py-1.5 rounded-lg text-[#5C8996]">
+<div class="flex items-center space-x-1.5">
+<span class="text-white font-medium">TOTAL LOAD:</span>
+<span class="text-[#50D9D0] font-semibold">42.8 GFLOPs</span>
+</div>
+<span class="text-[#163542]">|</span>
+<div class="flex items-center space-x-1.5">
+<span class="text-white font-medium">NEURAL SYNC:</span>
+<span class="text-[#50D9D0] font-semibold">99.8%</span>
+</div>
+<span class="text-[#163542]">|</span>
+<div class="flex items-center space-x-1.5">
+<span class="text-white font-medium">CROSS-ENV LATENCY:</span>
+<span class="text-[#50D9D0] font-semibold">4ms</span>
+</div>
+<span class="text-[#163542]">|</span>
+<div class="flex items-center space-x-1.5">
+<span class="text-white font-medium">ACTIVE AGENTS:</span>
+<span class="text-emerald-400 font-semibold">9/9 ONLINE</span>
+</div>
+</div>
+<!-- Navigation Modes & Profile Badge -->
+<div class="flex items-center space-x-3">
+<!-- Deck Mode Switcher -->
+<div class="flex items-center bg-[#0B1921] border border-[#163542] rounded-lg p-0.5 text-[11px]">
+<button class="px-2.5 py-1 rounded text-[#5C8996] hover:text-white transition">FOCUS</button>
+<button class="px-2.5 py-1 rounded bg-[#50D9D0]/20 text-[#50D9D0] border border-[#50D9D0]/40 font-semibold shadow-[0_0_10px_rgba(80,217,208,0.2)]">SPATIAL</button>
+<button class="px-2.5 py-1 rounded text-[#5C8996] hover:text-white transition">IMMERSIVE</button>
+</div>
+<!-- Notification Trigger -->
+<button class="relative p-2 bg-[#0B1921] border border-[#163542] hover:border-[#50D9D0]/40 rounded-lg text-[#5C8996] hover:text-[#50D9D0] transition">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#F59E0B] rounded-full"></span>
+</button>
+<!-- Executive Profile Badge -->
+<div class="flex items-center space-x-2.5 pl-2 border-l border-[#163542]">
+<div class="w-8 h-8 rounded-lg bg-[#50D9D0]/10 border border-[#50D9D0]/50 flex items-center justify-center text-[#50D9D0] font-bold text-xs">
+          YL
+        </div>
+<div class="text-left hidden sm:block">
+<div class="text-[12px] font-semibold text-white leading-tight">Yugantar Leader</div>
+<div class="text-[10px] text-[#5C8996] flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Executive Clearance
+          </div>
+</div>
+</div>
+</div>
+</header>
+<!-- END: MasterHeader -->
+<!-- BEGIN: MainDashboardGrid -->
+<main class="w-full flex-grow grid grid-cols-1 xl:grid-cols-12 gap-3.5"><div class="flex flex-col w-full">
+<!-- Environmental Breadcrumb & Micro Telemetry Ribbon -->
+<div class="flex flex-wrap items-center justify-between gap-3 px-4 py-2 mb-3.5 rounded-lg bg-gradient-to-r from-[#0a1520] via-[#08121a] to-[#060b14] border border-[#50D9D0]/20 shadow-[0_0_20px_rgba(80,217,208,0.06)]">
+<div class="flex items-center space-x-2.5">
+<div class="w-2 h-2 rounded-full bg-[#00FFA3] animate-ping"></div>
+<div class="w-2 h-2 -ml-3.5 rounded-full bg-[#00FFA3]"></div>
+<span class="text-[10px] tracking-widest text-[#50D9D0] uppercase font-bold">THALOS OS // ENV 06</span>
+<span class="text-[#163542]">/</span>
+<span class="text-[11px] font-semibold tracking-wide text-white uppercase">EXECUTION ENGINES &amp; COMPUTE HARNESS</span>
+<span class="hidden sm:inline-block px-1.5 py-0.5 text-[9px] font-mono rounded bg-[#50D9D0]/10 text-[#50D9D0] border border-[#50D9D0]/30 font-medium">SUB-10MS KERNEL</span>
+</div>
+<!-- Micro Gauge Strip -->
+<div class="flex items-center flex-wrap gap-x-4 gap-y-1 text-[10px] font-mono text-[#5C8996]">
+<div>COMPUTE: <span class="text-white font-bold">48.2</span> <span class="text-[#50D9D0]">GFLOPS</span></div>
+<span class="text-[#163542] hidden md:inline">|</span>
+<div>WORKERS: <span class="text-[#00FFA3] font-bold">12/12</span> ONLINE</div>
+<span class="text-[#163542] hidden md:inline">|</span>
+<div>INGEST: <span class="text-white font-bold">420</span> ev/s</div>
+<span class="text-[#163542] hidden lg:inline">|</span>
+<div>P99: <span class="text-[#00FFA3] font-bold">8.4ms</span></div>
+<span class="text-[#163542] hidden lg:inline">|</span>
+<div>RAM: <span class="text-white font-bold">3.4</span>/16 GB</div>
+<span class="text-[#163542] hidden xl:inline">|</span>
+<div>REDIS SYNC: <span class="text-[#50D9D0] font-bold">99.99%</span></div>
+</div>
+</div>
+<!-- Primary Asymmetric Control Grid (12-Col System) -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-3.5 w-full">
+<!-- LEFT PANEL: Celery Fleets, Routing Matrix & Queues (Col 4) -->
+<div class="xl:col-span-4 flex flex-col space-y-3.5">
+<!-- Worker Fleets Card -->
+<div class="rounded-xl bg-[#080D12] border border-[#163542] p-3.5 relative overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+<div class="absolute -right-12 -top-12 w-32 h-32 bg-[#50D9D0]/5 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex items-center justify-between pb-2.5 mb-3 border-b border-[#163542]/70">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-[#50D9D0] text-sm">hub</span>
+<span class="text-xs font-bold uppercase tracking-wider text-white">Celery Worker Matrix</span>
+</div>
+<span class="px-2 py-0.5 text-[9px] font-mono text-[#00FFA3] bg-[#00FFA3]/10 border border-[#00FFA3]/30 rounded">AUTONOMOUS DISPATCH</span>
+</div>
+<!-- Fleet Cluster Alpha -->
+<div class="rounded-lg bg-[#0B1921] border border-[#163542] p-3 mb-2.5 hover:border-[#50D9D0]/40 transition group">
+<div class="flex justify-between items-start mb-2">
+<div>
+<div class="flex items-center space-x-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#00FFA3]"></span>
+<span class="text-xs font-semibold text-white tracking-wide">Cluster Alpha (Primary Fleet)</span>
+</div>
+<span class="text-[10px] text-[#5C8996] font-mono">LLM response synthesis &amp; vector ingest</span>
+</div>
+<span class="text-[10px] font-mono font-bold text-[#50D9D0] bg-[#50D9D0]/10 px-1.5 py-0.5 rounded">44% LOAD</span>
+</div>
+<div class="grid grid-cols-2 gap-2 text-[10px] font-mono text-gray-300 mb-2">
+<div class="bg-[#05090D] p-1.5 rounded border border-[#163542]/50">
+<span class="text-[#5C8996] block text-[9px]">ACTIVE WORKERS</span>
+<span class="font-bold text-white">8 Assigned</span> (Concurrency 32)
+            </div>
+<div class="bg-[#05090D] p-1.5 rounded border border-[#163542]/50">
+<span class="text-[#5C8996] block text-[9px]">THROUGHPUT</span>
+<span class="font-bold text-[#00FFA3]">842 ops/s</span>
+</div>
+</div>
+<!-- Capacity Visualizer -->
+<div class="w-full bg-[#05090D] rounded-full h-1.5 overflow-hidden">
+<div class="bg-gradient-to-r from-[#50D9D0] to-[#00FFA3] h-full rounded-full" style="width: 44%"></div>
+</div>
+</div>
+<!-- Fleet Cluster Beta -->
+<div class="rounded-lg bg-[#0B1921] border border-[#163542] p-3 hover:border-[#50D9D0]/40 transition group">
+<div class="flex justify-between items-start mb-2">
+<div>
+<div class="flex items-center space-x-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#00FFA3]"></span>
+<span class="text-xs font-semibold text-white tracking-wide">Cluster Beta (Outreach Core)</span>
+</div>
+<span class="text-[10px] text-[#5C8996] font-mono">Outreach pipeline &amp; CRM synchronization</span>
+</div>
+<span class="text-[10px] font-mono font-bold text-[#F59E0B] bg-[#F59E0B]/10 px-1.5 py-0.5 rounded">72% LOAD</span>
+</div>
+<div class="grid grid-cols-2 gap-2 text-[10px] font-mono text-gray-300 mb-2">
+<div class="bg-[#05090D] p-1.5 rounded border border-[#163542]/50">
+<span class="text-[#5C8996] block text-[9px]">ACTIVE WORKERS</span>
+<span class="font-bold text-white">4 Assigned</span> (Concurrency 16)
+            </div>
+<div class="bg-[#05090D] p-1.5 rounded border border-[#163542]/50">
+<span class="text-[#5C8996] block text-[9px]">RATE LIMITER</span>
+<span class="font-bold text-white">0% Breached</span>
+</div>
+</div>
+<div class="w-full bg-[#05090D] rounded-full h-1.5 overflow-hidden">
+<div class="bg-gradient-to-r from-[#50D9D0] via-[#F59E0B] to-[#F59E0B] h-full rounded-full" style="width: 72%"></div>
+</div>
+</div>
+</div>
+<!-- Real-Time Queue Depth & Backoff Status -->
+<div class="rounded-xl bg-[#080D12] border border-[#163542] p-3.5">
+<div class="flex items-center justify-between pb-2 mb-3 border-b border-[#163542]/70">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-[#50D9D0] text-sm">stacked_line_chart</span>
+<span class="text-xs font-bold uppercase tracking-wider text-white">Redis Queue Buffer</span>
+</div>
+<span class="text-[10px] font-mono text-[#5C8996]">TOTAL DEPTH: 45</span>
+</div>
+<div class="space-y-2 font-mono text-xs">
+<!-- Queue Item 1 -->
+<div class="flex items-center justify-between p-2 rounded bg-[#0B1921] border border-[#163542]/60">
+<div class="flex items-center space-x-2">
+<span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+<span class="text-gray-200 text-[11px]">celery_high_priority</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="text-[#5C8996] text-[10px]">3 jobs</span>
+<span class="px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 text-[9px] font-bold">1.2ms SLA</span>
+</div>
+</div>
+<!-- Queue Item 2 -->
+<div class="flex items-center justify-between p-2 rounded bg-[#0B1921] border border-[#163542]/60">
+<div class="flex items-center space-x-2">
+<span class="w-1.5 h-1.5 rounded-full bg-[#50D9D0]"></span>
+<span class="text-gray-200 text-[11px]">celery_default</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="text-[#5C8996] text-[10px]">14 jobs</span>
+<span class="px-1.5 py-0.5 rounded bg-[#50D9D0]/10 text-[#50D9D0] text-[9px] font-bold">4.8ms SLA</span>
+</div>
+</div>
+<!-- Queue Item 3 -->
+<div class="flex items-center justify-between p-2 rounded bg-[#0B1921] border border-[#163542]/60">
+<div class="flex items-center space-x-2">
+<span class="w-1.5 h-1.5 rounded-full bg-[#5C8996]"></span>
+<span class="text-gray-200 text-[11px]">celery_scheduled</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="text-[#5C8996] text-[10px]">28 jobs</span>
+<span class="px-1.5 py-0.5 rounded bg-emerald-500/10 text-[#00FFA3] text-[9px] font-bold">Batch OK</span>
+</div>
+</div>
+</div>
+<div class="mt-3 pt-2.5 border-t border-[#163542]/60 flex items-center justify-between text-[10px] text-[#5C8996] font-mono">
+<span>DISPATCH RETRY RATE: 0.00%</span>
+<span class="text-[#00FFA3]">10,000 / 10,000 OK</span>
+</div>
+</div>
+</div>
+<!-- CENTER PANEL: Ephemeral Docker Sandboxes & Holographic Execution Engine (Col 5) -->
+<div class="xl:col-span-5 flex flex-col space-y-3.5">
+<!-- Ephemeral Execution Sandbox -->
+<div class="rounded-xl bg-[#080D12] border border-[#50D9D0]/30 p-3.5 shadow-[0_0_25px_rgba(80,217,208,0.08)] relative">
+<div class="flex items-center justify-between pb-2.5 mb-3 border-b border-[#163542]">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-[#50D9D0] text-sm">terminal</span>
+<span class="text-xs font-bold uppercase tracking-wider text-white">Docker Sandbox E2E Harness</span>
+</div>
+<div class="flex items-center space-x-2 text-[10px] font-mono">
+<span class="px-2 py-0.5 bg-[#50D9D0]/10 text-[#50D9D0] border border-[#50D9D0]/30 rounded">8 WARM CORES</span>
+<span class="px-2 py-0.5 bg-[#00FFA3]/10 text-[#00FFA3] border border-[#00FFA3]/30 rounded">3 ACTIVE</span>
+</div>
+</div>
+<!-- Visual Mesh Sparkline Header -->
+<div class="p-3 bg-[#0B1921] rounded-lg border border-[#163542] mb-3">
+<div class="flex items-center justify-between mb-1.5 text-[11px]">
+<span class="text-white font-semibold flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-[#50D9D0] animate-pulse"></span>
+              DevAgent-X Ephemeral Runtime Pool
+            </span>
+<span class="text-[#00FFA3] font-mono text-[10px]">SOC2 GUARDRAILS // ENFORCED</span>
+</div>
+<!-- Inline Sparkline Diagram -->
+<div class="w-full h-12 flex items-end gap-1 pt-2">
+<div class="w-full bg-[#163542] h-6 rounded-t hover:bg-[#50D9D0] transition"></div>
+<div class="w-full bg-[#163542] h-8 rounded-t hover:bg-[#50D9D0] transition"></div>
+<div class="w-full bg-[#50D9D0]/40 h-10 rounded-t hover:bg-[#50D9D0] transition"></div>
+<div class="w-full bg-[#163542] h-5 rounded-t hover:bg-[#50D9D0] transition"></div>
+<div class="w-full bg-[#50D9D0] h-12 rounded-t shadow-[0_0_8px_#50D9D0]"></div>
+<div class="w-full bg-[#00FFA3] h-9 rounded-t"></div>
+<div class="w-full bg-[#163542] h-7 rounded-t hover:bg-[#50D9D0] transition"></div>
+<div class="w-full bg-[#50D9D0]/60 h-11 rounded-t"></div>
+<div class="w-full bg-[#163542] h-6 rounded-t"></div>
+<div class="w-full bg-[#00FFA3] h-10 rounded-t"></div>
+<div class="w-full bg-[#50D9D0] h-12 rounded-t shadow-[0_0_8px_#50D9D0]"></div>
+<div class="w-full bg-[#163542] h-8 rounded-t"></div>
+</div>
+<div class="flex justify-between text-[9px] text-[#5C8996] font-mono mt-1">
+<span>T-60s</span>
+<span>SANDBOX CPU PEAK: 34.2%</span>
+<span>NOW</span>
+</div>
+</div>
+<!-- Active Containers Details -->
+<div class="space-y-2 font-mono">
+<!-- Active Runner 1 -->
+<div class="p-2.5 rounded-lg bg-[#05090D] border border-[#163542] hover:border-[#50D9D0]/40 transition">
+<div class="flex items-center justify-between text-[11px] mb-1">
+<span class="text-white font-bold flex items-center space-x-1.5">
+<span class="text-[#50D9D0]">#RUNNER-104:</span>
+<span>Acme Corp SLA Generator</span>
+</span>
+<span class="text-[#00FFA3] text-[9px] font-semibold bg-[#00FFA3]/10 px-1.5 py-0.5 rounded border border-[#00FFA3]/30">ISOLATED &amp; VERIFIED</span>
+</div>
+<div class="grid grid-cols-4 gap-2 text-[10px] text-[#5C8996] pt-1">
+<div>RAM: <span class="text-white font-medium">142 MB</span></div>
+<div>CPU: <span class="text-white font-medium">12.0%</span></div>
+<div>UPTIME: <span class="text-white font-medium">42s</span></div>
+<div class="text-right">EGRESS: <span class="text-[#00FFA3] font-medium">0 KB (SHIELDED)</span></div>
+</div>
+</div>
+<!-- Active Runner 2 -->
+<div class="p-2.5 rounded-lg bg-[#05090D] border border-[#163542] hover:border-[#50D9D0]/40 transition">
+<div class="flex items-center justify-between text-[11px] mb-1">
+<span class="text-white font-bold flex items-center space-x-1.5">
+<span class="text-[#50D9D0]">#RUNNER-105:</span>
+<span>Hyperion Logistics API Mock</span>
+</span>
+<span class="text-amber-400 text-[9px] font-semibold bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/30">E2E TEST HARNESS</span>
+</div>
+<div class="grid grid-cols-4 gap-2 text-[10px] text-[#5C8996] pt-1">
+<div>RAM: <span class="text-white font-medium">210 MB</span></div>
+<div>CPU: <span class="text-white font-medium">19.4%</span></div>
+<div>UPTIME: <span class="text-white font-medium">1m 18s</span></div>
+<div class="text-right">LEAKS: <span class="text-[#00FFA3] font-medium">NONE</span></div>
+</div>
+</div>
+<!-- Active Runner 3 (Idle Warm Standby) -->
+<div class="p-2.5 rounded-lg bg-[#05090D] border border-[#163542] opacity-75">
+<div class="flex items-center justify-between text-[11px] mb-1">
+<span class="text-gray-300 font-bold flex items-center space-x-1.5">
+<span class="text-[#5C8996]">#RUNNER-106:</span>
+<span>Vector Batch Indexer Standby</span>
+</span>
+<span class="text-[#50D9D0] text-[9px] font-semibold bg-[#50D9D0]/10 px-1.5 py-0.5 rounded">WARM POOL</span>
+</div>
+<div class="grid grid-cols-4 gap-2 text-[10px] text-[#5C8996] pt-1">
+<div>RAM: <span class="text-white font-medium">64 MB</span></div>
+<div>CPU: <span class="text-white font-medium">0.2%</span></div>
+<div>UPTIME: <span class="text-white font-medium">5m 02s</span></div>
+<div class="text-right">STATUS: <span class="text-white font-medium">READY</span></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Action Execution Buttons -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+<button class="p-2.5 rounded-lg bg-[#080D12] border border-[#163542] hover:border-red-400/50 hover:bg-[#0B1921] transition text-left group" id="btn-flush">
+<div class="flex items-center justify-between text-[#5C8996] group-hover:text-red-400 mb-1">
+<span class="text-[10px] font-bold font-mono">FLUSH TASKS</span>
+<span class="material-symbols-outlined text-xs">delete_sweep</span>
+</div>
+<span class="text-[9px] text-[#5C8996] block truncate">Purge stale queue</span>
+</button>
+<button class="p-2.5 rounded-lg bg-[#080D12] border border-[#163542] hover:border-[#50D9D0] hover:bg-[#0B1921] transition text-left group" id="btn-scale">
+<div class="flex items-center justify-between text-[#5C8996] group-hover:text-[#50D9D0] mb-1">
+<span class="text-[10px] font-bold font-mono">SCALE FLEET</span>
+<span class="material-symbols-outlined text-xs">add_circle</span>
+</div>
+<span class="text-[9px] text-[#5C8996] block truncate">+2 Celery workers</span>
+</button>
+<button class="p-2.5 rounded-lg bg-[#080D12] border border-[#163542] hover:border-[#F59E0B] hover:bg-[#0B1921] transition text-left group" id="btn-purge">
+<div class="flex items-center justify-between text-[#5C8996] group-hover:text-[#F59E0B] mb-1">
+<span class="text-[10px] font-bold font-mono">PURGE CORE</span>
+<span class="material-symbols-outlined text-xs">cleaning_services</span>
+</div>
+<span class="text-[9px] text-[#5C8996] block truncate">Clear dry containers</span>
+</button>
+<button class="p-2.5 rounded-lg bg-[#080D12] border border-[#163542] hover:border-[#00FFA3] hover:bg-[#0B1921] transition text-left group" id="btn-ping">
+<div class="flex items-center justify-between text-[#5C8996] group-hover:text-[#00FFA3] mb-1">
+<span class="text-[10px] font-bold font-mono">DIAGNOSTIC</span>
+<span class="material-symbols-outlined text-xs">radar</span>
+</div>
+<span class="text-[9px] text-[#5C8996] block truncate">Trigger E2E Ping</span>
+</button>
+</div>
+</div>
+<!-- RIGHT PANEL: Webhook Event Mesh & Cluster Health Infrastructure (Col 4) -->
+<div class="xl:col-span-4 flex flex-col space-y-3.5">
+<!-- Webhook Ingestion Mesh -->
+<div class="rounded-xl bg-[#080D12] border border-[#163542] p-3.5">
+<div class="flex items-center justify-between pb-2 mb-3 border-b border-[#163542]/70">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-[#50D9D0] text-sm">leak_add</span>
+<span class="text-xs font-bold uppercase tracking-wider text-white">Webhook Ingestion Mesh</span>
+</div>
+<span class="text-[10px] font-mono text-[#00FFA3] flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-[#00FFA3]"></span>
+            42 LISTENERS
+          </span>
+</div>
+<!-- Ingestion Events Stream -->
+<div class="space-y-2 font-mono text-[11px]">
+<!-- Event 1 -->
+<div class="p-2 rounded bg-[#0B1921] border border-[#163542] flex items-center justify-between">
+<div>
+<div class="flex items-center space-x-1.5">
+<span class="text-white font-medium">Stripe Checkout</span>
+<span class="text-[9px] text-[#00FFA3] bg-[#00FFA3]/10 px-1 rounded">200 OK</span>
+</div>
+<span class="text-[9px] text-[#5C8996]">evt_3Nz8v4Lkd9 | invoice.paid</span>
+</div>
+<div class="text-right">
+<span class="text-[#50D9D0] font-bold">12ms</span>
+<span class="block text-[8px] text-[#5C8996]">0s ago</span>
+</div>
+</div>
+<!-- Event 2 -->
+<div class="p-2 rounded bg-[#0B1921] border border-[#163542] flex items-center justify-between">
+<div>
+<div class="flex items-center space-x-1.5">
+<span class="text-white font-medium">GitHub PR Hook</span>
+<span class="text-[9px] text-[#00FFA3] bg-[#00FFA3]/10 px-1 rounded">200 OK</span>
+</div>
+<span class="text-[9px] text-[#5C8996]">PR #142 | commit: b78ac92</span>
+</div>
+<div class="text-right">
+<span class="text-[#50D9D0] font-bold">8ms</span>
+<span class="block text-[8px] text-[#5C8996]">14s ago</span>
+</div>
+</div>
+<!-- Event 3 -->
+<div class="p-2 rounded bg-[#0B1921] border border-[#163542] flex items-center justify-between">
+<div>
+<div class="flex items-center space-x-1.5">
+<span class="text-white font-medium">HubSpot CRM Deal</span>
+<span class="text-[9px] text-[#00FFA3] bg-[#00FFA3]/10 px-1 rounded">200 OK</span>
+</div>
+<span class="text-[9px] text-[#5C8996]">deal_update | stage: negotiation</span>
+</div>
+<div class="text-right">
+<span class="text-[#50D9D0] font-bold">15ms</span>
+<span class="block text-[8px] text-[#5C8996]">27s ago</span>
+</div>
+</div>
+</div>
+<div class="mt-2.5 pt-2 border-t border-[#163542]/60 flex items-center justify-between text-[10px] text-[#5C8996] font-mono">
+<span>DEAD-LETTER QUEUE (DLQ): 0</span>
+<span class="text-[#00FFA3]">CIRCUIT BREAKER: CLOSED</span>
+</div>
+</div>
+<!-- Infrastructure Health Gauges -->
+<div class="rounded-xl bg-[#080D12] border border-[#163542] p-3.5">
+<div class="flex items-center justify-between pb-2 mb-3 border-b border-[#163542]/70">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-[#50D9D0] text-sm">speed</span>
+<span class="text-xs font-bold uppercase tracking-wider text-white">Cluster Health Telemetry</span>
+</div>
+<span class="text-[10px] font-mono text-[#50D9D0]">REAL-TIME</span>
+</div>
+<!-- Infrastructure Metrics Grid -->
+<div class="grid grid-cols-1 gap-2 text-xs font-mono">
+<!-- Metric 1: Redis Cluster -->
+<div class="bg-[#0B1921] p-2 rounded border border-[#163542] flex items-center justify-between">
+<div class="flex items-center space-x-2">
+<span class="w-1.5 h-1.5 rounded-full bg-[#00FFA3]"></span>
+<div>
+<div class="text-white font-semibold text-[11px]">Redis Pub/Sub Mesh</div>
+<div class="text-[9px] text-[#5C8996]">6 Master Shards // 142 Active Channels</div>
+</div>
+</div>
+<div class="text-right">
+<span class="text-[#00FFA3] font-bold text-[11px]">0.4ms</span>
+<span class="block text-[8px] text-[#5C8996]">ROUNDTRIP</span>
+</div>
+</div>
+<!-- Metric 2: PostgreSQL / PGVector -->
+<div class="bg-[#0B1921] p-2 rounded border border-[#163542] flex items-center justify-between">
+<div class="flex items-center space-x-2">
+<span class="w-1.5 h-1.5 rounded-full bg-[#50D9D0]"></span>
+<div>
+<div class="text-white font-semibold text-[11px]">PostgreSQL &amp; PGVector</div>
+<div class="text-[9px] text-[#5C8996]">24 / 50 Active Conns Pool</div>
+</div>
+</div>
+<div class="text-right">
+<span class="text-[#50D9D0] font-bold text-[11px]">4.2ms</span>
+<span class="block text-[8px] text-[#5C8996]">AVG LATENCY</span>
+</div>
+</div>
+<!-- Metric 3: Cloudflare Edge -->
+<div class="bg-[#0B1921] p-2 rounded border border-[#163542] flex items-center justify-between">
+<div class="flex items-center space-x-2">
+<span class="w-1.5 h-1.5 rounded-full bg-[#00FFA3]"></span>
+<div>
+<div class="text-white font-semibold text-[11px]">Cloudflare Global Edge</div>
+<div class="text-[9px] text-[#5C8996]">Zero-Trust Perimeter Shield</div>
+</div>
+</div>
+<div class="text-right">
+<span class="text-white font-bold text-[11px]">94.6%</span>
+<span class="block text-[8px] text-[#00FFA3]">CACHE HIT</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Real-Time Interactive Standard Output / Terminal Stream -->
+<div class="mt-3.5 rounded-xl bg-[#060b11] border border-[#163542] p-3 shadow-inner">
+<div class="flex items-center justify-between pb-2 mb-2 border-b border-[#163542]/60 text-xs">
+<div class="flex items-center space-x-2">
+<span class="w-2.5 h-2.5 rounded-full bg-red-500/80 inline-block"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block"></span>
+<span class="ml-2 font-mono text-[10px] font-bold text-gray-300 uppercase tracking-widest">
+          ENV 06 // STDOUT &amp; HARNESS EXECUTION AUDIT FEED
+        </span>
+</div>
+<div class="flex items-center space-x-3 text-[10px] font-mono text-[#5C8996]">
+<button class="hover:text-white transition" id="toggle-stream">PAUSE STREAM</button>
+<span>•</span>
+<span class="text-[#00FFA3]">LIVE HARNESS FEED (10ms)</span>
+</div>
+</div>
+<!-- Terminal Log Lines -->
+<div class="h-28 overflow-y-auto font-mono text-[11px] leading-relaxed space-y-1 text-gray-300 scrollbar-thin" id="terminal-feed">
+<div class="flex items-baseline space-x-2">
+<span class="text-[#5C8996]">[10:52:14.004]</span>
+<span class="text-[#50D9D0] font-semibold">[celery@worker-04]</span>
+<span>Task <span class="text-white">thalos.tasks.agent_dispatch[89f2a]</span> received from orchestrator. Concurrency slot reserved.</span>
+</div>
+<div class="flex items-baseline space-x-2">
+<span class="text-[#5C8996]">[10:52:14.146]</span>
+<span class="text-[#00FFA3] font-semibold">[celery@worker-04]</span>
+<span>Task <span class="text-white">thalos.tasks.agent_dispatch[89f2a]</span> succeeded in 0.142s: return code 0, egress verified.</span>
+</div>
+<div class="flex items-baseline space-x-2">
+<span class="text-[#5C8996]">[10:52:21.890]</span>
+<span class="text-amber-400 font-semibold">[sandbox@runner-104]</span>
+<span>Spawning ephemeral microVM with image <span class="text-white">'thalos-sandbox:v4.8'</span>. Memory cap: 256MB.</span>
+</div>
+<div class="flex items-baseline space-x-2">
+<span class="text-[#5C8996]">[10:52:22.012]</span>
+<span class="text-[#50D9D0] font-semibold">[webhook@ingest]</span>
+<span>Stripe Webhook signature verified. Dispatching event <span class="text-white">invoice.payment_succeeded</span> to high_priority queue.</span>
+</div>
+<div class="flex items-baseline space-x-2">
+<span class="text-[#5C8996]">[10:52:28.455]</span>
+<span class="text-[#00FFA3] font-semibold">[guardrail@netshield]</span>
+<span>Network isolation confirmed for Runner #104. Zero outgoing socket leaks detected during execution.</span>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Simple micro-interactions for the telemetry control feed
+  const btnScale = document.getElementById('btn-scale');
+  const btnPing = document.getElementById('btn-ping');
+  const terminalFeed = document.getElementById('terminal-feed');
+
+  function appendLog(tag, color, text) {
+    if (!terminalFeed) return;
+    const now = new Date();
+    const timeStr = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
+    const logItem = document.createElement('div');
+    logItem.className = 'flex items-baseline space-x-2';
+    logItem.innerHTML = `
+      <span class="text-[#5C8996]">[${timeStr}]</span>
+      <span class="${color} font-semibold">[${tag}]</span>
+      <span>${text}</span>
+    `;
+    terminalFeed.appendChild(logItem);
+    terminalFeed.scrollTop = terminalFeed.scrollHeight;
+  }
+
+  if (btnScale) {
+    btnScale.addEventListener('click', () => {
+      appendLog('orchestrator', 'text-[#50D9D0]', 'Autoscaling request issued: Spawning +2 Celery worker instances in Cluster Alpha...');
+      setTimeout(() => {
+        appendLog('orchestrator', 'text-[#00FFA3]', 'Cluster Alpha scaled to 10 workers (Concurrency 40). Latency nominal.');
+      }, 700);
+    });
+  }
+
+  if (btnPing) {
+    btnPing.addEventListener('click', () => {
+      appendLog('diagnostic', 'text-amber-400', 'Executing sub-10ms E2E latency trace across all 12 worker nodes...');
+      setTimeout(() => {
+        appendLog('diagnostic', 'text-[#00FFA3]', 'E2E Ping complete: Mean 4.2ms | Max 8.4ms | Zero packet drop.');
+      }, 500);
+    });
+  }
+</script></main>
+<!-- END: MainDashboardGrid -->
+<!-- BEGIN: BottomTelemetryStream -->
+<section class="w-full bg-[#080D12] border border-[#163542] rounded-xl px-3.5 py-2" data-purpose="multi-env-synapse-stream">
+<div class="flex items-center justify-between text-[11px] mb-1.5 border-b border-[#163542]/60 pb-1">
+<div class="flex items-center space-x-2">
+<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+<span class="font-bold text-white uppercase tracking-wider text-[10px]">
+          GLOBAL SYNAPSE TELEMETRY // MULTI-ENVIRONMENT AUDIT STREAM
+        </span>
+</div>
+<div class="flex items-center space-x-3 text-[10px] text-[#5C8996]">
+<span>AGGREGATED STREAM</span>
+<span>BUFFER: 512/512 KB</span>
+</div>
+</div>
+<!-- Real-time Multi-Environment Logs -->
+<div class="font-mono text-[10px] space-y-1 text-gray-300">
+<div class="flex items-baseline space-x-2 truncate">
+<span class="text-[#5C8996]">[10:48:02]</span>
+<span class="text-[#50D9D0] font-semibold">[Env:AI-Team]</span>
+<span>DevAgent-X committed PR #142 to 'NexGen Systems' staging branch. E2E pipeline nominal.</span>
+</div>
+<div class="flex items-baseline space-x-2 truncate">
+<span class="text-[#5C8996]">[10:48:19]</span>
+<span class="text-amber-400 font-semibold">[Env:Revenue]</span>
+<span>Deal Architect generated custom SLA v2 for Acme Corp (₹6,00,000). Awaiting Executive clearance.</span>
+</div>
+<div class="flex items-baseline space-x-2 truncate">
+<span class="text-[#5C8996]">[10:48:44]</span>
+<span class="text-emerald-400 font-semibold">[Env:Knowledge]</span>
+<span>Qdrant vector cluster merged 1,420 legal precedent embeddings. Semantic drift: 0.01%.</span>
+</div>
+</div>
+</section>
+<!-- END: BottomTelemetryStream -->
+<!-- BEGIN: PersistentOmniCommandCapsule -->
+<footer class="w-full max-w-4xl mx-auto" data-purpose="omni-command-capsule">
+<div class="bg-[#080D12] border border-[#50D9D0]/40 rounded-full px-4 py-2 flex items-center justify-between gap-3 shadow-[0_0_25px_rgba(80,217,208,0.2)]">
+<!-- Microphone & Waveform Indicator -->
+<div class="flex items-center space-x-2.5 pl-1">
+<button class="w-7 h-7 rounded-full bg-[#0B1921] border border-[#50D9D0]/50 hover:bg-[#50D9D0]/20 flex items-center justify-center text-[#50D9D0] transition">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 02-3-3V5a3 3 0 116 0v6a3 3 0 02-3 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<!-- Simulated Voice Waveform Bars -->
+<div class="flex items-center space-x-0.5 h-3.5">
+<span class="w-0.5 h-2 bg-[#50D9D0] rounded-full animate-pulse"></span>
+<span class="w-0.5 h-3.5 bg-[#50D9D0] rounded-full animate-pulse" style="animation-delay: 150ms;"></span>
+<span class="w-0.5 h-1.5 bg-[#50D9D0] rounded-full animate-pulse" style="animation-delay: 300ms;"></span>
+<span class="w-0.5 h-3 bg-[#50D9D0] rounded-full animate-pulse" style="animation-delay: 75ms;"></span>
+<span class="w-0.5 h-2 bg-[#50D9D0] rounded-full animate-pulse" style="animation-delay: 200ms;"></span>
+</div>
+</div>
+<!-- Natural Language Command Input -->
+<div class="flex-grow">
+<input class="w-full bg-transparent border-none text-[11px] text-[#E6F0EF] placeholder-[#5C8996] focus:ring-0 focus:outline-none" placeholder="Broadcast command across all 7 THALOS environments or ask THALOS (e.g. 'Synthesize sprint velocity with Q2 revenue forecast')..." type="text"/>
+</div>
+<!-- Action & Dispatch -->
+<div class="flex items-center space-x-2 pr-1">
+<kbd class="hidden md:inline-block px-1.5 py-0.5 text-[9px] font-mono text-[#5C8996] bg-[#05090D] border border-[#163542] rounded">
+          ⌘K
+        </kbd>
+<button class="w-7 h-7 rounded-full bg-[#50D9D0] text-[#05090D] hover:bg-white flex items-center justify-center font-bold transition shadow-[0_0_10px_#50D9D0]">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<line x1="12" x2="12" y1="19" y2="5"></line>
+<polyline points="5 12 12 5 19 12"></polyline>
+</svg>
+</button>
+</div>
+</div>
+</footer>
+<!-- END: PersistentOmniCommandCapsule -->
+</body></html>

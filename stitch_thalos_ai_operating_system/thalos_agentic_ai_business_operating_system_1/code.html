@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>THALOS — Agentic AI Business Operating System</title>
+<!-- Font integration -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Orbitron:wght@500;700;800;900&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- FontAwesome Icons for High-Tech HUD elements -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<!-- Tailwind CSS v3 with Forms & Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            obsidian: '#05090C',
+            deepOcean: '#0C171E',
+            midnightTeal: '#10232B',
+            oceanTeal: '#147F83',
+            biolumCyan: '#50D9D0',
+            glowCyan: '#38efdf',
+            mist: '#A5C7C8',
+            iceWhite: '#E6F0EF'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            orbitron: ['Orbitron', 'sans-serif'],
+            space: ['Space Grotesk', 'sans-serif']
+          },
+          boxShadow: {
+            'cyan-glow': '0 0 25px rgba(80, 217, 208, 0.35)',
+            'cyan-glow-lg': '0 0 50px rgba(80, 217, 208, 0.45)',
+            'cyan-radial': '0 0 35px rgba(80, 217, 208, 0.65)'
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom Glass & Futuristic HUD Styling -->
+<style data-purpose="hud-theme">
+    body {
+      background-color: #05090c;
+      color: #E6F0EF;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    /* Ambient Bioluminescent Background Gradients */
+    .bg-thalos-mesh {
+      background: 
+        radial-gradient(circle at 75% 20%, rgba(20, 127, 131, 0.22) 0%, transparent 45%),
+        radial-gradient(circle at 25% 70%, rgba(16, 35, 43, 0.8) 0%, transparent 60%),
+        radial-gradient(circle at 50% 50%, rgba(5, 9, 12, 0.95) 0%, #04070a 100%);
+    }
+
+    /* Sci-Fi Glass Panels */
+    .glass-hud {
+      background: rgba(12, 23, 30, 0.68);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(80, 217, 208, 0.22);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.65), inset 0 0 12px rgba(80, 217, 208, 0.05);
+    }
+
+    .glass-hud-active {
+      border: 1px solid rgba(80, 217, 208, 0.7);
+      box-shadow: 0 0 30px rgba(80, 217, 208, 0.25), inset 0 0 15px rgba(80, 217, 208, 0.15);
+    }
+
+    /* Radial Navigation Arc Alignment */
+    .radial-center-disc {
+      background: radial-gradient(circle, rgba(20,127,131,0.5) 0%, rgba(12,23,30,0.9) 70%, #05090c 100%);
+      box-shadow: 0 0 45px rgba(80, 217, 208, 0.35);
+    }
+
+    /* Animated Holographic Rings */
+    @keyframes spin-slow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes spin-reverse {
+      0% { transform: rotate(360deg); }
+      100% { transform: rotate(0deg); }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.75; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.04); }
+    }
+
+    .animate-spin-slow {
+      animation: spin-slow 28s linear infinite;
+    }
+    .animate-spin-reverse {
+      animation: spin-reverse 20s linear infinite;
+    }
+    .animate-pulse-glow {
+      animation: pulse-glow 3.5s ease-in-out infinite;
+    }
+
+    /* Custom Scrollbar for inner feeds */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(12, 23, 30, 0.4);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(80, 217, 208, 0.3);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(80, 217, 208, 0.6);
+    }
+  </style>
+<!-- END: Custom Glass & Futuristic HUD Styling -->
+</head>
+<body class="bg-thalos-mesh min-h-screen text-iceWhite flex flex-col font-sans relative overflow-x-hidden selection:bg-biolumCyan selection:text-obsidian">
+<!-- Holographic Grid Overlay Accent -->
+<div class="fixed inset-0 pointer-events-none opacity-20 bg-[linear-gradient(to_right,#147f8315_1px,transparent_1px),linear-gradient(to_bottom,#147f8315_1px,transparent_1px)] bg-[size:4rem_4rem] z-0"></div>
+<!-- BEGIN: MasterTopNavigation -->
+<header class="relative z-30 w-full px-6 py-3 border-b border-oceanTeal/30 glass-hud flex items-center justify-between" data-purpose="top-command-bar">
+<!-- Brand identity -->
+<div class="flex items-center space-x-4">
+<div class="flex items-center space-x-3 cursor-pointer group" onclick="switchEnvironment('command')">
+<div class="relative w-10 h-10 flex items-center justify-center">
+<svg class="w-9 h-9 text-biolumCyan group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_10px_rgba(80,217,208,0.7)]" fill="none" viewbox="0 0 100 100">
+<path d="M50 12 L85 82 L70 82 L50 40 L30 82 L15 82 Z" fill="currentColor"></path>
+<path d="M42 62 L58 62 L50 46 Z" fill="#0C171E"></path>
+</svg>
+<span class="absolute inset-0 rounded-full border border-biolumCyan/40 animate-ping opacity-25"></span>
+</div>
+<div>
+<h1 class="text-xl tracking-[0.25em] font-orbitron font-extrabold text-iceWhite flex items-center">
+            THALOS
+          </h1>
+<p class="text-[10px] tracking-widest uppercase text-biolumCyan/80 font-medium">One Intelligence. Every Device.</p>
+</div>
+</div>
+<!-- Organization Badge -->
+<span class="hidden md:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-oceanTeal/20 text-mist border border-oceanTeal/40">
+<span class="w-1.5 h-1.5 rounded-full bg-biolumCyan mr-1.5 animate-pulse"></span>
+        Yugantar Core v4.8
+      </span>
+</div>
+<!-- Center System Status & Time Telemetry -->
+<div class="hidden lg:flex items-center space-x-6 text-xs text-mist font-space tracking-wider">
+<div class="flex items-center space-x-2 bg-deepOcean/70 px-4 py-1.5 rounded-full border border-oceanTeal/30">
+<span class="w-2 h-2 rounded-full bg-biolumCyan shadow-cyan-glow"></span>
+<span class="text-iceWhite font-medium">Good Morning, Boss!</span>
+<span class="text-mist/50">|</span>
+<span class="text-biolumCyan font-mono" id="liveTimeClock">Mon, Apr 28 • 09:41:22 AM</span>
+</div>
+<!-- View Mode Switcher -->
+<div class="flex items-center bg-obsidian/70 p-0.5 rounded-lg border border-oceanTeal/40" data-purpose="view-mode-selector">
+<button class="px-2.5 py-1 text-[11px] rounded transition-all text-mist hover:text-biolumCyan" id="viewBtn-focus" onclick="setViewMode('focus')">FOCUS</button>
+<button class="px-2.5 py-1 text-[11px] rounded transition-all bg-oceanTeal/40 text-biolumCyan font-semibold border border-biolumCyan/40 shadow-sm" id="viewBtn-spatial" onclick="setViewMode('spatial')">SPATIAL</button>
+<button class="px-2.5 py-1 text-[11px] rounded transition-all text-mist hover:text-biolumCyan" id="viewBtn-immersive" onclick="setViewMode('immersive')">IMMERSIVE</button>
+</div>
+</div>
+<!-- Right Controls: Quick Search, Notifications, Profile Avatar -->
+<div class="flex items-center space-x-4">
+<button class="w-9 h-9 rounded-full bg-deepOcean/80 border border-oceanTeal/40 flex items-center justify-center text-mist hover:text-biolumCyan hover:border-biolumCyan transition-all shadow-sm" title="Search Telemetry &amp; Agents">
+<i class="fa-solid fa-magnifying-glass text-xs"></i>
+</button>
+<!-- Alert Notification Bell with Real Badge -->
+<div class="relative">
+<button class="w-9 h-9 rounded-full bg-deepOcean/80 border border-oceanTeal/40 flex items-center justify-center text-mist hover:text-biolumCyan transition-all" id="alertBtn" onclick="toggleAlertsTray()">
+<i class="fa-regular fa-bell text-sm"></i>
+<span class="absolute -top-1 -right-1 w-4 h-4 bg-biolumCyan text-obsidian text-[10px] font-bold rounded-full flex items-center justify-center shadow-cyan-glow">2</span>
+</button>
+</div>
+<!-- User Avatar / Security Token -->
+<div class="flex items-center space-x-2.5 pl-2 border-l border-oceanTeal/30">
+<div class="relative">
+<img alt="Executive Avatar" class="w-9 h-9 rounded-full object-cover border border-biolumCyan shadow-cyan-glow" src="https://lh3.googleusercontent.com/aida-public/AB6AXuADJ37a6szwFHPeXm-NTXgBo1aOZC483Z_m1ORBaMXcWPjGC-VAjGdWI_GAjzdoCy62aVqUvWtLiNuIGsnoBWSpwxdzHE0bVh67O0qz7ePmayEFogzJm1wjRpi6CkQaa_O9aoc1JFta2IPYyJbWshvnbRIfllaghoV6aM67sCbTVmRlyPeCww3kRt4hscCkWNu9IpFKanVJo5ffWnCixrAg30NTqKkeGHM8G6AA3PA"/>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-obsidian rounded-full"></span>
+</div>
+<div class="hidden xl:block text-left">
+<p class="text-xs font-semibold text-iceWhite leading-tight">Yugantar Leader</p>
+<p class="text-[10px] text-biolumCyan/70 font-mono tracking-tighter">EXEC-LEVEL-0</p>
+</div>
+</div>
+</div>
+</header>
+<!-- END: MasterTopNavigation -->
+<!-- BEGIN: MainSpatialWorkspace -->
+<main class="relative flex-1 flex overflow-hidden z-10">
+<!-- Workspace Container (Left 78% Width, fully reactive) -->
+<div class="flex-1 h-[calc(100vh-4.25rem)] overflow-y-auto p-4 lg:p-7 transition-all duration-500 relative flex flex-col justify-between" id="activeWorkspace">
+<!-- Dynamic Environment Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4" data-purpose="environment-breadcrumbs">
+<div>
+<div class="flex items-center space-x-2 text-xs font-mono text-biolumCyan uppercase tracking-widest">
+<span class="inline-block w-2 h-0.5 bg-biolumCyan"></span>
+<span id="envCategoryLabel">COMMAND SUITE</span>
+<span>//</span>
+<span class="text-mist" id="envSubLabel">SYSTEM.ACTIVE</span>
+</div>
+<h2 class="text-2xl lg:text-3xl font-orbitron font-bold text-white tracking-wide mt-1" id="envTitle">
+            Command Chamber
+          </h2>
+</div>
+<!-- Metric Pulse Indicators -->
+<div class="flex items-center space-x-3 bg-deepOcean/50 px-4 py-2 rounded-xl border border-oceanTeal/30 text-xs">
+<div class="flex items-center space-x-1.5 text-emerald-400 font-mono">
+<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+<span>AUTONOMY: 98.4%</span>
+</div>
+<span class="text-mist/30">|</span>
+<div class="text-mist font-mono">
+            NEURAL LOAD: <span class="text-biolumCyan">14.2 GigaFLOPs</span>
+</div>
+</div>
+</div>
+<!-- ============================================== -->
+<!-- VIEW 1: MY DAY / COMMAND CHAMBER (DEFAULT)   -->
+<!-- ============================================== -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-5 my-auto" id="view-command">
+<!-- Left Panel: My Day Priorities & Approvals -->
+<div class="lg:col-span-4 flex flex-col space-y-5">
+<!-- Priorities Widget -->
+<div class="glass-hud rounded-2xl p-5 relative overflow-hidden group hover:border-biolumCyan/50 transition-all duration-300" data-purpose="priorities-widget">
+<div class="absolute top-0 right-0 w-24 h-24 bg-biolumCyan/5 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex items-center justify-between pb-3 border-b border-oceanTeal/30">
+<div class="flex items-center space-x-2.5">
+<div class="w-8 h-8 rounded-lg bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-300">
+<i class="fa-solid fa-sun text-sm"></i>
+</div>
+<div>
+<h3 class="font-bold text-sm text-iceWhite tracking-wide">My Day</h3>
+<p class="text-[10px] text-mist/70">Command Chamber Matrix</p>
+</div>
+</div>
+<div class="text-right">
+<span class="text-xs font-mono text-biolumCyan bg-oceanTeal/30 px-2 py-0.5 rounded border border-biolumCyan/30">3 Priorities</span>
+</div>
+</div>
+<!-- Priority Interactive Checkboxes -->
+<div class="mt-4 space-y-3 font-space text-xs">
+<label class="flex items-center space-x-3 p-2.5 rounded-lg bg-obsidian/40 border border-oceanTeal/30 hover:border-biolumCyan/40 cursor-pointer transition-all">
+<input checked="" class="rounded border-oceanTeal/50 bg-deepOcean text-biolumCyan focus:ring-biolumCyan focus:ring-offset-obsidian w-4 h-4" type="checkbox"/>
+<span class="line-through text-mist/60 flex-1">Review Q2 Revenue Plan</span>
+<span class="text-[10px] font-mono text-emerald-400 bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-500/20">Done</span>
+</label>
+<label class="flex items-center space-x-3 p-2.5 rounded-lg bg-obsidian/60 border border-oceanTeal/40 hover:border-biolumCyan cursor-pointer transition-all">
+<input class="rounded border-oceanTeal/50 bg-deepOcean text-biolumCyan focus:ring-biolumCyan focus:ring-offset-obsidian w-4 h-4" type="checkbox"/>
+<span class="text-iceWhite font-medium flex-1">Approve Client Proposal</span>
+<span class="text-[10px] font-mono text-amber-400 bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-500/30 animate-pulse">Critical</span>
+</label>
+<label class="flex items-center space-x-3 p-2.5 rounded-lg bg-obsidian/60 border border-oceanTeal/40 hover:border-biolumCyan cursor-pointer transition-all">
+<input class="rounded border-oceanTeal/50 bg-deepOcean text-biolumCyan focus:ring-biolumCyan focus:ring-offset-obsidian w-4 h-4" type="checkbox"/>
+<span class="text-iceWhite font-medium flex-1">Check Agent Progress</span>
+<span class="text-[10px] font-mono text-biolumCyan bg-oceanTeal/40 px-1.5 py-0.5 rounded border border-biolumCyan/30">Auto</span>
+</label>
+</div>
+<!-- Priority Action Link -->
+<div class="mt-4 pt-3 border-t border-oceanTeal/20 flex items-center justify-between text-xs">
+<span class="text-mist text-[11px]">2 Pending Approvals</span>
+<button class="inline-flex items-center space-x-1.5 text-biolumCyan hover:text-white transition-colors group" onclick="switchEnvironment('agents')">
+<span class="font-medium text-[11px]">View Details</span>
+<i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+</button>
+</div>
+</div>
+<!-- THALOS Live Activity Feed Widget -->
+<div class="glass-hud rounded-2xl p-5 border border-oceanTeal/30 relative" data-purpose="thalos-live-pulse">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center space-x-2">
+<i class="fa-solid fa-bolt-lightning text-biolumCyan text-xs animate-bounce"></i>
+<h4 class="text-xs font-orbitron font-bold uppercase tracking-wider text-iceWhite">THALOS Activity</h4>
+</div>
+<span class="flex items-center space-x-1 text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-500/30">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+<span>Live</span>
+</span>
+</div>
+<div class="p-3 bg-obsidian/60 rounded-xl border border-oceanTeal/40 flex items-start space-x-3">
+<div class="w-7 h-7 rounded-full bg-biolumCyan/10 border border-biolumCyan/40 flex items-center justify-center text-biolumCyan mt-0.5">
+<i class="fa-solid fa-check text-xs"></i>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<h5 class="text-xs font-semibold text-iceWhite">Research Agent</h5>
+<span class="text-[10px] text-mist/60 font-mono">3m ago</span>
+</div>
+<p class="text-[11px] text-mist mt-0.5 leading-snug">
+                  Completed market intelligence on 12 prospective enterprise nodes.
+                </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Center: 3D Holographic Earth / Digital Core -->
+<div class="lg:col-span-5 flex flex-col items-center justify-center relative min-h-[360px]" data-purpose="digital-core-hologram">
+<!-- Outer Telemetry Ring -->
+<div class="absolute w-[340px] h-[340px] rounded-full border border-oceanTeal/30 animate-spin-slow pointer-events-none flex items-center justify-center">
+<div class="absolute top-0 w-2 h-2 rounded-full bg-biolumCyan shadow-cyan-glow"></div>
+<div class="absolute bottom-6 left-12 w-1.5 h-1.5 rounded-full bg-oceanTeal"></div>
+</div>
+<!-- Counter-rotating Inner Ring -->
+<div class="absolute w-[280px] h-[280px] rounded-full border border-dashed border-biolumCyan/25 animate-spin-reverse pointer-events-none"></div>
+<!-- Digital Holographic Core Globe Center -->
+<div class="relative w-56 h-56 rounded-full flex items-center justify-center animate-pulse-glow" style="background: radial-gradient(circle, rgba(20,127,131,0.5) 0%, rgba(12,23,30,0.85) 60%, rgba(5,9,12,0.98) 100%); box-shadow: 0 0 60px rgba(80,217,208,0.25);">
+<!-- Planetary Wireframe Representation -->
+<svg class="w-48 h-48 text-biolumCyan/80 drop-shadow-[0_0_15px_rgba(80,217,208,0.8)]" fill="none" viewbox="0 0 100 100">
+<!-- Latitude lines -->
+<circle cx="50" cy="50" opacity="0.4" r="45" stroke="currentColor" stroke-width="0.8"></circle>
+<ellipse cx="50" cy="50" opacity="0.6" rx="45" ry="22" stroke="currentColor" stroke-width="0.8"></ellipse>
+<ellipse cx="50" cy="50" opacity="0.4" rx="45" ry="10" stroke="currentColor" stroke-width="0.7"></ellipse>
+<!-- Longitude lines -->
+<ellipse cx="50" cy="50" opacity="0.6" rx="20" ry="45" stroke="currentColor" stroke-width="0.8"></ellipse>
+<line opacity="0.5" stroke="currentColor" stroke-width="0.8" x1="5" x2="95" y1="50" y2="50"></line>
+<line opacity="0.5" stroke="currentColor" stroke-width="0.8" x1="50" x2="50" y1="5" y2="95"></line>
+<!-- Active Node Coordinates -->
+<circle class="animate-ping" cx="34" cy="40" fill="#50D9D0" r="2.5"></circle>
+<circle cx="34" cy="40" fill="#FFFFFF" r="2"></circle>
+<circle cx="65" cy="58" fill="#50D9D0" r="2"></circle>
+<circle cx="52" cy="28" fill="#50D9D0" r="2.2"></circle>
+</svg>
+<!-- Hologram Pedestal Light Beam below Globe -->
+<div class="absolute -bottom-8 w-44 h-8 bg-gradient-to-t from-biolumCyan/30 to-transparent blur-md rounded-full pointer-events-none"></div>
+</div>
+<!-- Bottom Telemetry Label -->
+<div class="mt-8 text-center">
+<span class="text-[11px] font-mono tracking-widest text-biolumCyan/80 bg-deepOcean/70 px-3 py-1 rounded-full border border-oceanTeal/40">
+              GLOBAL SYNAPSE: ACTIVE • 12 REGIONS
+            </span>
+</div>
+</div>
+<!-- Right Panel: Revenue Pulse Metric Widget -->
+<div class="lg:col-span-3 flex flex-col space-y-5">
+<div class="glass-hud rounded-2xl p-5 relative overflow-hidden group hover:border-biolumCyan/50 transition-all duration-300" data-purpose="revenue-pulse-card">
+<div class="flex items-center justify-between pb-3 border-b border-oceanTeal/30">
+<div class="flex items-center space-x-2">
+<i class="fa-solid fa-chart-line text-biolumCyan text-sm"></i>
+<h3 class="font-bold text-sm text-iceWhite">Revenue Pulse</h3>
+</div>
+<span class="text-xs font-mono text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/30">
+                ▲ +12%
+              </span>
+</div>
+<!-- Value Display -->
+<div class="mt-4">
+<span class="text-xs text-mist font-space uppercase">Gross Velocity</span>
+<div class="text-3xl font-orbitron font-extrabold text-iceWhite tracking-tight mt-0.5">
+                ₹42,500
+              </div>
+</div>
+<!-- Stylized Sparkline Chart -->
+<div class="mt-3 py-2">
+<svg class="w-full h-16 overflow-visible" viewbox="0 0 200 60">
+<defs>
+<lineargradient id="sparkGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#50D9D0" stop-opacity="0.5"></stop>
+<stop offset="100%" stop-color="#147F83" stop-opacity="0.0"></stop>
+</lineargradient>
+</defs>
+<path d="M 0,45 Q 30,50 60,32 T 120,25 T 160,12 T 200,8 L 200,60 L 0,60 Z" fill="url(#sparkGradient)"></path>
+<path d="M 0,45 Q 30,50 60,32 T 120,25 T 160,12 T 200,8" fill="none" stroke="#50D9D0" stroke-linecap="round" stroke-width="2.5"></path>
+<!-- Highlight Spark Point -->
+<circle class="animate-pulse" cx="200" cy="8" fill="#E6F0EF" r="4" stroke="#50D9D0" stroke-width="2"></circle>
+</svg>
+</div>
+<!-- Metrics Details Grid -->
+<div class="grid grid-cols-2 gap-3 pt-3 border-t border-oceanTeal/30 text-xs">
+<div class="bg-obsidian/40 p-2.5 rounded-lg border border-oceanTeal/20">
+<span class="text-mist text-[10px] block font-mono">Active Deals</span>
+<span class="font-bold text-iceWhite text-sm">4 In Progress</span>
+</div>
+<div class="bg-obsidian/40 p-2.5 rounded-lg border border-oceanTeal/20">
+<span class="text-mist text-[10px] block font-mono">Pipeline Volume</span>
+<span class="font-bold text-biolumCyan text-sm">₹12.5L</span>
+</div>
+</div>
+<!-- Jump to Revenue View Button -->
+<button class="w-full mt-4 py-2 bg-oceanTeal/20 hover:bg-oceanTeal/40 border border-oceanTeal/40 rounded-xl text-xs text-biolumCyan font-semibold transition-all" onclick="switchEnvironment('revenue')">
+              Inspect Pipeline →
+            </button>
+</div>
+<!-- Environment Quick Footnote Card -->
+<div class="glass-hud rounded-2xl p-4 border border-oceanTeal/30 text-xs flex items-center space-x-3">
+<div class="w-8 h-8 rounded-lg bg-oceanTeal/30 flex items-center justify-center text-biolumCyan shrink-0">
+<i class="fa-solid fa-desktop text-sm"></i>
+</div>
+<div>
+<p class="font-semibold text-iceWhite text-[11px]">DESKTOP IMMERSIVE</p>
+<p class="text-[10px] text-mist/70">Expansive. Real-time. Multimodal.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- ============================================== -->
+<!-- VIEW 2: AI TEAM / AGENT ORCHESTRATOR           -->
+<!-- ============================================== -->
+<section class="hidden grid-cols-1 lg:grid-cols-12 gap-5 my-auto" data-purpose="agents-view" id="view-agents">
+<div class="lg:col-span-12 glass-hud rounded-3xl p-6 border border-oceanTeal/40">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-oceanTeal/30 gap-3">
+<div>
+<h3 class="text-lg font-orbitron font-bold text-iceWhite flex items-center gap-2">
+<i class="fa-solid fa-users-gear text-biolumCyan"></i>
+                Autonomous Agent Fleet
+              </h3>
+<p class="text-xs text-mist">6 Registered Agents • 4 Active in Execution Thread</p>
+</div>
+<div class="flex items-center space-x-2">
+<button class="px-3 py-1.5 rounded-lg bg-biolumCyan/10 border border-biolumCyan/40 text-biolumCyan text-xs hover:bg-biolumCyan/20">
+                + Deploy New Agent
+              </button>
+<button class="px-3 py-1.5 rounded-lg bg-deepOcean border border-oceanTeal/40 text-mist text-xs hover:text-white">
+                Logs Stream
+              </button>
+</div>
+</div>
+<!-- Agent Grid Cards with Real States -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+<!-- Agent 1: Running -->
+<div class="bg-obsidian/60 p-4 rounded-xl border border-biolumCyan/50 shadow-cyan-glow relative">
+<div class="flex items-center justify-between mb-2">
+<span class="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Running
+                </span>
+<span class="text-xs text-mist font-mono">ID: AG-08</span>
+</div>
+<h4 class="font-bold text-sm text-iceWhite">Research &amp; Prospector</h4>
+<p class="text-[11px] text-mist/80 mt-1">Autonomous scrape and enrichment on Tier-1 enterprise leads.</p>
+<div class="mt-4 pt-3 border-t border-oceanTeal/20 flex justify-between items-center text-xs">
+<span class="text-mist text-[10px]">Progress</span>
+<span class="text-biolumCyan font-mono">82%</span>
+</div>
+<div class="w-full bg-deepOcean rounded-full h-1.5 mt-1 overflow-hidden">
+<div class="bg-biolumCyan h-1.5 rounded-full" style="width: 82%"></div>
+</div>
+</div>
+<!-- Agent 2: Waiting Approval -->
+<div class="bg-obsidian/60 p-4 rounded-xl border border-amber-500/40 relative">
+<div class="flex items-center justify-between mb-2">
+<span class="text-[10px] font-mono text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span> Awaiting Review
+                </span>
+<span class="text-xs text-mist font-mono">ID: AG-02</span>
+</div>
+<h4 class="font-bold text-sm text-iceWhite">Proposal Synthesizer</h4>
+<p class="text-[11px] text-mist/80 mt-1">Contract drafted for Acme Corp. Requires executive sign-off.</p>
+<div class="mt-4 pt-3 border-t border-oceanTeal/20 flex justify-between items-center">
+<button class="w-full py-1 text-xs bg-amber-500/20 hover:bg-amber-500/40 border border-amber-500/50 rounded text-amber-300 font-medium">
+                  Review Proposal
+                </button>
+</div>
+</div>
+<!-- Agent 3: Queued -->
+<div class="bg-obsidian/60 p-4 rounded-xl border border-oceanTeal/40 relative">
+<div class="flex items-center justify-between mb-2">
+<span class="text-[10px] font-mono text-mist bg-deepOcean px-2 py-0.5 rounded-full border border-oceanTeal/30 flex items-center gap-1">
+<i class="fa-solid fa-clock text-[9px]"></i> Queued
+                </span>
+<span class="text-xs text-mist font-mono">ID: AG-14</span>
+</div>
+<h4 class="font-bold text-sm text-iceWhite">Cash Flow Optimizer</h4>
+<p class="text-[11px] text-mist/80 mt-1">Scheduled to simulate monthly runway and burn forecast.</p>
+<div class="mt-4 pt-3 border-t border-oceanTeal/20 flex justify-between items-center text-xs">
+<span class="text-mist text-[10px]">Triggers in</span>
+<span class="text-mist font-mono">14m</span>
+</div>
+<div class="w-full bg-deepOcean rounded-full h-1.5 mt-1 overflow-hidden">
+<div class="bg-mist/30 h-1.5 rounded-full" style="width: 15%"></div>
+</div>
+</div>
+<!-- Agent 4: Completed -->
+<div class="bg-obsidian/60 p-4 rounded-xl border border-oceanTeal/30 relative">
+<div class="flex items-center justify-between mb-2">
+<span class="text-[10px] font-mono text-biolumCyan bg-oceanTeal/30 px-2 py-0.5 rounded-full border border-biolumCyan/30 flex items-center gap-1">
+<i class="fa-solid fa-check text-[9px]"></i> Completed
+                </span>
+<span class="text-xs text-mist font-mono">ID: AG-01</span>
+</div>
+<h4 class="font-bold text-sm text-iceWhite">Weekly SEO Matrix</h4>
+<p class="text-[11px] text-mist/80 mt-1">Indexed 45 core keywords and generated rank analytics.</p>
+<div class="mt-4 pt-3 border-t border-oceanTeal/20 flex justify-between items-center text-xs">
+<span class="text-mist text-[10px]">Result</span>
+<span class="text-emerald-400 font-mono">+18% Reach</span>
+</div>
+<div class="w-full bg-deepOcean rounded-full h-1.5 mt-1 overflow-hidden">
+<div class="bg-emerald-400 h-1.5 rounded-full" style="width: 100%"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ============================================== -->
+<!-- VIEW 3: REVENUE & SALES WORKSPACE              -->
+<!-- ============================================== -->
+<section class="hidden grid-cols-1 lg:grid-cols-12 gap-5 my-auto" data-purpose="revenue-view" id="view-revenue">
+<div class="lg:col-span-8 glass-hud rounded-3xl p-6 border border-oceanTeal/40">
+<h3 class="text-lg font-orbitron font-bold text-iceWhite mb-1">Revenue Trajectory &amp; Deal Flow</h3>
+<p class="text-xs text-mist mb-6">Real-time valuation across all sales channels.</p>
+<div class="grid grid-cols-3 gap-4 mb-6">
+<div class="p-4 bg-obsidian/60 rounded-xl border border-oceanTeal/30">
+<span class="text-[11px] text-mist font-mono block">MRR CURRENT</span>
+<span class="text-2xl font-orbitron font-bold text-biolumCyan">₹42,500</span>
+<span class="text-[10px] text-emerald-400 block mt-1">▲ +12% from last cycle</span>
+</div>
+<div class="p-4 bg-obsidian/60 rounded-xl border border-oceanTeal/30">
+<span class="text-[11px] text-mist font-mono block">PIPELINE VALUE</span>
+<span class="text-2xl font-orbitron font-bold text-white">₹12,50,000</span>
+<span class="text-[10px] text-mist block mt-1">8 Qualified B2B Leads</span>
+</div>
+<div class="p-4 bg-obsidian/60 rounded-xl border border-oceanTeal/30">
+<span class="text-[11px] text-mist font-mono block">WIN PROBABILITY</span>
+<span class="text-2xl font-orbitron font-bold text-emerald-400">76.4%</span>
+<span class="text-[10px] text-biolumCyan block mt-1">AI Guided Negotiation</span>
+</div>
+</div>
+<div class="p-4 bg-deepOcean/40 rounded-xl border border-oceanTeal/30">
+<h4 class="text-xs font-semibold text-iceWhite mb-3 uppercase tracking-wider font-space">Live Deal Pipeline</h4>
+<div class="space-y-2 text-xs">
+<div class="flex items-center justify-between p-2 rounded bg-obsidian/40 border border-oceanTeal/20">
+<span class="font-medium text-iceWhite">Alpha Logistics Corp — Enterprise Node</span>
+<span class="font-mono text-biolumCyan">₹6,00,000</span>
+<span class="text-[10px] text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-500/30">Final Review</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-obsidian/40 border border-oceanTeal/20">
+<span class="font-medium text-iceWhite">Zenith Healthtech — AI Copilot License</span>
+<span class="font-mono text-biolumCyan">₹4,50,000</span>
+<span class="text-[10px] text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/30">Proposal Signed</span>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-4 glass-hud rounded-3xl p-6 border border-oceanTeal/40 flex flex-col justify-between">
+<div>
+<h3 class="text-base font-orbitron font-bold text-iceWhite mb-2">Autonomous Forecast</h3>
+<p class="text-xs text-mist leading-relaxed">
+              Based on conversation sentiment extracted by THALOS Voice Agents, 2 additional deals are expected to close before Friday.
+            </p>
+</div>
+<button class="w-full py-2.5 bg-biolumCyan/20 hover:bg-biolumCyan/30 border border-biolumCyan/60 rounded-xl text-xs font-bold text-biolumCyan tracking-wider uppercase transition-all shadow-cyan-glow">
+            Generate Executive Ledger
+          </button>
+</div>
+</section>
+<!-- ============================================== -->
+<!-- VIEW 4: DIGITAL WORLD / PROJECTS               -->
+<!-- ============================================== -->
+<section class="hidden grid-cols-1 lg:grid-cols-12 gap-5 my-auto" data-purpose="digital-world-view" id="view-world">
+<div class="lg:col-span-12 glass-hud rounded-3xl p-6 border border-oceanTeal/40">
+<div class="flex items-center justify-between mb-6 pb-3 border-b border-oceanTeal/30">
+<div>
+<h3 class="text-lg font-orbitron font-bold text-iceWhite">Digital World &amp; Client Networks</h3>
+<p class="text-xs text-mist">Synchronized Nodes &amp; Active Project Topology</p>
+</div>
+<span class="text-xs font-mono text-biolumCyan bg-oceanTeal/30 px-3 py-1 rounded-full border border-biolumCyan/40">
+              Latency: 18ms (Edge Node)
+            </span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+<div class="p-4 rounded-2xl bg-obsidian/70 border border-oceanTeal/40">
+<div class="w-10 h-10 rounded-xl bg-oceanTeal/30 flex items-center justify-center text-biolumCyan text-lg mb-3">
+<i class="fa-solid fa-cubes"></i>
+</div>
+<h4 class="font-bold text-sm text-iceWhite">Client Workspace Hub</h4>
+<p class="text-xs text-mist mt-1">24 interconnected spaces across 5 continents.</p>
+<div class="mt-4 flex items-center space-x-2 text-[11px] text-biolumCyan">
+<span>Access Federation</span>
+<i class="fa-solid fa-arrow-right text-[10px]"></i>
+</div>
+</div>
+<div class="p-4 rounded-2xl bg-obsidian/70 border border-oceanTeal/40">
+<div class="w-10 h-10 rounded-xl bg-oceanTeal/30 flex items-center justify-center text-biolumCyan text-lg mb-3">
+<i class="fa-solid fa-database"></i>
+</div>
+<h4 class="font-bold text-sm text-iceWhite">Memory &amp; Vector Store</h4>
+<p class="text-xs text-mist mt-1">3.4M token embeddings indexed for continuous enterprise learning.</p>
+<div class="mt-4 flex items-center space-x-2 text-[11px] text-biolumCyan">
+<span>View Vector Map</span>
+<i class="fa-solid fa-arrow-right text-[10px]"></i>
+</div>
+</div>
+<div class="p-4 rounded-2xl bg-obsidian/70 border border-oceanTeal/40">
+<div class="w-10 h-10 rounded-xl bg-oceanTeal/30 flex items-center justify-center text-biolumCyan text-lg mb-3">
+<i class="fa-solid fa-network-wired"></i>
+</div>
+<h4 class="font-bold text-sm text-iceWhite">Zero-Trust Security Mesh</h4>
+<p class="text-xs text-mist mt-1">Biometric identity tokens verified. 0 anomalies detected.</p>
+<div class="mt-4 flex items-center space-x-2 text-[11px] text-emerald-400">
+<i class="fa-solid fa-shield-halved"></i>
+<span>All Enclaves Shielded</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ============================================== -->
+<!-- VIEW 5: KNOWLEDGE, EXECUTION & SETTINGS        -->
+<!-- ============================================== -->
+<section class="hidden grid-cols-1 lg:grid-cols-12 gap-5 my-auto" data-purpose="generic-env-view" id="view-generic">
+<div class="lg:col-span-12 glass-hud rounded-3xl p-8 border border-oceanTeal/40 text-center">
+<div class="w-16 h-16 rounded-full bg-oceanTeal/20 border border-biolumCyan/40 flex items-center justify-center text-biolumCyan text-2xl mx-auto mb-4 shadow-cyan-glow">
+<i class="fa-solid fa-brain" id="genericIcon"></i>
+</div>
+<h3 class="text-2xl font-orbitron font-bold text-iceWhite" id="genericTitle">Knowledge Matrix</h3>
+<p class="text-mist max-w-md mx-auto text-xs mt-2" id="genericDesc">
+            Central repository of intellectual property, agent memories, and real-time operational playbooks.
+          </p>
+<div class="mt-6 flex justify-center space-x-3">
+<button class="px-5 py-2 rounded-xl bg-oceanTeal/30 hover:bg-oceanTeal/50 border border-biolumCyan/40 text-xs font-semibold text-biolumCyan" onclick="switchEnvironment('command')">
+              Return to Command Chamber
+            </button>
+</div>
+</div>
+</section>
+<!-- Floating Central THALOS Companion Prompt Bar -->
+<div class="relative w-full max-w-2xl mx-auto mt-4 z-20" data-purpose="thalos-prompt-companion">
+<div class="glass-hud rounded-full p-1.5 pl-4 pr-2 flex items-center space-x-3 shadow-cyan-glow border border-biolumCyan/40 focus-within:border-biolumCyan transition-all duration-300">
+<!-- Animated Voice / Neuro Waveform Icon -->
+<div class="flex items-center space-x-1 px-1 cursor-pointer" title="Voice Input Ready">
+<span class="w-0.5 h-3.5 bg-biolumCyan rounded-full animate-pulse"></span>
+<span class="w-0.5 h-5 bg-biolumCyan rounded-full animate-bounce"></span>
+<span class="w-0.5 h-2.5 bg-oceanTeal rounded-full"></span>
+<span class="w-0.5 h-4 bg-biolumCyan rounded-full animate-pulse"></span>
+</div>
+<!-- Text Input Prompt -->
+<input class="flex-1 bg-transparent border-none text-xs md:text-sm text-iceWhite placeholder-mist/50 focus:ring-0 focus:outline-none" id="thalosCommandInput" onkeydown="if(event.key==='Enter') executeCompanionCommand()" placeholder="Ask THALOS anything... (e.g. 'Draft sales review' or 'Trigger pipeline audit')" type="text"/>
+<!-- Cyan Send Action Trigger -->
+<button class="w-8 h-8 rounded-full bg-biolumCyan text-obsidian flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-cyan-glow font-bold" onclick="executeCompanionCommand()" title="Dispatch Command">
+<i class="fa-solid fa-arrow-up text-xs"></i>
+</button>
+</div>
+<!-- Live System Response Toast (hidden by default) -->
+<div class="hidden absolute -top-12 left-1/2 -translate-x-1/2 bg-deepOcean/90 border border-biolumCyan/60 text-biolumCyan text-xs px-4 py-1.5 rounded-full shadow-cyan-glow backdrop-blur-md transition-all" id="companionResponse">
+<i class="fa-solid fa-circle-notch fa-spin mr-1.5"></i> Synthesizing request across AI Fleet...
+        </div>
+</div>
+</div>
+<!-- ================================================================= -->
+<!-- ABSOLUTE NAVIGATION RULE — RIGHT-SIDE RADIAL ONLY (NO SIDEBARS) -->
+<!-- ================================================================= -->
+<aside class="relative w-80 lg:w-96 h-[calc(100vh-4.25rem)] border-l border-oceanTeal/30 glass-hud flex flex-col items-center justify-center p-4 z-20 shrink-0 select-none overflow-hidden" data-purpose="right-side-radial-navigation">
+<!-- Subdued Background Arc Guidance -->
+<div class="absolute inset-0 bg-radial from-oceanTeal/10 via-transparent to-transparent pointer-events-none"></div>
+<!-- Top Radial Instructions Indicator -->
+<div class="absolute top-4 text-center px-4">
+<span class="text-[10px] font-mono tracking-widest text-biolumCyan uppercase bg-deepOcean/80 px-3 py-1 rounded-full border border-oceanTeal/30">
+          RADIAL NAVIGATION MATRIX
+        </span>
+<p class="text-[11px] text-mist/70 mt-1 font-space">1. Tap Node • 2. Tap Glyph to Open</p>
+</div>
+<!-- Interactive Radial System Anchor Container -->
+<div class="relative w-72 h-72 flex items-center justify-center my-auto">
+<!-- Outer Glowing Orbital Track -->
+<div class="absolute inset-0 rounded-full border border-dashed border-biolumCyan/30 animate-spin-slow pointer-events-none"></div>
+<div class="absolute -inset-4 rounded-full border border-oceanTeal/20 pointer-events-none"></div>
+<!-- ============================================== -->
+<!-- RADIAL SATELLITE NODES (Circular Trigonometry) -->
+<!-- ============================================== -->
+<!-- Node 1: My Day / Command Chamber (Top-Left: -60 deg) -->
+<button class="radial-node absolute w-11 h-11 rounded-full bg-deepOcean border-2 border-biolumCyan text-biolumCyan shadow-cyan-glow flex items-center justify-center transition-all duration-300 hover:scale-125 z-20 group" id="node-command" onclick="selectRadialNode('command')" style="transform: translate(-95px, -65px);" title="Command Chamber (My Day)">
+<i class="fa-solid fa-calendar-day text-sm"></i>
+<!-- Tooltip -->
+<span class="absolute right-12 bg-deepOcean/90 border border-biolumCyan/40 text-iceWhite text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity pointer-events-none">
+            My Day (Active)
+          </span>
+</button>
+<!-- Node 2: AI Team (Top: -90 deg) -->
+<button class="radial-node absolute w-11 h-11 rounded-full bg-deepOcean border border-oceanTeal/60 text-mist flex items-center justify-center transition-all duration-300 hover:border-biolumCyan hover:text-biolumCyan hover:scale-125 z-20 group" id="node-agents" onclick="selectRadialNode('agents')" style="transform: translate(0px, -118px);" title="AI Team (Agents &amp; Automation)">
+<i class="fa-solid fa-users-gear text-sm"></i>
+<span class="absolute top-12 bg-deepOcean/90 border border-biolumCyan/40 text-iceWhite text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity pointer-events-none">
+            AI Team Fleet
+          </span>
+</button>
+<!-- Node 3: Digital World (Top-Right: -30 deg) -->
+<button class="radial-node absolute w-11 h-11 rounded-full bg-deepOcean border border-oceanTeal/60 text-mist flex items-center justify-center transition-all duration-300 hover:border-biolumCyan hover:text-biolumCyan hover:scale-125 z-20 group" id="node-world" onclick="selectRadialNode('world')" style="transform: translate(95px, -65px);" title="Digital World (Projects &amp; Clients)">
+<i class="fa-solid fa-earth-americas text-sm"></i>
+<span class="absolute left-12 bg-deepOcean/90 border border-biolumCyan/40 text-iceWhite text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity pointer-events-none">
+            Digital World
+          </span>
+</button>
+<!-- Node 4: Revenue (Right: 0 deg) -->
+<button class="radial-node absolute w-11 h-11 rounded-full bg-deepOcean border border-oceanTeal/60 text-mist flex items-center justify-center transition-all duration-300 hover:border-biolumCyan hover:text-biolumCyan hover:scale-125 z-20 group" id="node-revenue" onclick="selectRadialNode('revenue')" style="transform: translate(118px, 15px);" title="Revenue (Growth &amp; Sales)">
+<i class="fa-solid fa-chart-line text-sm"></i>
+<span class="absolute left-12 bg-deepOcean/90 border border-biolumCyan/40 text-iceWhite text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity pointer-events-none">
+            Revenue Pulse
+          </span>
+</button>
+<!-- Node 5: Knowledge (Bottom-Right: 45 deg) -->
+<button class="radial-node absolute w-11 h-11 rounded-full bg-deepOcean border border-oceanTeal/60 text-mist flex items-center justify-center transition-all duration-300 hover:border-biolumCyan hover:text-biolumCyan hover:scale-125 z-20 group" id="node-knowledge" onclick="selectRadialNode('knowledge')" style="transform: translate(80px, 88px);" title="Knowledge">
+<i class="fa-solid fa-brain text-sm"></i>
+<span class="absolute left-12 bg-deepOcean/90 border border-biolumCyan/40 text-iceWhite text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity pointer-events-none">
+            Knowledge
+          </span>
+</button>
+<!-- Node 6: Execution (Bottom: 90 deg) -->
+<button class="radial-node absolute w-11 h-11 rounded-full bg-deepOcean border border-oceanTeal/60 text-mist flex items-center justify-center transition-all duration-300 hover:border-biolumCyan hover:text-biolumCyan hover:scale-125 z-20 group" id="node-execution" onclick="selectRadialNode('execution')" style="transform: translate(0px, 118px);" title="Execution">
+<i class="fa-solid fa-bolt text-sm"></i>
+<span class="absolute top-12 bg-deepOcean/90 border border-biolumCyan/40 text-iceWhite text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity pointer-events-none">
+            Execution
+          </span>
+</button>
+<!-- Node 7: Settings (Bottom-Left: 135 deg) -->
+<button class="radial-node absolute w-11 h-11 rounded-full bg-deepOcean border border-oceanTeal/60 text-mist flex items-center justify-center transition-all duration-300 hover:border-biolumCyan hover:text-biolumCyan hover:scale-125 z-20 group" id="node-settings" onclick="selectRadialNode('settings')" style="transform: translate(-80px, 88px);" title="Settings">
+<i class="fa-solid fa-gear text-sm"></i>
+<span class="absolute right-12 bg-deepOcean/90 border border-biolumCyan/40 text-iceWhite text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity pointer-events-none">
+            Settings
+          </span>
+</button>
+<!-- Node 8: Notifications / Alert Hub (Left: 180 deg) -->
+<button class="radial-node absolute w-11 h-11 rounded-full bg-deepOcean border border-oceanTeal/60 text-mist flex items-center justify-center transition-all duration-300 hover:border-biolumCyan hover:text-biolumCyan hover:scale-125 z-20 group" id="node-alerts" onclick="toggleAlertsTray()" style="transform: translate(-118px, 15px);" title="Notifications &amp; Feed">
+<i class="fa-solid fa-bell text-sm"></i>
+<span class="absolute right-12 bg-deepOcean/90 border border-biolumCyan/40 text-iceWhite text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity pointer-events-none">
+            Alert Feed
+          </span>
+</button>
+<!-- ============================================== -->
+<!-- CENTRAL THALOS GLYPH / CORE POWER BUTTON       -->
+<!-- ============================================== -->
+<button class="radial-center-disc relative w-24 h-24 rounded-full border-2 border-biolumCyan/80 flex flex-col items-center justify-center text-biolumCyan shadow-cyan-radial group cursor-pointer hover:scale-105 active:scale-95 transition-all duration-300 z-30" id="centralThalosGlyph" onclick="triggerCentralCoreAction()" title="Tap to Engage Selected Environment">
+<!-- Bioluminescent Inner Glow Pulse -->
+<span class="absolute inset-0 rounded-full border-2 border-biolumCyan animate-ping opacity-20 pointer-events-none"></span>
+<!-- THALOS Master Chevron Symbol -->
+<svg class="w-10 h-10 text-biolumCyan group-hover:scale-110 drop-shadow-[0_0_12px_rgba(80,217,208,0.9)] transition-transform duration-300" fill="none" viewbox="0 0 100 100">
+<path d="M50 14 L86 84 L70 84 L50 44 L30 84 L14 84 Z" fill="currentColor"></path>
+</svg>
+<span class="text-[9px] font-orbitron font-bold tracking-widest text-iceWhite mt-0.5">OPEN</span>
+</button>
+</div>
+<!-- Environment Status Card Anchored in Radial Drawer Base -->
+<div class="w-full mt-auto p-3.5 bg-obsidian/60 rounded-2xl border border-oceanTeal/30 text-center" data-purpose="radial-active-descriptor">
+<span class="text-[10px] text-mist/70 uppercase tracking-widest font-mono">Focused Target</span>
+<h4 class="text-sm font-orbitron font-bold text-biolumCyan mt-0.5" id="radialFocusedTitle">
+          My Day (Command Chamber)
+        </h4>
+<p class="text-[11px] text-mist mt-1" id="radialFocusedNote">
+          High-priority executive orchestration &amp; approval queue.
+        </p>
+</div>
+</aside>
+</main>
+<!-- END: MainSpatialWorkspace -->
+<!-- BEGIN: NotificationsSlideOver -->
+<div class="fixed inset-y-0 right-0 w-80 bg-obsidian/95 border-l border-biolumCyan/40 p-5 shadow-2xl backdrop-blur-xl transform translate-x-full transition-transform duration-300 z-50 flex flex-col" id="alertsTrayModal">
+<div class="flex items-center justify-between pb-3 border-b border-oceanTeal/30">
+<div class="flex items-center space-x-2">
+<i class="fa-solid fa-bell text-biolumCyan"></i>
+<h3 class="font-orbitron font-bold text-sm text-iceWhite">Active Alerts</h3>
+</div>
+<button class="text-mist hover:text-white text-sm" onclick="toggleAlertsTray()">
+<i class="fa-solid fa-xmark"></i>
+</button>
+</div>
+<div class="mt-4 space-y-3 flex-1 overflow-y-auto font-space text-xs">
+<div class="p-3 bg-deepOcean/80 rounded-xl border border-amber-500/30">
+<span class="text-[10px] font-mono text-amber-400 block">APPROVAL REQUIRED</span>
+<p class="font-medium text-iceWhite mt-0.5">Client Proposal: ₹6.0L</p>
+<p class="text-mist text-[11px] mt-1">Generated by Proposal Synthesizer. Awaiting digital signature.</p>
+</div>
+<div class="p-3 bg-deepOcean/80 rounded-xl border border-biolumCyan/30">
+<span class="text-[10px] font-mono text-biolumCyan block">AGENT COMPLETION</span>
+<p class="font-medium text-iceWhite mt-0.5">Research Agent Synced</p>
+<p class="text-mist text-[11px] mt-1">12 leads verified with LinkedIn and Crunchbase telemetry.</p>
+</div>
+</div>
+<button class="w-full py-2 bg-oceanTeal/30 hover:bg-oceanTeal/50 border border-oceanTeal/50 rounded-xl text-xs text-biolumCyan font-bold tracking-wider uppercase mt-4" onclick="toggleAlertsTray()">
+      Dismiss Tray
+    </button>
+</div>
+<!-- END: NotificationsSlideOver -->
+<!-- BEGIN: BottomCorporateFooterBar -->
+<footer class="relative z-30 px-6 py-2.5 bg-obsidian border-t border-oceanTeal/20 flex flex-col sm:flex-row items-center justify-between text-[11px] font-space text-mist" data-purpose="bottom-status-strip">
+<div class="flex items-center space-x-3">
+<span class="text-biolumCyan font-bold tracking-wider">THALOS OS</span>
+<span>•</span>
+<span>The Intelligence Beneath Yugantar</span>
+</div>
+<div class="flex items-center space-x-4 mt-1 sm:mt-0 font-mono text-[10px] text-mist/60">
+<span>LATENCY: 14ms</span>
+<span>ENCRYPTION: QUANTUM-READY</span>
+<span class="text-emerald-400">STATUS: OPTIMAL</span>
+</div>
+</footer>
+<!-- END: BottomCorporateFooterBar -->
+<!-- BEGIN: Scripts & Interactivity -->
+<script data-purpose="radial-and-system-controller">
+    // Current Active Selected Node in the Radial Wheel
+    let currentSelectedTarget = 'command';
+
+    // Node Metadata definitions matching visual reference
+    const environmentData = {
+      command: {
+        title: "Command Chamber",
+        cat: "COMMAND SUITE",
+        sub: "SYSTEM.ACTIVE",
+        desc: "High-priority executive orchestration & approval queue.",
+        icon: "fa-calendar-day"
+      },
+      agents: {
+        title: "AI Team (Agents & Automation)",
+        cat: "AUTONOMOUS AGENTS",
+        sub: "4 THREADS RUNNING",
+        desc: "Manage, deploy, and inspect real-time agent fleet states.",
+        icon: "fa-users-gear"
+      },
+      world: {
+        title: "Digital World (Projects & Clients)",
+        cat: "SPATIAL TOPOLOGY",
+        sub: "CONNECTED HUBS",
+        desc: "Federated client workspaces, vector maps, and secure enclaves.",
+        icon: "fa-earth-americas"
+      },
+      revenue: {
+        title: "Revenue Pulse (Growth & Sales)",
+        cat: "FINANCIAL TELEMETRY",
+        sub: "+12% VELOCITY",
+        desc: "Gross pipeline volume, deal status, and autonomous forecasts.",
+        icon: "fa-chart-line"
+      },
+      knowledge: {
+        title: "Knowledge Matrix",
+        cat: "INTELLECTUAL CORE",
+        sub: "3.4M EMBEDDINGS",
+        desc: "Central repository of organizational context, documents, and memory.",
+        icon: "fa-brain"
+      },
+      execution: {
+        title: "Execution Engine",
+        cat: "RUNTIME QUEUE",
+        sub: "DETERMINISTIC OPS",
+        desc: "Batch script execution, scheduled tasks, and webhook listeners.",
+        icon: "fa-bolt"
+      },
+      settings: {
+        title: "System Configuration",
+        cat: "CORE PROTOCOLS",
+        sub: "ROOT ACCESS",
+        desc: "Security tokens, voice model fine-tuning, and radial behavior.",
+        icon: "fa-gear"
+      }
+    };
+
+    // 1. Select Radial Node (Step 1 in how it works)
+    function selectRadialNode(nodeKey) {
+      currentSelectedTarget = nodeKey;
+
+      // Update Node visual borders
+      document.querySelectorAll('.radial-node').forEach(btn => {
+        btn.classList.remove('border-2', 'border-biolumCyan', 'text-biolumCyan', 'shadow-cyan-glow');
+        btn.classList.add('border-oceanTeal/60', 'text-mist');
+      });
+
+      const selectedBtn = document.getElementById(`node-${nodeKey}`);
+      if (selectedBtn) {
+        selectedBtn.classList.remove('border-oceanTeal/60', 'text-mist');
+        selectedBtn.classList.add('border-2', 'border-biolumCyan', 'text-biolumCyan', 'shadow-cyan-glow');
+      }
+
+      // Update the descriptor note in bottom of radial aside
+      const data = environmentData[nodeKey];
+      if (data) {
+        document.getElementById('radialFocusedTitle').innerText = data.title;
+        document.getElementById('radialFocusedNote').innerText = data.desc;
+      }
+    }
+
+    // 2. Trigger Central Core Button (Step 3: Tap Central Glyph to Open Environment)
+    function triggerCentralCoreAction() {
+      // Glow effect on central glyph
+      const glyph = document.getElementById('centralThalosGlyph');
+      glyph.classList.add('scale-110');
+      setTimeout(() => glyph.classList.remove('scale-110'), 250);
+
+      // Perform Environment Switch
+      switchEnvironment(currentSelectedTarget);
+    }
+
+    // Switch Environment views in workspace
+    function switchEnvironment(envKey) {
+      currentSelectedTarget = envKey;
+      selectRadialNode(envKey);
+
+      // Hide all environment views
+      document.getElementById('view-command').classList.add('hidden');
+      document.getElementById('view-command').classList.remove('grid');
+
+      document.getElementById('view-agents').classList.add('hidden');
+      document.getElementById('view-agents').classList.remove('grid');
+
+      document.getElementById('view-revenue').classList.add('hidden');
+      document.getElementById('view-revenue').classList.remove('grid');
+
+      document.getElementById('view-world').classList.add('hidden');
+      document.getElementById('view-world').classList.remove('grid');
+
+      document.getElementById('view-generic').classList.add('hidden');
+      document.getElementById('view-generic').classList.remove('grid');
+
+      // Update Header Breadcrumbs
+      const data = environmentData[envKey];
+      if (data) {
+        document.getElementById('envCategoryLabel').innerText = data.cat;
+        document.getElementById('envSubLabel').innerText = data.sub;
+        document.getElementById('envTitle').innerText = data.title;
+      }
+
+      // Show targeted view
+      if (envKey === 'command') {
+        document.getElementById('view-command').classList.remove('hidden');
+        document.getElementById('view-command').classList.add('grid');
+      } else if (envKey === 'agents') {
+        document.getElementById('view-agents').classList.remove('hidden');
+        document.getElementById('view-agents').classList.add('grid');
+      } else if (envKey === 'revenue') {
+        document.getElementById('view-revenue').classList.remove('hidden');
+        document.getElementById('view-revenue').classList.add('grid');
+      } else if (envKey === 'world') {
+        document.getElementById('view-world').classList.remove('hidden');
+        document.getElementById('view-world').classList.add('grid');
+      } else {
+        // Generic fallback for Knowledge, Execution, Settings
+        document.getElementById('view-generic').classList.remove('hidden');
+        document.getElementById('view-generic').classList.add('grid');
+        document.getElementById('genericTitle').innerText = data.title;
+        document.getElementById('genericDesc').innerText = data.desc;
+        document.getElementById('genericIcon').className = `fa-solid ${data.icon}`;
+      }
+    }
+
+    // Companion Prompt Bar input simulator
+    function executeCompanionCommand() {
+      const input = document.getElementById('thalosCommandInput');
+      const response = document.getElementById('companionResponse');
+      
+      if (!input.value.trim()) return;
+
+      response.classList.remove('hidden');
+      response.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-1.5"></i> Interpreting: "${input.value}"...`;
+
+      setTimeout(() => {
+        response.innerHTML = `<i class="fa-solid fa-check text-biolumCyan mr-1.5"></i> Agent instruction dispatched to Executive Core.`;
+        input.value = '';
+        setTimeout(() => {
+          response.classList.add('hidden');
+        }, 3200);
+      }, 1400);
+    }
+
+    // Toggle Notifications Drawer
+    function toggleAlertsTray() {
+      const tray = document.getElementById('alertsTrayModal');
+      tray.classList.toggle('translate-x-full');
+    }
+
+    // View Mode Switcher
+    function setViewMode(mode) {
+      ['focus', 'spatial', 'immersive'].forEach(m => {
+        const btn = document.getElementById(`viewBtn-${m}`);
+        if (m === mode) {
+          btn.className = "px-2.5 py-1 text-[11px] rounded transition-all bg-oceanTeal/40 text-biolumCyan font-semibold border border-biolumCyan/40 shadow-sm";
+        } else {
+          btn.className = "px-2.5 py-1 text-[11px] rounded transition-all text-mist hover:text-biolumCyan";
+        }
+      });
+    }
+
+    // Live Clock updater
+    function updateClock() {
+      const now = new Date();
+      const options = { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+      const clockEl = document.getElementById('liveTimeClock');
+      if (clockEl) {
+        clockEl.innerText = now.toLocaleString('en-US', options).replace(',', ' •');
+      }
+    }
+    setInterval(updateClock, 1000);
+  </script>
+<!-- END: Scripts & Interactivity -->
+</body></html>

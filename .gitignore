@@ -1,0 +1,29 @@
+node_modules/
+dist/
+.env
+*.env
+*.env.local
+*.env.production
+settings.json
+*.zip
+
+# Never commit credentials or secrets
+*.pem
+*.key
+*.p12
+
+# Build artifacts
+coverage/
+*.tsbuildinfo
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Uploads / temp
+uploads/
+tmp/

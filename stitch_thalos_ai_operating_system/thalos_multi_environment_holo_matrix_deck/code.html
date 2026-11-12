@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-[#05090D] text-[#E6F0EF] antialiased" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>THALOS — All Environments Unified Overview / Holo-Matrix Deck</title>
+<!-- Tailwind CSS v3 with Forms & Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Custom Configuration -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            thalos: {
+              obsidian: '#05090D',
+              deep: '#080D12',
+              card: '#0B1921',
+              cardLight: '#10232B',
+              border: '#163542',
+              cyan: '#50D9D0',
+              cyanDark: '#1E626B',
+              muted: '#5C8996',
+              amber: '#F59E0B',
+              ice: '#E6F0EF'
+            }
+          },
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+            sans: ['"Inter"', 'ui-sans-serif', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-full font-mono bg-[#05090D] text-[#E6F0EF] selection:bg-[#50D9D0]/30 selection:text-white flex flex-col justify-between p-3 lg:p-4 space-y-3 overflow-x-hidden border-box">
+<!-- BEGIN: MasterHeader -->
+<header class="w-full bg-[#080D12] border border-[#163542] rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-[0_0_20px_rgba(80,217,208,0.05)]" data-purpose="master-system-header">
+<!-- Brand & System Identity -->
+<div class="flex items-center space-x-3.5">
+<div class="relative w-9 h-9 rounded-lg border border-[#50D9D0]/50 bg-[#0B1921] flex items-center justify-center shadow-[0_0_15px_rgba(80,217,208,0.25)]">
+<svg class="w-5 h-5 text-[#50D9D0]" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polygon points="12 2 2 22 22 22 12 2"></polygon>
+<line x1="12" x2="12" y1="11" y2="17"></line>
+</svg>
+<span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#50D9D0] rounded-full animate-ping"></span>
+<span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#50D9D0] rounded-full"></span>
+</div>
+<div>
+<div class="flex items-center space-x-2">
+<span class="text-sm font-bold tracking-wider text-white">THALOS OS <span class="text-[#50D9D0] text-xs font-normal">v4.8 AUTONOMOUS</span></span>
+<span class="px-2 py-0.5 text-[10px] uppercase font-semibold tracking-wider text-[#50D9D0] bg-[#50D9D0]/10 border border-[#50D9D0]/40 rounded-full">
+            7 ENVIRONMENTS ONLINE // ALL MESHED
+          </span>
+</div>
+<p class="text-[11px] text-[#5C8996] tracking-tight uppercase">// MULTI-ENVIRONMENT HOLO-MATRIX DECK // YUGANTAR GROWTH CORE</p>
+</div>
+</div>
+<!-- Center System Telemetry Metrics -->
+<div class="hidden xl:flex items-center space-x-4 text-[11px] bg-[#05090D] border border-[#163542] px-3.5 py-1.5 rounded-lg text-[#5C8996]">
+<div class="flex items-center space-x-1.5">
+<span class="text-white font-medium">TOTAL LOAD:</span>
+<span class="text-[#50D9D0] font-semibold">42.8 GFLOPs</span>
+</div>
+<span class="text-[#163542]">|</span>
+<div class="flex items-center space-x-1.5">
+<span class="text-white font-medium">NEURAL SYNC:</span>
+<span class="text-[#50D9D0] font-semibold">99.8%</span>
+</div>
+<span class="text-[#163542]">|</span>
+<div class="flex items-center space-x-1.5">
+<span class="text-white font-medium">CROSS-ENV LATENCY:</span>
+<span class="text-[#50D9D0] font-semibold">4ms</span>
+</div>
+<span class="text-[#163542]">|</span>
+<div class="flex items-center space-x-1.5">
+<span class="text-white font-medium">ACTIVE AGENTS:</span>
+<span class="text-emerald-400 font-semibold">9/9 ONLINE</span>
+</div>
+</div>
+<!-- Navigation Modes & Profile Badge -->
+<div class="flex items-center space-x-3">
+<!-- Deck Mode Switcher -->
+<div class="flex items-center bg-[#0B1921] border border-[#163542] rounded-lg p-0.5 text-[11px]">
+<button class="px-2.5 py-1 rounded text-[#5C8996] hover:text-white transition">FOCUS</button>
+<button class="px-2.5 py-1 rounded bg-[#50D9D0]/20 text-[#50D9D0] border border-[#50D9D0]/40 font-semibold shadow-[0_0_10px_rgba(80,217,208,0.2)]">SPATIAL</button>
+<button class="px-2.5 py-1 rounded text-[#5C8996] hover:text-white transition">IMMERSIVE</button>
+</div>
+<!-- Notification Trigger -->
+<button class="relative p-2 bg-[#0B1921] border border-[#163542] hover:border-[#50D9D0]/40 rounded-lg text-[#5C8996] hover:text-[#50D9D0] transition">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#F59E0B] rounded-full"></span>
+</button>
+<!-- Executive Profile Badge -->
+<div class="flex items-center space-x-2.5 pl-2 border-l border-[#163542]">
+<div class="w-8 h-8 rounded-lg bg-[#50D9D0]/10 border border-[#50D9D0]/50 flex items-center justify-center text-[#50D9D0] font-bold text-xs">
+          YL
+        </div>
+<div class="text-left hidden sm:block">
+<div class="text-[12px] font-semibold text-white leading-tight">Yugantar Leader</div>
+<div class="text-[10px] text-[#5C8996] flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Executive Clearance
+          </div>
+</div>
+</div>
+</div>
+</header>
+<!-- END: MasterHeader -->
+<!-- BEGIN: MainDashboardGrid -->
+<main class="w-full flex-grow grid grid-cols-1 xl:grid-cols-12 gap-3.5">
+<!-- LEFT 9 COLS: All 7 Environments Unified Cockpit -->
+<section class="xl:col-span-9 flex flex-col space-y-3.5" data-purpose="holo-matrix-cockpit">
+<!-- Top Overview Subheader Bar -->
+<div class="flex flex-wrap items-center justify-between gap-2 px-1">
+<div class="flex items-center space-x-2.5">
+<span class="w-2 h-2 rounded-full bg-[#50D9D0] shadow-[0_0_8px_#50D9D0]"></span>
+<h2 class="text-xs uppercase font-bold tracking-widest text-[#50D9D0]">
+            ALL ENVIRONMENTS COCKPIT // SPATIAL HOLO-MATRIX
+          </h2>
+<span class="text-[11px] text-[#5C8996]">Autonomous Federation: 7 Systems Active</span>
+</div>
+<div class="flex items-center space-x-2 text-[10px] text-[#5C8996]">
+<span class="px-2 py-0.5 rounded bg-[#0B1921] border border-[#163542]">Mesh Consensus: 100%</span>
+<span class="px-2 py-0.5 rounded bg-[#0B1921] border border-[#163542]">Zero State Discrepancy</span>
+</div>
+</div>
+<!-- 7 Environments Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+<!-- ENV 01: COMMAND CHAMBER (MY DAY) -->
+<article class="bg-[#080D12] border border-[#163542] hover:border-[#50D9D0]/50 rounded-xl p-3.5 flex flex-col justify-between transition-all duration-200 group hover:shadow-[0_0_15px_rgba(80,217,208,0.12)]" data-purpose="env-card-my-day">
+<div>
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center space-x-2">
+<span class="text-[10px] text-[#50D9D0] bg-[#50D9D0]/10 px-1.5 py-0.5 rounded border border-[#50D9D0]/30 font-bold">01</span>
+<h3 class="text-xs font-bold text-white tracking-wide">COMMAND CHAMBER</h3>
+</div>
+<span class="text-[9px] uppercase px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Active Orbit</span>
+</div>
+<p class="text-[10px] text-[#5C8996] mb-3">Executive focus, daily synthetic briefing &amp; direct neural directives.</p>
+<div class="bg-[#05090D] border border-[#163542] rounded-lg p-2.5 mb-2.5">
+<div class="flex justify-between items-center text-[11px] mb-1">
+<span class="text-[#5C8996]">Gross Velocity:</span>
+<span class="text-[#50D9D0] font-bold">₹42,500 <span class="text-[9px] text-[#5C8996]">/ day</span></span>
+</div>
+<div class="flex justify-between items-center text-[10px] text-[#5C8996]">
+<span>Holographic Core:</span>
+<span class="text-emerald-400">Synchronized</span>
+</div>
+</div>
+<!-- Priority Stack Mini -->
+<div class="space-y-1 mb-3">
+<div class="text-[10px] text-[#5C8996] uppercase tracking-wider font-semibold">3 Approvals Pending:</div>
+<div class="text-[10px] bg-[#0B1921] px-2 py-1 rounded border border-[#163542] flex items-center justify-between">
+<span class="truncate text-gray-300">Acme Corp SLA Signing</span>
+<span class="text-[#F59E0B] font-semibold text-[9px]">₹6.00L</span>
+</div>
+<div class="text-[10px] bg-[#0B1921] px-2 py-1 rounded border border-[#163542] flex items-center justify-between">
+<span class="truncate text-gray-300">NexGen Systems Stage 03 Gate</span>
+<span class="text-emerald-400 font-semibold text-[9px]">Verify</span>
+</div>
+</div>
+</div>
+<a class="w-full py-1.5 px-3 rounded-lg bg-[#0B1921] border border-[#163542] text-[#50D9D0] group-hover:border-[#50D9D0]/40 group-hover:bg-[#50D9D0]/10 text-[11px] font-medium flex items-center justify-between transition" href="#">
+<span>Enter Environment</span>
+<span class="group-hover:translate-x-1 transition-transform">→</span>
+</a>
+</article>
+<!-- ENV 02: DIGITAL WORLD (CLIENTS & SPRINTS) -->
+<article class="bg-[#080D12] border border-[#163542] hover:border-[#50D9D0]/50 rounded-xl p-3.5 flex flex-col justify-between transition-all duration-200 group hover:shadow-[0_0_15px_rgba(80,217,208,0.12)]" data-purpose="env-card-digital-world">
+<div>
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center space-x-2">
+<span class="text-[10px] text-[#50D9D0] bg-[#50D9D0]/10 px-1.5 py-0.5 rounded border border-[#50D9D0]/30 font-bold">02</span>
+<h3 class="text-xs font-bold text-white tracking-wide">DIGITAL WORLD</h3>
+</div>
+<span class="text-[9px] uppercase px-1.5 py-0.5 rounded bg-[#50D9D0]/10 text-[#50D9D0] border border-[#50D9D0]/30">Delivery Engine</span>
+</div>
+<p class="text-[10px] text-[#5C8996] mb-3">Multi-agent client pipelines, autonomous engineering &amp; release gates.</p>
+<div class="grid grid-cols-2 gap-2 mb-2.5">
+<div class="bg-[#05090D] border border-[#163542] rounded-lg p-2 text-center">
+<div class="text-[10px] text-[#5C8996]">Active Clients</div>
+<div class="text-sm font-bold text-white">14</div>
+</div>
+<div class="bg-[#05090D] border border-[#163542] rounded-lg p-2 text-center">
+<div class="text-[10px] text-[#5C8996]">Velocity</div>
+<div class="text-sm font-bold text-[#50D9D0]">98.4%</div>
+</div>
+</div>
+<!-- Active Workstream Feed -->
+<div class="space-y-1 mb-3">
+<div class="text-[10px] text-[#5C8996] uppercase tracking-wider font-semibold">Highlights:</div>
+<div class="text-[10px] bg-[#0B1921] px-2 py-1 rounded border border-[#163542] flex items-center justify-between">
+<span class="truncate text-gray-300">Acme Corp Agentic Core</span>
+<span class="text-[#50D9D0] font-semibold text-[9px]">74% Done</span>
+</div>
+<div class="text-[10px] bg-[#0B1921] px-2 py-1 rounded border border-[#163542] flex items-center justify-between">
+<span class="truncate text-gray-300">ZenData Bio Sandbox</span>
+<span class="text-emerald-400 font-semibold text-[9px]">SOC2 Pass</span>
+</div>
+</div>
+</div>
+<a class="w-full py-1.5 px-3 rounded-lg bg-[#0B1921] border border-[#163542] text-[#50D9D0] group-hover:border-[#50D9D0]/40 group-hover:bg-[#50D9D0]/10 text-[11px] font-medium flex items-center justify-between transition" href="#">
+<span>Enter Environment</span>
+<span class="group-hover:translate-x-1 transition-transform">→</span>
+</a>
+</article>
+<!-- ENV 03: REVENUE & SALES PIPELINE -->
+<article class="bg-[#080D12] border border-[#163542] hover:border-[#50D9D0]/50 rounded-xl p-3.5 flex flex-col justify-between transition-all duration-200 group hover:shadow-[0_0_15px_rgba(80,217,208,0.12)]" data-purpose="env-card-revenue">
+<div>
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center space-x-2">
+<span class="text-[10px] text-[#50D9D0] bg-[#50D9D0]/10 px-1.5 py-0.5 rounded border border-[#50D9D0]/30 font-bold">03</span>
+<h3 class="text-xs font-bold text-white tracking-wide">REVENUE &amp; PIPELINE</h3>
+</div>
+<span class="text-[9px] uppercase px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">100% Pacing</span>
+</div>
+<p class="text-[10px] text-[#5C8996] mb-3">Predictive capital forecast, autonomous outreach &amp; contract SLA formulation.</p>
+<div class="bg-[#05090D] border border-[#163542] rounded-lg p-2.5 mb-2.5">
+<div class="flex justify-between items-center text-[11px] mb-1">
+<span class="text-[#5C8996]">Gross Pipeline:</span>
+<span class="text-white font-bold">₹18,50,000</span>
+</div>
+<div class="flex justify-between items-center text-[10px]">
+<span class="text-[#5C8996]">Weighted Forecast:</span>
+<span class="text-[#50D9D0] font-semibold">₹13,20,000</span>
+</div>
+</div>
+<!-- Urgent Executive Gate Pill -->
+<div class="bg-[#0B1921] border border-[#F59E0B]/40 rounded-lg p-2 mb-3">
+<div class="flex items-center justify-between text-[9px] text-[#F59E0B] font-bold mb-0.5">
+<span>GATE // ACTION REQ</span>
+<span>₹6,00,000</span>
+</div>
+<div class="text-[10px] text-gray-200 truncate">Acme Corp Multi-Agent SLA Tier 1</div>
+</div>
+</div>
+<a class="w-full py-1.5 px-3 rounded-lg bg-[#0B1921] border border-[#163542] text-[#50D9D0] group-hover:border-[#50D9D0]/40 group-hover:bg-[#50D9D0]/10 text-[11px] font-medium flex items-center justify-between transition" href="#">
+<span>Enter Environment</span>
+<span class="group-hover:translate-x-1 transition-transform">→</span>
+</a>
+</article>
+<!-- ENV 04: AI TEAM ORCHESTRATION -->
+<article class="bg-[#080D12] border border-[#163542] hover:border-[#50D9D0]/50 rounded-xl p-3.5 flex flex-col justify-between transition-all duration-200 group hover:shadow-[0_0_15px_rgba(80,217,208,0.12)]" data-purpose="env-card-ai-team">
+<div>
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center space-x-2">
+<span class="text-[10px] text-[#50D9D0] bg-[#50D9D0]/10 px-1.5 py-0.5 rounded border border-[#50D9D0]/30 font-bold">04</span>
+<h3 class="text-xs font-bold text-white tracking-wide">AI TEAM DECK</h3>
+</div>
+<span class="text-[9px] uppercase px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">9/9 Synchronous</span>
+</div>
+<p class="text-[10px] text-[#5C8996] mb-3">Synchronous neural orchestration &amp; autonomous agent role distribution.</p>
+<div class="grid grid-cols-3 gap-1.5 mb-2.5 text-center text-[9px]">
+<div class="bg-[#05090D] border border-[#163542] rounded p-1">
+<div class="text-[#5C8996]">Active</div>
+<div class="font-bold text-emerald-400">6</div>
+</div>
+<div class="bg-[#05090D] border border-[#163542] rounded p-1">
+<div class="text-[#5C8996]">Review</div>
+<div class="font-bold text-[#F59E0B]">1</div>
+</div>
+<div class="bg-[#05090D] border border-[#163542] rounded p-1">
+<div class="text-[#5C8996]">Compl.</div>
+<div class="font-bold text-[#50D9D0]">2</div>
+</div>
+</div>
+<!-- Active Agents Micro Grid -->
+<div class="grid grid-cols-2 gap-1 mb-3 text-[9px] text-[#5C8996]">
+<span class="bg-[#0B1921] px-1.5 py-0.5 rounded border border-[#163542] text-gray-300">Deal Architect</span>
+<span class="bg-[#0B1921] px-1.5 py-0.5 rounded border border-[#163542] text-gray-300">DevAgent-X</span>
+<span class="bg-[#0B1921] px-1.5 py-0.5 rounded border border-[#163542] text-gray-300">Legal/PII Agent</span>
+<span class="bg-[#0B1921] px-1.5 py-0.5 rounded border border-[#163542] text-gray-300">Growth Strategist</span>
+</div>
+</div>
+<a class="w-full py-1.5 px-3 rounded-lg bg-[#0B1921] border border-[#163542] text-[#50D9D0] group-hover:border-[#50D9D0]/40 group-hover:bg-[#50D9D0]/10 text-[11px] font-medium flex items-center justify-between transition" href="#">
+<span>Enter Environment</span>
+<span class="group-hover:translate-x-1 transition-transform">→</span>
+</a>
+</article>
+<!-- ENV 05: KNOWLEDGE & MEMORY REPOSITORY -->
+<article class="bg-[#080D12] border border-[#163542] hover:border-[#50D9D0]/50 rounded-xl p-3.5 flex flex-col justify-between transition-all duration-200 group hover:shadow-[0_0_15px_rgba(80,217,208,0.12)]" data-purpose="env-card-knowledge">
+<div>
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center space-x-2">
+<span class="text-[10px] text-[#50D9D0] bg-[#50D9D0]/10 px-1.5 py-0.5 rounded border border-[#50D9D0]/30 font-bold">05</span>
+<h3 class="text-xs font-bold text-white tracking-wide">KNOWLEDGE &amp; MEMORY</h3>
+</div>
+<span class="text-[9px] uppercase px-1.5 py-0.5 rounded bg-[#50D9D0]/10 text-[#50D9D0] border border-[#50D9D0]/30">1.4M Chunks</span>
+</div>
+<p class="text-[10px] text-[#5C8996] mb-3">Vector store memory graphs, episodic client logs &amp; semantic clustering.</p>
+<div class="bg-[#05090D] border border-[#163542] rounded-lg p-2.5 mb-2.5">
+<div class="flex justify-between items-center text-[10px] mb-1">
+<span class="text-[#5C8996]">Vector Stores:</span>
+<span class="text-white font-mono">Pinecone / Qdrant</span>
+</div>
+<div class="flex justify-between items-center text-[10px]">
+<span class="text-[#5C8996]">Memory Health:</span>
+<span class="text-[#50D9D0] font-bold">99.2% Nominal</span>
+</div>
+</div>
+<!-- Stores Status Mini -->
+<div class="space-y-1 mb-3">
+<div class="flex justify-between text-[9px] text-[#5C8996]">
+<span>Voyage Code-2</span>
+<span class="text-emerald-400">410,000</span>
+</div>
+<div class="w-full bg-[#10232B] h-1 rounded-full overflow-hidden">
+<div class="bg-[#50D9D0] h-full" style="width: 85%"></div>
+</div>
+</div>
+</div>
+<a class="w-full py-1.5 px-3 rounded-lg bg-[#0B1921] border border-[#163542] text-[#50D9D0] group-hover:border-[#50D9D0]/40 group-hover:bg-[#50D9D0]/10 text-[11px] font-medium flex items-center justify-between transition" href="#">
+<span>Enter Environment</span>
+<span class="group-hover:translate-x-1 transition-transform">→</span>
+</a>
+</article>
+<!-- ENV 06: EXECUTION & WORKFLOW ENGINES -->
+<article class="bg-[#080D12] border border-[#163542] hover:border-[#50D9D0]/50 rounded-xl p-3.5 flex flex-col justify-between transition-all duration-200 group hover:shadow-[0_0_15px_rgba(80,217,208,0.12)]" data-purpose="env-card-execution">
+<div>
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center space-x-2">
+<span class="text-[10px] text-[#50D9D0] bg-[#50D9D0]/10 px-1.5 py-0.5 rounded border border-[#50D9D0]/30 font-bold">06</span>
+<h3 class="text-xs font-bold text-white tracking-wide">EXECUTION ENGINES</h3>
+</div>
+<span class="text-[9px] uppercase px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Sub-10ms</span>
+</div>
+<p class="text-[10px] text-[#5C8996] mb-3">Celery/Redis worker fleets, automated webhook routers &amp; CI sandbox.</p>
+<div class="grid grid-cols-2 gap-2 mb-2.5">
+<div class="bg-[#05090D] border border-[#163542] rounded-lg p-2">
+<div class="text-[9px] text-[#5C8996]">Celery Queues</div>
+<div class="text-sm font-bold text-white">12 Active</div>
+</div>
+<div class="bg-[#05090D] border border-[#163542] rounded-lg p-2">
+<div class="text-[9px] text-[#5C8996]">Webhooks</div>
+<div class="text-sm font-bold text-[#50D9D0]">42 Live</div>
+</div>
+</div>
+<!-- Health Status -->
+<div class="text-[10px] bg-[#0B1921] px-2 py-1.5 rounded border border-[#163542] text-[#5C8996] flex items-center justify-between mb-3">
+<span>Deadlock Guard:</span>
+<span class="text-emerald-400 font-semibold">0 Conflicts</span>
+</div>
+</div>
+<a class="w-full py-1.5 px-3 rounded-lg bg-[#0B1921] border border-[#163542] text-[#50D9D0] group-hover:border-[#50D9D0]/40 group-hover:bg-[#50D9D0]/10 text-[11px] font-medium flex items-center justify-between transition" href="#">
+<span>Enter Environment</span>
+<span class="group-hover:translate-x-1 transition-transform">→</span>
+</a>
+</article>
+</div>
+<!-- ENV 07: SETTINGS, INTEGRATIONS & API VAULT (Full Width Card) -->
+<article class="bg-[#080D12] border border-[#163542] hover:border-[#50D9D0]/50 rounded-xl p-3.5 transition-all duration-200 group hover:shadow-[0_0_15px_rgba(80,217,208,0.12)]" data-purpose="env-card-settings">
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+<div class="flex items-start md:items-center space-x-3">
+<span class="text-[10px] text-[#50D9D0] bg-[#50D9D0]/10 px-2 py-1 rounded border border-[#50D9D0]/30 font-bold">07</span>
+<div>
+<div class="flex items-center space-x-2">
+<h3 class="text-xs font-bold text-white tracking-wide">SETTINGS, INTEGRATIONS &amp; API VAULT</h3>
+<span class="text-[9px] uppercase px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Zero-Trust Verified</span>
+</div>
+<p class="text-[10px] text-[#5C8996] mt-0.5">Model gateways (Claude 3.5 Sonnet, GPT-4o), ElevenLabs speech engine, Stripe hooks, and SOC2 boundary redactors.</p>
+</div>
+</div>
+<!-- Integrations Pills -->
+<div class="flex flex-wrap items-center gap-1.5">
+<span class="text-[10px] bg-[#05090D] border border-[#163542] px-2 py-1 rounded text-[#50D9D0]">Claude 3.5 Sonnet</span>
+<span class="text-[10px] bg-[#05090D] border border-[#163542] px-2 py-1 rounded text-gray-300">OpenAI GPT-4o</span>
+<span class="text-[10px] bg-[#05090D] border border-[#163542] px-2 py-1 rounded text-gray-300">ElevenLabs Voice</span>
+<span class="text-[10px] bg-[#05090D] border border-[#163542] px-2 py-1 rounded text-gray-300">Stripe Billing</span>
+<a class="py-1 px-3 rounded-lg bg-[#0B1921] border border-[#163542] text-[#50D9D0] hover:border-[#50D9D0]/40 hover:bg-[#50D9D0]/10 text-[10px] font-medium transition ml-2" href="#">
+              Configure Vault →
+            </a>
+</div>
+</div>
+</article>
+</section>
+<!-- RIGHT 3 COLS: THALOS Signature Radial Matrix Deck -->
+<aside class="xl:col-span-3 flex flex-col justify-between bg-[#080D12] border border-[#163542] rounded-xl p-3.5 shadow-[0_0_25px_rgba(80,217,208,0.06)] relative overflow-hidden" data-purpose="radial-navigation-deck">
+<!-- Background Ambient Grid Lines -->
+<div class="absolute inset-0 bg-[radial-gradient(#163542_1px,transparent_1px)] [background-size:16px_16px] opacity-25 pointer-events-none"></div>
+<!-- Top Orbit Label -->
+<div>
+<div class="flex items-center justify-between mb-1">
+<span class="text-[10px] uppercase font-bold text-[#50D9D0] tracking-widest flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#50D9D0] animate-pulse"></span>
+            SPATIAL MULTI-ORBIT SWITCHER
+          </span>
+<span class="text-[9px] text-[#5C8996] font-mono">3D MATRIX</span>
+</div>
+<h3 class="text-sm font-bold text-white tracking-wider mb-1">THALOS RADIAL MATRIX</h3>
+<p class="text-[10px] text-[#5C8996] leading-relaxed">
+          Master spatial orbit. All 7 environments are synchronized in a unified holographic nexus.
+        </p>
+</div>
+<!-- Radial Matrix Visual Graphic (SVG Interconnected Orbit) -->
+<div class="my-4 relative flex items-center justify-center min-h-[290px]">
+<!-- Concentric Ring Overlays -->
+<div class="absolute w-64 h-64 rounded-full border border-dashed border-[#163542]/80"></div>
+<div class="absolute w-48 h-48 rounded-full border border-[#163542]/60"></div>
+<div class="absolute w-32 h-32 rounded-full border border-[#50D9D0]/20 animate-spin" style="animation-duration: 40s;"></div>
+<!-- Central Holographic Core -->
+<div class="relative z-10 w-20 h-20 rounded-full bg-[#0B1921] border-2 border-[#50D9D0] flex flex-col items-center justify-center shadow-[0_0_30px_rgba(80,217,208,0.4)] group cursor-pointer">
+<svg class="w-7 h-7 text-[#50D9D0] filter drop-shadow-[0_0_8px_#50D9D0]" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polygon points="12 2 2 22 22 22 12 2"></polygon>
+<line x1="12" x2="12" y1="11" y2="17"></line>
+</svg>
+<span class="text-[9px] font-bold tracking-widest text-white mt-0.5">THALOS</span>
+<span class="text-[7px] text-[#50D9D0] uppercase font-mono">UNIFIED</span>
+</div>
+<!-- 7 Orbiting Environment Nodes -->
+<!-- Node 1: My Day (Top) -->
+<button class="absolute top-1 transform -translate-x-1/2 left-1/2 flex flex-col items-center group" title="01 Command Chamber">
+<div class="w-7 h-7 rounded-full bg-[#0B1921] border border-[#50D9D0]/70 group-hover:border-[#50D9D0] flex items-center justify-center text-[#50D9D0] shadow-[0_0_10px_rgba(80,217,208,0.3)] transition">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="5"></circle>
+<line x1="12" x2="12" y1="1" y2="3"></line>
+<line x1="12" x2="12" y1="21" y2="23"></line>
+</svg>
+</div>
+<span class="text-[8px] font-bold text-gray-300 group-hover:text-[#50D9D0] mt-0.5">My Day</span>
+</button>
+<!-- Node 2: Digital World (Top-Right) -->
+<button class="absolute top-8 right-5 flex flex-col items-center group" title="02 Digital World">
+<div class="w-7 h-7 rounded-full bg-[#0B1921] border border-[#50D9D0]/70 group-hover:border-[#50D9D0] flex items-center justify-center text-[#50D9D0] shadow-[0_0_10px_rgba(80,217,208,0.3)] transition">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<line x1="2" x2="22" y1="12" y2="12"></line>
+<path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+</svg>
+</div>
+<span class="text-[8px] font-bold text-gray-300 group-hover:text-[#50D9D0] mt-0.5">Digital World</span>
+</button>
+<!-- Node 3: Revenue (Mid-Right) -->
+<button class="absolute bottom-16 right-3 flex flex-col items-center group" title="03 Revenue">
+<div class="w-7 h-7 rounded-full bg-[#0B1921] border border-[#50D9D0]/70 group-hover:border-[#50D9D0] flex items-center justify-center text-[#50D9D0] shadow-[0_0_10px_rgba(80,217,208,0.3)] transition">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+<polyline points="17 6 23 6 23 12"></polyline>
+</svg>
+</div>
+<span class="text-[8px] font-bold text-gray-300 group-hover:text-[#50D9D0] mt-0.5">Revenue</span>
+</button>
+<!-- Node 4: AI Team (Bottom-Right) -->
+<button class="absolute bottom-1 right-12 flex flex-col items-center group" title="04 AI Team">
+<div class="w-7 h-7 rounded-full bg-[#0B1921] border border-[#50D9D0]/70 group-hover:border-[#50D9D0] flex items-center justify-center text-[#50D9D0] shadow-[0_0_10px_rgba(80,217,208,0.3)] transition">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+<circle cx="9" cy="7" r="4"></circle>
+<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+</svg>
+</div>
+<span class="text-[8px] font-bold text-gray-300 group-hover:text-[#50D9D0] mt-0.5">AI Team</span>
+</button>
+<!-- Node 5: Knowledge (Bottom-Left) -->
+<button class="absolute bottom-1 left-12 flex flex-col items-center group" title="05 Knowledge">
+<div class="w-7 h-7 rounded-full bg-[#0B1921] border border-[#50D9D0]/70 group-hover:border-[#50D9D0] flex items-center justify-center text-[#50D9D0] shadow-[0_0_10px_rgba(80,217,208,0.3)] transition">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+</svg>
+</div>
+<span class="text-[8px] font-bold text-gray-300 group-hover:text-[#50D9D0] mt-0.5">Knowledge</span>
+</button>
+<!-- Node 6: Execution (Mid-Left) -->
+<button class="absolute bottom-16 left-3 flex flex-col items-center group" title="06 Execution">
+<div class="w-7 h-7 rounded-full bg-[#0B1921] border border-[#50D9D0]/70 group-hover:border-[#50D9D0] flex items-center justify-center text-[#50D9D0] shadow-[0_0_10px_rgba(80,217,208,0.3)] transition">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+</svg>
+</div>
+<span class="text-[8px] font-bold text-gray-300 group-hover:text-[#50D9D0] mt-0.5">Execution</span>
+</button>
+<!-- Node 7: Settings & Integrations (Top-Left) -->
+<button class="absolute top-8 left-5 flex flex-col items-center group" title="07 Settings &amp; Integrations">
+<div class="w-7 h-7 rounded-full bg-[#0B1921] border border-[#50D9D0]/70 group-hover:border-[#50D9D0] flex items-center justify-center text-[#50D9D0] shadow-[0_0_10px_rgba(80,217,208,0.3)] transition">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="3"></circle>
+<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+</svg>
+</div>
+<span class="text-[8px] font-bold text-gray-300 group-hover:text-[#50D9D0] mt-0.5">Settings</span>
+</button>
+</div>
+<!-- Matrix Telemetry Status -->
+<div class="bg-[#05090D] border border-[#163542] rounded-lg p-2.5 text-[10px] space-y-1">
+<div class="flex justify-between">
+<span class="text-[#5C8996]">Radial Status:</span>
+<span class="text-emerald-400 font-bold">LOCKED &amp; SYNCED</span>
+</div>
+<div class="flex justify-between">
+<span class="text-[#5C8996]">Spatial Depth:</span>
+<span class="text-white font-mono">Master Holo-View</span>
+</div>
+<div class="flex justify-between">
+<span class="text-[#5C8996]">Haptic Dial:</span>
+<span class="text-[#50D9D0]">Ready (7/7 Nodes)</span>
+</div>
+</div>
+<!-- Global Actions -->
+<div class="mt-3 space-y-1.5">
+<button class="w-full py-1.5 px-3 bg-[#50D9D0]/10 border border-[#50D9D0]/40 hover:bg-[#50D9D0]/20 rounded-lg text-[#50D9D0] text-[10px] font-bold tracking-wider uppercase transition shadow-[0_0_10px_rgba(80,217,208,0.1)]">
+          Broadcast Prompt To All
+        </button>
+<button class="w-full py-1 px-3 bg-[#0B1921] border border-[#163542] hover:border-gray-500 rounded-lg text-[#5C8996] hover:text-white text-[9px] transition">
+          Trigger System State Snapshot
+        </button>
+</div>
+</aside>
+</main>
+<!-- END: MainDashboardGrid -->
+<!-- BEGIN: BottomTelemetryStream -->
+<section class="w-full bg-[#080D12] border border-[#163542] rounded-xl px-3.5 py-2" data-purpose="multi-env-synapse-stream">
+<div class="flex items-center justify-between text-[11px] mb-1.5 border-b border-[#163542]/60 pb-1">
+<div class="flex items-center space-x-2">
+<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+<span class="font-bold text-white uppercase tracking-wider text-[10px]">
+          GLOBAL SYNAPSE TELEMETRY // MULTI-ENVIRONMENT AUDIT STREAM
+        </span>
+</div>
+<div class="flex items-center space-x-3 text-[10px] text-[#5C8996]">
+<span>AGGREGATED STREAM</span>
+<span>BUFFER: 512/512 KB</span>
+</div>
+</div>
+<!-- Real-time Multi-Environment Logs -->
+<div class="font-mono text-[10px] space-y-1 text-gray-300">
+<div class="flex items-baseline space-x-2 truncate">
+<span class="text-[#5C8996]">[10:48:02]</span>
+<span class="text-[#50D9D0] font-semibold">[Env:AI-Team]</span>
+<span>DevAgent-X committed PR #142 to 'NexGen Systems' staging branch. E2E pipeline nominal.</span>
+</div>
+<div class="flex items-baseline space-x-2 truncate">
+<span class="text-[#5C8996]">[10:48:19]</span>
+<span class="text-amber-400 font-semibold">[Env:Revenue]</span>
+<span>Deal Architect generated custom SLA v2 for Acme Corp (₹6,00,000). Awaiting Executive clearance.</span>
+</div>
+<div class="flex items-baseline space-x-2 truncate">
+<span class="text-[#5C8996]">[10:48:44]</span>
+<span class="text-emerald-400 font-semibold">[Env:Knowledge]</span>
+<span>Qdrant vector cluster merged 1,420 legal precedent embeddings. Semantic drift: 0.01%.</span>
+</div>
+</div>
+</section>
+<!-- END: BottomTelemetryStream -->
+<!-- BEGIN: PersistentOmniCommandCapsule -->
+<footer class="w-full max-w-4xl mx-auto" data-purpose="omni-command-capsule">
+<div class="bg-[#080D12] border border-[#50D9D0]/40 rounded-full px-4 py-2 flex items-center justify-between gap-3 shadow-[0_0_25px_rgba(80,217,208,0.2)]">
+<!-- Microphone & Waveform Indicator -->
+<div class="flex items-center space-x-2.5 pl-1">
+<button class="w-7 h-7 rounded-full bg-[#0B1921] border border-[#50D9D0]/50 hover:bg-[#50D9D0]/20 flex items-center justify-center text-[#50D9D0] transition">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 02-3-3V5a3 3 0 116 0v6a3 3 0 02-3 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<!-- Simulated Voice Waveform Bars -->
+<div class="flex items-center space-x-0.5 h-3.5">
+<span class="w-0.5 h-2 bg-[#50D9D0] rounded-full animate-pulse"></span>
+<span class="w-0.5 h-3.5 bg-[#50D9D0] rounded-full animate-pulse" style="animation-delay: 150ms;"></span>
+<span class="w-0.5 h-1.5 bg-[#50D9D0] rounded-full animate-pulse" style="animation-delay: 300ms;"></span>
+<span class="w-0.5 h-3 bg-[#50D9D0] rounded-full animate-pulse" style="animation-delay: 75ms;"></span>
+<span class="w-0.5 h-2 bg-[#50D9D0] rounded-full animate-pulse" style="animation-delay: 200ms;"></span>
+</div>
+</div>
+<!-- Natural Language Command Input -->
+<div class="flex-grow">
+<input class="w-full bg-transparent border-none text-[11px] text-[#E6F0EF] placeholder-[#5C8996] focus:ring-0 focus:outline-none" placeholder="Broadcast command across all 7 THALOS environments or ask THALOS (e.g. 'Synthesize sprint velocity with Q2 revenue forecast')..." type="text"/>
+</div>
+<!-- Action & Dispatch -->
+<div class="flex items-center space-x-2 pr-1">
+<kbd class="hidden md:inline-block px-1.5 py-0.5 text-[9px] font-mono text-[#5C8996] bg-[#05090D] border border-[#163542] rounded">
+          ⌘K
+        </kbd>
+<button class="w-7 h-7 rounded-full bg-[#50D9D0] text-[#05090D] hover:bg-white flex items-center justify-center font-bold transition shadow-[0_0_10px_#50D9D0]">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<line x1="12" x2="12" y1="19" y2="5"></line>
+<polyline points="5 12 12 5 19 12"></polyline>
+</svg>
+</button>
+</div>
+</div>
+</footer>
+<!-- END: PersistentOmniCommandCapsule -->
+</body></html>
