@@ -28,6 +28,8 @@ import * as crmTools from './tools/crmTools.js';
 import * as financeTools from './tools/financeTools.js';
 import * as reportingTools from './tools/reportingTools.js';
 
+import { TOOL_PARAMS } from '../intelligence/toolRegistry.js';
+
 export interface ToolCallRequest {
   tool_id: string;
   agent_id: string;
@@ -35,6 +37,7 @@ export interface ToolCallRequest {
   workflow_run_id?: string;
   job_id?: string;
   is_approved?: boolean;
+  correlation_id?: string;
 }
 
 export interface ToolResult {
@@ -52,7 +55,7 @@ type ToolHandler = (inputs: Record<string, unknown>) => Promise<{
   evidence?: string;
 }>;
 
-const HANDLERS: Record<string, ToolHandler> = {
+export const HANDLERS: Record<string, ToolHandler> = {
   // Research
   web_search: webSearch.execute,
   website_audit: websiteAudit.execute,
@@ -119,6 +122,24 @@ export async function executeTool(req: ToolCallRequest): Promise<ToolResult> {
     return { success: false, error: reason, duration_ms: Date.now() - start };
   }
 
+  // Check integration readiness (L11-AC-03)
+  if (tool.integration_id) {
+    const { data: integ } = await supabase
+      .from('integrations')
+      .select('status, display_name')
+      .eq('integration_id', tool.integration_id)
+      .maybeSingle();
+
+    const readyStatuses = ['configured', 'connected', 'tested', 'operational'];
+    if (integ && !readyStatuses.includes(integ.status)) {
+      return {
+        success: false,
+        error: `Tool ${req.tool_id} requires integration '${tool.integration_id}' which is not ready (status: ${integ.status})`,
+        duration_ms: Date.now() - start,
+      };
+    }
+  }
+
   // Check agent is allowed to use this tool
   const { data: agent } = await supabase
     .from('agents')
@@ -132,6 +153,21 @@ export async function executeTool(req: ToolCallRequest): Promise<ToolResult> {
       error: `Agent ${req.agent_id} is not permitted to use tool: ${req.tool_id}`,
       duration_ms: Date.now() - start,
     };
+  }
+
+  // Schema input validation (L11-AC-02)
+  const specParams = TOOL_PARAMS[req.tool_id];
+  if (specParams && Array.isArray(specParams.required)) {
+    for (const requiredField of specParams.required) {
+      const val = req.inputs[requiredField];
+      if (val === undefined || val === null || (typeof val === 'string' && val.trim() === '')) {
+        return {
+          success: false,
+          error: `Missing required parameter for ${req.tool_id}: ${requiredField}`,
+          duration_ms: Date.now() - start,
+        };
+      }
+    }
   }
 
   // Create execution record
@@ -211,7 +247,7 @@ export async function executeTool(req: ToolCallRequest): Promise<ToolResult> {
       event_type: 'tool.executed',
       agent: req.agent_id,
       description: `${tool.display_name} completed (${duration}ms)`,
-      metadata: { tool_id: req.tool_id, evidence },
+      metadata: { tool_id: req.tool_id, evidence, correlation_id: req.correlation_id },
     });
 
     return { success: true, output, evidence, duration_ms: duration };
@@ -219,7 +255,7 @@ export async function executeTool(req: ToolCallRequest): Promise<ToolResult> {
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     const duration = Date.now() - start;
-    logger.error('Tool execution failed', { tool_id: req.tool_id, error: errMsg });
+    logger.error('Tool execution failed', { tool_id: req.tool_id, error: errMsg, correlation_id: req.correlation_id });
 
     if (execId) {
       await supabase.from('tool_executions').update({
@@ -229,6 +265,13 @@ export async function executeTool(req: ToolCallRequest): Promise<ToolResult> {
         duration_ms: duration,
       }).eq('id', execId);
     }
+
+    await audit({
+      event_type: 'tool.failed',
+      agent: req.agent_id,
+      description: `${tool.display_name} failed: ${errMsg}`,
+      metadata: { tool_id: req.tool_id, error: errMsg, correlation_id: req.correlation_id },
+    });
 
     return { success: false, error: errMsg, duration_ms: duration };
   }

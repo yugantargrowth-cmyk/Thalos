@@ -2,9 +2,10 @@
  * THALOS Background Worker
  * ─────────────────────────────────────────────────────────────
  * Polls the jobs table using FOR UPDATE SKIP LOCKED.
- * Processes: document ingestion, follow-up scanning,
- * invoice overdue detection, approval expiry.
+ * Processes: document ingestion, CSV/spreadsheet import,
+ * follow-up scanning, invoice overdue detection, approval expiry.
  *
+ * Honors worker concurrency (WORKER_MAX_CONCURRENCY).
  * Runs as a separate process alongside the API server.
  * Exposes an HTTP health/readiness endpoint on WORKER_PORT (default 3001).
  */
@@ -31,7 +32,10 @@ export interface WorkerStatus {
   workerId: string;
   running: boolean;
   uptime: number;
+  activeCount: number;
+  maxConcurrency: number;
   inFlightJob: { id: string; type: string } | null;
+  inFlightJobs: Array<{ id: string; type: string }>;
   pollIntervalMs: number;
 }
 
@@ -39,13 +43,14 @@ export class WorkerService {
   public readonly workerId: string;
   private running: boolean = false;
   private shutdownRequested: boolean = false;
-  private inFlightJob: { id: string; type: string } | null = null;
+  private activeJobs: Map<string, { job: JobRow; promise: Promise<void> }> = new Map();
   private healthServer: HttpServer | null = null;
   private loopPromise: Promise<void> | null = null;
   private startTime: number = Date.now();
 
   private readonly jobHandlers: Record<string, (payload: Record<string, unknown>) => Promise<void>> = {
     ingest_document: processIngestionJob,
+    import_csv: this.importCsv.bind(this),
     scan_follow_ups: this.scanFollowUps.bind(this),
     mark_overdue_invoices: this.markOverdueInvoices.bind(this),
     expire_approvals: this.expireApprovals.bind(this),
@@ -56,12 +61,20 @@ export class WorkerService {
   }
 
   public getStatus(): WorkerStatus {
+    const inFlightJobs: Array<{ id: string; type: string }> = [];
+    for (const [id, entry] of this.activeJobs.entries()) {
+      inFlightJobs.push({ id, type: entry.job.job_type });
+    }
+
     return {
       service: 'thalos-worker',
       workerId: this.workerId,
       running: this.running,
       uptime: Math.floor((Date.now() - this.startTime) / 1000),
-      inFlightJob: this.inFlightJob,
+      activeCount: this.activeJobs.size,
+      maxConcurrency: config.worker.maxConcurrency,
+      inFlightJob: inFlightJobs.length > 0 ? inFlightJobs[0] : null,
+      inFlightJobs,
       pollIntervalMs: config.worker.pollIntervalMs,
     };
   }
@@ -153,7 +166,6 @@ export class WorkerService {
       return;
     }
 
-    this.inFlightJob = { id: job.id, type: job.job_type };
     try {
       await handler(job.payload);
       await supabase.from('jobs').update({
@@ -175,14 +187,14 @@ export class WorkerService {
         next_attempt_at: willRetry
           ? new Date(Date.now() + Math.pow(2, job.attempt) * 30000).toISOString()
           : new Date().toISOString(),
+        completed_at: willRetry ? null : new Date().toISOString(),
       }).eq('id', job.id);
-    } finally {
-      this.inFlightJob = null;
     }
   }
 
   public async pollOnce(): Promise<boolean> {
     if (this.shutdownRequested) return false;
+    if (this.activeJobs.size >= config.worker.maxConcurrency) return false;
 
     const supabase = getSupabase();
     try {
@@ -199,11 +211,15 @@ export class WorkerService {
       if (!jobs || jobs.length === 0) return false;
 
       const job = jobs[0] as JobRow;
-      logger.info('Processing job', { job_type: job.job_type, job_id: job.id });
-      await this.processJob(job);
+      logger.info('Processing job', { job_type: job.job_type, job_id: job.id, active_count: this.activeJobs.size + 1 });
+
+      const promise = this.processJob(job).finally(() => {
+        this.activeJobs.delete(job.id);
+      });
+
+      this.activeJobs.set(job.id, { job, promise });
       return true;
     } catch (err) {
-      // If running on placeholder Supabase in local development/test, log debug rather than spamming errors
       const isPlaceholder = config.supabase.url.includes('placeholder');
       if (!isPlaceholder) {
         logger.error('Worker poll error', { error: err instanceof Error ? err.message : err });
@@ -223,6 +239,78 @@ export class WorkerService {
         logger.warn('Maintenance task error', { err });
       }
     }
+  }
+
+  /**
+   * Worker handler for import_csv jobs (Fixes R-004)
+   * Parses CSV content and inserts validated leads or clients.
+   */
+  public async importCsv(payload: Record<string, unknown>): Promise<void> {
+    const supabase = getSupabase();
+    const targetTable = (payload.target_table as string) || 'leads';
+    let csvData = (payload.csv_data as string) || '';
+
+    // If document_id is provided, read content from document chunks
+    if (!csvData && payload.document_id) {
+      const { data: chunks } = await supabase
+        .from('document_chunks')
+        .select('content')
+        .eq('document_id', payload.document_id)
+        .order('chunk_index', { ascending: true });
+      if (chunks && chunks.length > 0) {
+        csvData = chunks.map(c => c.content).join('');
+      }
+    }
+
+    if (!csvData.trim()) {
+      throw new Error('import_csv: No CSV data provided or extracted');
+    }
+
+    // Parse CSV lines
+    const lines = csvData.trim().split(/\r?\n/).filter(line => line.trim().length > 0);
+    if (lines.length < 2) {
+      throw new Error('import_csv: CSV must contain a header and at least one data row');
+    }
+
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/['"]/g, ''));
+    let importedCount = 0;
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
+      const row: Record<string, string> = {};
+      headers.forEach((h, idx) => {
+        if (values[idx] !== undefined) row[h] = values[idx];
+      });
+
+      if (targetTable === 'leads') {
+        const leadPayload = {
+          name: row.name || row.business_name || row.company || `Lead row ${i}`,
+          phone: row.phone || row.contact_number || `+91000000000${i}`.slice(0, 15),
+          contact_name: row.contact_name || row.contact || null,
+          email: row.email || null,
+          industry: row.industry || null,
+          location: row.location || row.city || null,
+          stage: 'new',
+          source: 'import',
+        };
+        const { error } = await supabase.from('leads').upsert(leadPayload, { onConflict: 'phone' });
+        if (!error) importedCount++;
+      } else if (targetTable === 'clients') {
+        const clientPayload = {
+          business_name: row.business_name || row.name || `Client row ${i}`,
+          contact_name: row.contact_name || row.contact || 'Main Contact',
+          phone: row.phone || `+91000000000${i}`.slice(0, 15),
+          email: row.email || null,
+          status: 'active',
+          start_date: new Date().toISOString().split('T')[0],
+          monthly_value: parseFloat(row.monthly_value || '0') || 0,
+        };
+        const { error } = await supabase.from('clients').insert(clientPayload);
+        if (!error) importedCount++;
+      }
+    }
+
+    logger.info('import_csv completed', { targetTable, importedCount, totalRows: lines.length - 1 });
   }
 
   private async scanFollowUps(_payload: Record<string, unknown>): Promise<void> {
@@ -259,6 +347,7 @@ export class WorkerService {
     logger.info(`Worker ${this.workerId} starting`, {
       poll_interval_ms: config.worker.pollIntervalMs,
       lease_seconds: config.worker.leaseSeconds,
+      max_concurrency: config.worker.maxConcurrency,
     });
 
     if (options?.healthPort !== undefined || config.workerPort) {
@@ -276,7 +365,15 @@ export class WorkerService {
     const MAINTENANCE_EVERY = Math.max(1, Math.floor(3600000 / config.worker.pollIntervalMs));
 
     while (!this.shutdownRequested) {
-      await this.pollOnce();
+      // Poll up to maxConcurrency available slots
+      const availableCapacity = config.worker.maxConcurrency - this.activeJobs.size;
+      if (availableCapacity > 0) {
+        for (let i = 0; i < availableCapacity; i++) {
+          const polled = await this.pollOnce();
+          if (!polled) break;
+        }
+      }
+
       maintenanceTick++;
       if (maintenanceTick >= MAINTENANCE_EVERY) {
         await this.runMaintenanceTasks();
@@ -286,13 +383,13 @@ export class WorkerService {
     }
   }
 
-  public async stop(): Promise<void> {
+  public async stop(drainTimeoutMs: number = 10000): Promise<void> {
     this.shutdownRequested = true;
-    logger.info(`Worker ${this.workerId} shutdown requested`);
+    logger.info(`Worker ${this.workerId} shutdown requested`, { active_jobs: this.activeJobs.size });
 
-    // Wait for in-flight job if running (max 10s timeout)
+    // Wait for in-flight jobs if running (up to drainTimeoutMs)
     const startWait = Date.now();
-    while (this.inFlightJob && Date.now() - startWait < 10000) {
+    while (this.activeJobs.size > 0 && Date.now() - startWait < drainTimeoutMs) {
       await this.sleep(200);
     }
 

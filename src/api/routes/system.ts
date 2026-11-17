@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { getSupabase } from '../../lib/supabase.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { config } from '../../lib/config.js';
+import { executeWorkflow } from '../../execution/workflowRuntime.js';
 
 const router = Router();
 
@@ -122,6 +123,29 @@ router.get('/workflows/:id/runs', async (req: Request, res: Response): Promise<v
     .limit(20);
   if (error) throw new AppError(500, 'Failed to fetch workflow runs');
   res.json({ runs: data });
+});
+
+router.post('/workflows/:id/run', async (req: Request, res: Response): Promise<void> => {
+  const workflowId = String(req.params.id);
+  const { input_data, idempotency_key } = req.body ?? {};
+  const rawCorr = req.headers['x-correlation-id'] || (req as Request & { correlationId?: string }).correlationId;
+  const correlationId = Array.isArray(rawCorr) ? rawCorr[0] : (rawCorr as string | undefined);
+
+  try {
+    const result = await executeWorkflow({
+      workflowId,
+      inputData: input_data ?? {},
+      triggerType: 'manual',
+      triggeredBy: req.auth?.sub ?? 'founder',
+      idempotencyKey: idempotency_key,
+      correlationId,
+    });
+    res.json({ run: result });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes('not found')) throw new AppError(404, msg);
+    throw new AppError(500, msg);
+  }
 });
 
 // ── Audit log ─────────────────────────────────────────────────

@@ -248,7 +248,53 @@ const TOOL_PARAMS: Record<string, Record<string, unknown>> = {
     },
     required: ['entity'],
   },
+  save_to_db: {
+    type: 'object',
+    properties: {
+      table: {
+        type: 'string',
+        enum: ['leads', 'lead_activities', 'follow_ups', 'clients', 'projects', 'tasks', 'documents', 'knowledge_nodes'],
+        description: 'Target database table name',
+      },
+      record: {
+        type: 'object',
+        description: 'Record fields to persist in Supabase',
+      },
+    },
+    required: ['table', 'record'],
+  },
+  sheets_import: {
+    type: 'object',
+    properties: {
+      target_table: {
+        type: 'string',
+        enum: ['leads', 'clients'],
+        description: 'Target table to import rows into',
+      },
+      csv_data: {
+        type: 'string',
+        description: 'Raw CSV text content',
+      },
+      document_id: {
+        type: 'string',
+        description: 'UUID of an uploaded document containing the spreadsheet',
+      },
+    },
+    required: ['target_table'],
+  },
+  ingest_knowledge_file: {
+    type: 'object',
+    properties: {
+      document_id: {
+        type: 'string',
+        description: 'UUID of an existing uploaded document record to index',
+      },
+    },
+    required: ['document_id'],
+  },
 };
+
+export { TOOL_PARAMS };
 
 /**
  * Load tool specs for a given agent from the DB.

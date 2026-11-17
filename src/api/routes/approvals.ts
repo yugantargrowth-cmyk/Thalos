@@ -91,11 +91,22 @@ router.post(
       throw new AppError(409, 'Approval payload has been tampered with — cannot approve');
     }
 
-    await supabase.from('approval_queue').update({
-      status: 'approved',
-      reviewed_at: new Date().toISOString(),
-      reviewed_by: req.auth?.sub ?? 'owner',
-    }).eq('id', req.params.id);
+    // Atomic single-use transition (R-002, L11-AC-04)
+    const { data: updatedApproval, error: updateErr } = await supabase
+      .from('approval_queue')
+      .update({
+        status: 'approved',
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: req.auth?.sub ?? 'owner',
+      })
+      .eq('id', req.params.id)
+      .eq('status', 'pending')
+      .select('*')
+      .maybeSingle();
+
+    if (updateErr || !updatedApproval) {
+      throw new AppError(409, 'Approval is no longer pending or was processed concurrently');
+    }
 
     await audit({
       event_type: 'approval.approved',
@@ -151,12 +162,23 @@ router.post(
 
     if (!approval) throw new AppError(404, 'Approval not found or not pending');
 
-    await supabase.from('approval_queue').update({
-      status: 'rejected',
-      reviewed_at: new Date().toISOString(),
-      reviewed_by: req.auth?.sub ?? 'owner',
-      rejection_reason: req.body.reason,
-    }).eq('id', req.params.id);
+    // Atomic single-use rejection transition (R-002, L11-AC-04)
+    const { data: rejectedApproval, error: rejectErr } = await supabase
+      .from('approval_queue')
+      .update({
+        status: 'rejected',
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: req.auth?.sub ?? 'owner',
+        rejection_reason: req.body.reason,
+      })
+      .eq('id', req.params.id)
+      .eq('status', 'pending')
+      .select('*')
+      .maybeSingle();
+
+    if (rejectErr || !rejectedApproval) {
+      throw new AppError(409, 'Approval is no longer pending or was processed concurrently');
+    }
 
     await audit({
       event_type: 'approval.rejected',
