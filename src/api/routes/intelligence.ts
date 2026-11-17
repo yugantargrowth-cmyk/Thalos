@@ -50,8 +50,11 @@ router.post(
     // Append user message to history
     history.push({ role: 'user', content: message, timestamp: new Date().toISOString() });
 
+    const rawCorr = req.headers['x-correlation-id'] || (req as Request & { correlationId?: string }).correlationId;
+    const correlationId = Array.isArray(rawCorr) ? rawCorr[0] : (rawCorr as string | undefined);
+
     // Run orchestrator
-    const result = await thalosOrchestrate({ message, history, sessionDate });
+    const result = await thalosOrchestrate({ message, history, sessionDate, correlationId });
 
     // Append assistant response
     history.push({
