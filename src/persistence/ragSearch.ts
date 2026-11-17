@@ -11,19 +11,44 @@ export interface SearchResult {
   section_title?: string;
   source_url?: string;
   page_number?: number;
+  metadata?: {
+    ftsRank?: number;
+    vectorRank?: number;
+    vectorSimilarity?: number;
+    fusionMethod: 'reciprocal_rank_fusion' | 'fts_only' | 'vector_only';
+  };
 }
 
 export interface SearchOptions {
   query: string;
   topK?: number;
   category?: string;
+  ftsWeight?: number;
+  vectorWeight?: number;
+  rrfK?: number;
 }
 
+/**
+ * Hybrid Search combining Full-Text Search (BM25 via Postgres tsvector) and
+ * Vector Cosine Similarity (pgvector) using Reciprocal Rank Fusion (RRF).
+ *
+ * Ranking Formula (RRF):
+ * score(d) = (w_fts / (K + rank_fts(d))) + (w_vec / (K + rank_vec(d)))
+ * where default K = 60, w_fts = 1.0, w_vec = 1.0.
+ */
 export async function hybridSearch(options: SearchOptions): Promise<SearchResult[]> {
-  const { query, topK = 5, category } = options;
+  const {
+    query,
+    topK = 5,
+    category,
+    ftsWeight = 1.0,
+    vectorWeight = 1.0,
+    rrfK = 60,
+  } = options;
+
   const supabase = getSupabase();
 
-  // 1. Full-text search (always available)
+  // 1. Full-text search (lexical BM25 match against fts_vector)
   let ftsQ = supabase
     .from('document_chunks')
     .select(`
@@ -32,62 +57,130 @@ export async function hybridSearch(options: SearchOptions): Promise<SearchResult
     `)
     .textSearch('fts_vector', query, { type: 'websearch' })
     .eq('documents.status', 'indexed')
-    .limit(topK * 2);
+    .limit(topK * 3);
 
   if (category) ftsQ = ftsQ.eq('documents.category', category);
-  const { data: ftsResults } = await ftsQ;
+  const { data: ftsResults, error: ftsError } = await ftsQ;
 
-  // 2. Vector search (requires embeddings to exist)
-  let vectorResults: typeof ftsResults = [];
-  try {
-    const { embedding } = await generateEmbedding(query);
-    const { data: vecData } = await supabase.rpc('match_document_chunks', {
-      query_embedding: embedding,
-      match_threshold: 0.5,
-      match_count: topK,
-      filter_category: category ?? null,
-    });
-    vectorResults = (vecData as typeof ftsResults) ?? [];
-  } catch (err) {
-    logger.warn('Vector search failed, using FTS only', { error: err instanceof Error ? err.message : err });
+  if (ftsError) {
+    logger.warn('Full-text search query failed or skipped', { error: ftsError.message });
   }
 
-  // 3. Merge and deduplicate by chunk id, keeping highest score
-  const merged = new Map<string, SearchResult>();
+  // 2. Vector search (dense semantic match against embeddings)
+  let vectorResults: Array<{
+    id: string;
+    document_id: string;
+    content: string;
+    section_title?: string;
+    source_url?: string;
+    page_number?: number;
+    similarity: number;
+    documents: { title: string; category: string; status: string } | Array<{ title: string; category: string; status: string }>;
+  }> = [];
 
-  for (const r of (ftsResults ?? [])) {
+  try {
+    const { embedding } = await generateEmbedding(query);
+    const { data: vecData, error: vecError } = await supabase.rpc('match_document_chunks', {
+      query_embedding: embedding,
+      match_threshold: 0.4,
+      match_count: topK * 3,
+      filter_category: category ?? null,
+    });
+
+    if (vecError) {
+      logger.warn('Vector RPC search error', { error: vecError.message });
+    } else if (vecData) {
+      vectorResults = vecData;
+    }
+  } catch (err) {
+    logger.warn('Vector search unavailable, falling back to FTS only', {
+      error: err instanceof Error ? err.message : err,
+    });
+  }
+
+  // 3. Reciprocal Rank Fusion (RRF)
+  interface Candidate {
+    chunk_id: string;
+    document_id: string;
+    document_title: string;
+    content: string;
+    section_title?: string;
+    source_url?: string;
+    page_number?: number;
+    ftsRank?: number;
+    vectorRank?: number;
+    vectorSimilarity?: number;
+    rrfScore: number;
+  }
+
+  const candidates = new Map<string, Candidate>();
+
+  // Process FTS rankings (1-indexed rank)
+  (ftsResults ?? []).forEach((r, idx) => {
+    const rank = idx + 1;
     const doc = Array.isArray(r.documents) ? r.documents[0] : r.documents;
-    merged.set(r.id, {
+    candidates.set(r.id, {
       chunk_id: r.id,
       document_id: r.document_id,
-      document_title: doc?.title ?? 'Unknown',
+      document_title: doc?.title ?? 'Untitled',
       content: r.content,
-      score: 0.5,
       section_title: r.section_title ?? undefined,
       source_url: r.source_url ?? undefined,
       page_number: r.page_number ?? undefined,
+      ftsRank: rank,
+      rrfScore: ftsWeight / (rrfK + rank),
     });
-  }
+  });
 
-  for (const r of (vectorResults ?? [])) {
-    const existing = merged.get(r.id);
-    const score = (r as unknown as { similarity?: number }).similarity ?? 0;
-    if (!existing || score > existing.score) {
-      const doc = Array.isArray(r.documents) ? r.documents[0] : r.documents;
-      merged.set(r.id, {
+  // Process Vector rankings (1-indexed rank)
+  vectorResults.forEach((r, idx) => {
+    const rank = idx + 1;
+    const doc = Array.isArray(r.documents) ? r.documents[0] : r.documents;
+    const existing = candidates.get(r.id);
+
+    const vecContribution = vectorWeight / (rrfK + rank);
+
+    if (existing) {
+      existing.vectorRank = rank;
+      existing.vectorSimilarity = r.similarity;
+      existing.rrfScore += vecContribution;
+    } else {
+      candidates.set(r.id, {
         chunk_id: r.id,
         document_id: r.document_id,
-        document_title: doc?.title ?? 'Unknown',
+        document_title: doc?.title ?? 'Untitled',
         content: r.content,
-        score,
         section_title: r.section_title ?? undefined,
         source_url: r.source_url ?? undefined,
         page_number: r.page_number ?? undefined,
+        vectorRank: rank,
+        vectorSimilarity: r.similarity,
+        rrfScore: vecContribution,
       });
     }
-  }
+  });
 
-  return Array.from(merged.values())
-    .sort((a, b) => b.score - a.score)
+  // Sort candidates by combined RRF score descending
+  const sorted = Array.from(candidates.values())
+    .sort((a, b) => b.rrfScore - a.rrfScore)
     .slice(0, topK);
+
+  return sorted.map((c) => ({
+    chunk_id: c.chunk_id,
+    document_id: c.document_id,
+    document_title: c.document_title,
+    content: c.content,
+    score: Number(c.rrfScore.toFixed(6)),
+    section_title: c.section_title,
+    source_url: c.source_url,
+    page_number: c.page_number,
+    metadata: {
+      ftsRank: c.ftsRank,
+      vectorRank: c.vectorRank,
+      vectorSimilarity: c.vectorSimilarity,
+      fusionMethod: c.ftsRank && c.vectorRank
+        ? 'reciprocal_rank_fusion'
+        : (c.vectorRank ? 'vector_only' : 'fts_only'),
+    },
+  }));
 }

@@ -1,7 +1,8 @@
+import crypto from 'crypto';
 import { getSupabase } from '../lib/supabase.js';
 import { generateEmbedding } from '../intelligence/llmClient.js';
 import { logger } from '../lib/logger.js';
-
+import { documentRepository } from './repositories/documentRepository.js';
 
 export interface IngestionJob {
   document_id: string;
@@ -10,9 +11,23 @@ export interface IngestionJob {
   buffer: Buffer;
 }
 
+/** Compute SHA-256 checksum of a buffer */
+export function computeSha256(buffer: Buffer): string {
+  return crypto.createHash('sha256').update(buffer).digest('hex');
+}
+
 /** Queue a document for async ingestion */
 export async function queueIngestionJob(job: IngestionJob): Promise<string> {
   const supabase = getSupabase();
+  const checksum = computeSha256(job.buffer);
+
+  // Update document record with checksum and size if not already set
+  await supabase.from('documents').update({
+    checksum_sha256: checksum,
+    file_size_bytes: job.buffer.length,
+    status: 'pending',
+  }).eq('id', job.document_id);
+
   const { data, error } = await supabase.from('jobs').insert({
     job_type: 'ingest_document',
     priority: 5,
@@ -20,37 +35,40 @@ export async function queueIngestionJob(job: IngestionJob): Promise<string> {
       document_id: job.document_id,
       filename: job.filename,
       mime_type: job.mime_type,
+      checksum_sha256: checksum,
+      file_size_bytes: job.buffer.length,
       // Buffer as base64 for transport through job queue
       content_b64: job.buffer.toString('base64'),
     },
-    idempotency_key: `ingest_${job.document_id}`,
+    idempotency_key: `ingest_${job.document_id}_${checksum.slice(0, 8)}`,
   }).select('id').single();
 
   if (error) throw new Error(`Failed to queue ingestion job: ${error.message}`);
   return data!.id;
 }
 
-/** Process a single ingestion job — called by worker */
+/**
+ * Process a single ingestion job — called by worker.
+ * Fixes R-003: Ensures that failures update document status AND throw an error
+ * so the worker accurately marks the job as failed/retried rather than completed.
+ */
 export async function processIngestionJob(payload: Record<string, unknown>): Promise<void> {
-  const supabase = getSupabase();
   const docId = payload.document_id as string;
   const filename = payload.filename as string;
   const mimeType = payload.mime_type as string;
-  const buffer = Buffer.from(payload.content_b64 as string, 'base64');
+  const buffer = Buffer.from((payload.content_b64 as string) || '', 'base64');
 
-  await supabase.from('documents').update({ status: 'ingesting' }).eq('id', docId);
+  await documentRepository.updateStatus(docId, 'ingesting');
 
   try {
     // Extract text
     const text = await extractText(buffer, mimeType, filename);
 
-    if (!text.trim()) {
-      await supabase.from('documents').update({
-        status: 'failed',
-        parse_error: 'No extractable text found',
-        has_extractable_text: false,
-      }).eq('id', docId);
-      return;
+    if (!text || !text.trim()) {
+      const emptyError = 'No extractable text found in document';
+      await documentRepository.updateStatus(docId, 'failed', { parse_error: emptyError });
+      // Throw to ensure worker records job failure
+      throw new Error(`Ingestion failed for doc ${docId}: ${emptyError}`);
     }
 
     // Chunk text
@@ -65,7 +83,7 @@ export async function processIngestionJob(payload: Record<string, unknown>): Pro
     for (let i = 0; i < chunks.length; i++) {
       try {
         const { embedding } = await generateEmbedding(chunks[i]);
-        await supabase.from('document_chunks').insert({
+        await documentRepository.insertChunk({
           document_id: docId,
           chunk_index: i,
           content: chunks[i],
@@ -75,12 +93,13 @@ export async function processIngestionJob(payload: Record<string, unknown>): Pro
         });
         indexed++;
       } catch (embErr) {
-        logger.warn('Chunk embedding failed — storing without vector', {
-          doc_id: docId, chunk_index: i,
+        logger.warn('Chunk embedding failed — storing without vector (FTS fallback)', {
+          doc_id: docId,
+          chunk_index: i,
           error: embErr instanceof Error ? embErr.message : embErr,
         });
         // Store chunk without embedding (FTS still works)
-        await supabase.from('document_chunks').insert({
+        await documentRepository.insertChunk({
           document_id: docId,
           chunk_index: i,
           content: chunks[i],
@@ -90,25 +109,25 @@ export async function processIngestionJob(payload: Record<string, unknown>): Pro
       }
     }
 
-    await supabase.from('documents').update({
-      status: 'indexed',
+    await documentRepository.updateStatus(docId, 'indexed', {
       char_count: text.length,
       embedding_model: EMBEDDING_MODEL,
-      embedding_dimensions: 768, // text-embedding-004 default
-    }).eq('id', docId);
+      embedding_dimensions: 768,
+    });
 
-    logger.info('Document ingested', { doc_id: docId, chunks: indexed });
+    logger.info('Document ingested successfully', { doc_id: docId, chunks: indexed, chars: text.length });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     logger.error('Ingestion failed', { doc_id: docId, error: msg });
-    await supabase.from('documents').update({
-      status: 'failed',
-      parse_error: msg.slice(0, 500),
-    }).eq('id', docId);
+
+    await documentRepository.updateStatus(docId, 'failed', { parse_error: msg.slice(0, 500) });
+
+    // CRITICAL: Rethrow error so the calling worker catches it and marks the job failed/retried
+    throw err;
   }
 }
 
-async function extractText(buffer: Buffer, mimeType: string, _filename: string): Promise<string> {
+export async function extractText(buffer: Buffer, mimeType: string, _filename: string): Promise<string> {
   if (mimeType === 'text/plain' || mimeType === 'text/markdown') {
     return buffer.toString('utf-8');
   }
@@ -144,7 +163,7 @@ async function extractText(buffer: Buffer, mimeType: string, _filename: string):
   throw new Error(`Unsupported MIME type: ${mimeType}`);
 }
 
-function chunkText(text: string, chunkSize: number, overlap: number): string[] {
+export function chunkText(text: string, chunkSize: number, overlap: number): string[] {
   const chunks: string[] = [];
   let start = 0;
 
