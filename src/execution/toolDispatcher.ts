@@ -19,6 +19,7 @@ import crypto from 'crypto';
 // Tool handlers
 import * as webSearch from './tools/webSearch.js';
 import * as websiteAudit from './tools/websiteAudit.js';
+import * as socialLookup from './tools/socialLookup.js';
 import * as saveToDB from './tools/saveToDb.js';
 import * as searchKnowledge from './tools/searchKnowledge.js';
 import * as draftCompose from './tools/draftCompose.js';
@@ -59,7 +60,7 @@ export const HANDLERS: Record<string, ToolHandler> = {
   // Research
   web_search: webSearch.execute,
   website_audit: websiteAudit.execute,
-  social_lookup: websiteAudit.execute,
+  social_lookup: socialLookup.execute,
 
   // Knowledge
   search_knowledge: searchKnowledge.execute,

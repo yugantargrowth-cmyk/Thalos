@@ -3,6 +3,7 @@ import { getSupabase } from '../../lib/supabase.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { config } from '../../lib/config.js';
 import { executeWorkflow } from '../../execution/workflowRuntime.js';
+import { agentService } from '../../intelligence/agentService.js';
 
 const router = Router();
 
@@ -89,6 +90,46 @@ router.get('/agents/:agentId', async (req: Request, res: Response): Promise<void
     .single();
   if (error || !data) throw new AppError(404, 'Agent not found');
   res.json({ agent: data });
+});
+
+router.patch('/agents/:agentId', async (req: Request, res: Response): Promise<void> => {
+  const agentId = String(req.params.agentId);
+  try {
+    const updated = await agentService.updateAgent(agentId, req.body, req.auth?.sub ?? 'founder');
+    res.json({ agent: updated });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes('not found')) throw new AppError(404, msg);
+    throw new AppError(400, msg);
+  }
+});
+
+router.post('/agents/:agentId/delegate', async (req: Request, res: Response): Promise<void> => {
+  const toAgent = String(req.params.agentId);
+  const { from_agent = 'thalos', task_type, input = {}, context = {}, deadline_seconds, max_steps } = req.body ?? {};
+  const rawCorr = req.headers['x-correlation-id'] || (req as Request & { correlationId?: string }).correlationId;
+  const correlationId = Array.isArray(rawCorr) ? rawCorr[0] : (rawCorr as string | undefined);
+
+  if (!task_type) {
+    throw new AppError(400, 'task_type is required for delegation');
+  }
+
+  try {
+    const result = await agentService.delegateTask({
+      from_agent,
+      to_agent: toAgent,
+      task_type,
+      input,
+      context,
+      deadline_seconds,
+      max_steps,
+      correlation_id: correlationId,
+    });
+    res.json({ delegation: result });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new AppError(500, msg);
+  }
 });
 
 // ── Tools ─────────────────────────────────────────────────────
