@@ -139,8 +139,15 @@ src/
 
 ## Tests
 ```bash
-npm test                 # All 45 tests
+npm test                 # Run all 113 automated unit, security, API, and worker tests
+npm run test:unit        # Unit tests
+npm run test:api         # API tests
+npm run test:security    # Security and SSRF tests
+npm run test:worker      # Background worker tests
 npm run test:coverage    # With coverage report
+npm run lint             # ESLint (flat config)
+npm run typecheck        # TypeScript validation
+npm run build            # Compile to dist/
 ```
 
 ## Production deployment
