@@ -5,11 +5,21 @@
  * and relevance rules for the THALOS Intelligence Layer (L09-AC-04).
  */
 
-import { LLMMessage } from './llmClient.js';
+import type { LLMMessage } from './llmClient.js';
 
 export interface ContextAssemblyOptions {
   systemPrompt: string;
   businessContext?: string;
+  relevantMemories?: Array<{
+    title: string;
+    content: string;
+    category?: string;
+    scope?: string;
+    citation?: string;
+  }>;
+  scopeFilter?: {
+    allowedScopes?: string[];
+  };
   history: Array<{ role: string; content: string; timestamp?: string }>;
   userMessage: string;
   maxTokens?: number; // Total budget for prompt (default: 4000)
@@ -36,7 +46,7 @@ export function estimateTokens(text: string): number {
  *
  * Priority order:
  * 1. System Prompt + Core Instructions (Always preserved)
- * 2. Live Business Context (Preserved if within remaining budget)
+ * 2. Live Business Context & Verified Memories (Filtered by scope boundaries)
  * 3. Immediate User Message (Always preserved)
  * 4. Recent Conversation History (Pruned from oldest to newest to fit budget)
  */
@@ -44,6 +54,8 @@ export function assembleContext(options: ContextAssemblyOptions): AssembledConte
   const {
     systemPrompt,
     businessContext,
+    relevantMemories,
+    scopeFilter,
     history,
     userMessage,
     maxTokens = 4000,
@@ -52,11 +64,30 @@ export function assembleContext(options: ContextAssemblyOptions): AssembledConte
 
   const sourcesAttributed: string[] = [];
 
-  // 1. Build System Instruction with Business Context
+  // Filter memories by allowed scopes to prevent cross-scope data leakage (S02-AC-06)
+  const allowedScopes = scopeFilter?.allowedScopes ?? ['global'];
+  const validMemories = (relevantMemories ?? []).filter(
+    (m) => !m.scope || allowedScopes.includes(m.scope)
+  );
+
+  let memoryContextText = '';
+  if (validMemories.length > 0) {
+    memoryContextText = validMemories
+      .map((m) => `- ${m.citation ? `${m.citation} ` : ''}${m.title}: ${m.content}`)
+      .join('\n');
+    validMemories.forEach((m) => {
+      sourcesAttributed.push(m.citation ?? `memory:${m.title}`);
+    });
+  }
+
+  // 1. Build System Instruction with Business Context & Memories
   let fullSystemContent = systemPrompt.trim();
   if (businessContext && businessContext.trim()) {
     fullSystemContent += `\n\n## Live Business Context\n${businessContext.trim()}`;
     sourcesAttributed.push('business_context_snapshot');
+  }
+  if (memoryContextText) {
+    fullSystemContent += `\n\n## Verified Memory & Knowledge\n${memoryContextText}`;
   }
 
   const systemMessage: LLMMessage = {

@@ -57,10 +57,54 @@ export async function processIngestionJob(payload: Record<string, unknown>): Pro
   const filename = payload.filename as string;
   const mimeType = payload.mime_type as string;
   const buffer = Buffer.from((payload.content_b64 as string) || '', 'base64');
+  const checksum = (payload.checksum_sha256 as string) || computeSha256(buffer);
 
   await documentRepository.updateStatus(docId, 'ingesting');
 
   try {
+    // S02-AC-07: Checksum-based deduplication avoids duplicate embedding
+    let existingDoc = null;
+    try {
+      existingDoc = await documentRepository.getByChecksum(checksum);
+    } catch (checkErr) {
+      logger.warn('Checksum lookup failed, proceeding with fresh ingestion', {
+        doc_id: docId,
+        error: checkErr instanceof Error ? checkErr.message : checkErr,
+      });
+    }
+
+    if (existingDoc && existingDoc.id !== docId && existingDoc.status === 'indexed') {
+      const existingChunks = await documentRepository.getChunks(existingDoc.id);
+      for (const chunk of existingChunks) {
+        await documentRepository.insertChunk({
+          document_id: docId,
+          chunk_index: chunk.chunk_index,
+          content: chunk.content,
+          char_count: chunk.char_count,
+          page_number: chunk.page_number,
+          section_title: chunk.section_title,
+          source_url: chunk.source_url,
+          embedding: chunk.embedding,
+          embedding_model: chunk.embedding_model,
+          metadata: { ...(chunk.metadata || {}), deduplicated_from: existingDoc.id },
+        });
+      }
+      await documentRepository.updateStatus(docId, 'indexed', {
+        char_count: existingDoc.char_count ?? 0,
+        embedding_model: existingDoc.embedding_model ?? 'text-embedding-004',
+        embedding_dimensions: existingDoc.embedding_dimensions ?? 768,
+      });
+
+      // Supersede previous version if specified
+      const currentDoc = await documentRepository.getById(docId);
+      if (currentDoc?.previous_version_id) {
+        await documentRepository.supersedeDocument(currentDoc.previous_version_id, docId);
+      }
+
+      logger.info('Document re-ingestion deduplicated from existing checksum', { doc_id: docId, source_doc_id: existingDoc.id });
+      return;
+    }
+
     // Extract text
     const text = await extractText(buffer, mimeType, filename);
 
@@ -114,6 +158,12 @@ export async function processIngestionJob(payload: Record<string, unknown>): Pro
       embedding_model: EMBEDDING_MODEL,
       embedding_dimensions: 768,
     });
+
+    // Supersede previous version if specified
+    const currentDoc = await documentRepository.getById(docId);
+    if (currentDoc?.previous_version_id) {
+      await documentRepository.supersedeDocument(currentDoc.previous_version_id, docId);
+    }
 
     logger.info('Document ingested successfully', { doc_id: docId, chunks: indexed, chars: text.length });
   } catch (err) {

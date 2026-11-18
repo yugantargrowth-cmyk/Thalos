@@ -48,6 +48,7 @@ describe('Document Ingestion, Hashing, and Error Propagation (L13-AC-05, R-003)'
 
   it('rethrows on empty text and marks document failed (R-003 fix)', async () => {
     const updateSpy = vi.spyOn(documentRepository, 'updateStatus').mockResolvedValue(undefined);
+    const checksumSpy = vi.spyOn(documentRepository, 'getByChecksum').mockResolvedValue(null);
 
     const emptyPayload = {
       document_id: 'doc-empty-123',
@@ -69,5 +70,6 @@ describe('Document Ingestion, Hashing, and Error Propagation (L13-AC-05, R-003)'
     );
 
     updateSpy.mockRestore();
+    checksumSpy.mockRestore();
   });
 });

@@ -11,6 +11,7 @@ export interface SearchResult {
   section_title?: string;
   source_url?: string;
   page_number?: number;
+  citation?: string;
   metadata?: {
     ftsRank?: number;
     vectorRank?: number;
@@ -174,6 +175,7 @@ export async function hybridSearch(options: SearchOptions): Promise<SearchResult
     section_title: c.section_title,
     source_url: c.source_url,
     page_number: c.page_number,
+    citation: `[Source: ${c.document_title}${c.section_title ? ` > ${c.section_title}` : ''}${c.page_number ? ` (p. ${c.page_number})` : ''}]`,
     metadata: {
       ftsRank: c.ftsRank,
       vectorRank: c.vectorRank,
