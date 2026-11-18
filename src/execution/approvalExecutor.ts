@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { executeTool } from './toolDispatcher.js';
 import { resumeWorkflow } from './workflowRuntime.js';
 import { logger } from '../lib/logger.js';
@@ -7,6 +8,7 @@ interface ApprovalRecord {
   action: string;
   agent: string;
   workflow_run_id?: string | null;
+  payload_hash?: string;
   payload: {
     tool_id?: string;
     workflow_run_id?: string;
@@ -25,6 +27,23 @@ export interface ExecutionResult {
 export async function executeApprovedAction(approval: ApprovalRecord): Promise<ExecutionResult> {
   const { tool_id, inputs = {} } = approval.payload;
   const workflowRunId = approval.workflow_run_id ?? approval.payload?.workflow_run_id;
+
+  // Re-verify payload integrity before execution if payload_hash is present (S07-AC-04)
+  if (approval.payload_hash) {
+    const computedHash = crypto.createHash('sha256').update(JSON.stringify(approval.payload)).digest('hex');
+    if (computedHash !== approval.payload_hash) {
+      logger.error('Approval payload tampered before execution', {
+        approval_id: approval.id,
+        expected: approval.payload_hash,
+        actual: computedHash,
+      });
+      return {
+        success: false,
+        summary: 'Approval execution aborted: payload has been tampered with',
+        error: 'Integrity check failed',
+      };
+    }
+  }
 
   // Case 1: Pure workflow approval gate (no tool_id)
   if (!tool_id && workflowRunId) {

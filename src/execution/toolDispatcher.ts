@@ -141,14 +141,30 @@ export async function executeTool(req: ToolCallRequest): Promise<ToolResult> {
     }
   }
 
-  // Check agent is allowed to use this tool
+  // Check agent exists and is allowed to use this tool (S07-AC-03, Least Privilege)
   const { data: agent } = await supabase
     .from('agents')
     .select('allowed_tools, prohibited_actions')
     .eq('agent_id', req.agent_id)
     .single();
 
-  if (agent && !agent.allowed_tools.includes(req.tool_id)) {
+  if (!agent) {
+    return {
+      success: false,
+      error: `Agent not found or unregistered: ${req.agent_id}`,
+      duration_ms: Date.now() - start,
+    };
+  }
+
+  if (Array.isArray(agent.prohibited_actions) && agent.prohibited_actions.includes(req.tool_id)) {
+    return {
+      success: false,
+      error: `Action explicitly prohibited for agent ${req.agent_id}: ${req.tool_id}`,
+      duration_ms: Date.now() - start,
+    };
+  }
+
+  if (!Array.isArray(agent.allowed_tools) || !agent.allowed_tools.includes(req.tool_id)) {
     return {
       success: false,
       error: `Agent ${req.agent_id} is not permitted to use tool: ${req.tool_id}`,
