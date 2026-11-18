@@ -97,6 +97,18 @@ export interface ScheduleFollowUpInput {
   assigned_agent?: string | null;
 }
 
+export interface ClientCommercialProfile {
+  client: ClientEntity;
+  lead_origin: LeadEntity | null;
+  projects: ProjectEntity[];
+  tasks: TaskEntity[];
+  proposals: unknown[];
+  invoices: unknown[];
+  total_invoiced: number;
+  total_paid: number;
+  outstanding_balance: number;
+}
+
 export class CrmService {
   // ── Leads ───────────────────────────────────────────────────
 
@@ -484,6 +496,104 @@ export class CrmService {
     });
 
     return { project: data as ProjectEntity, updated_fields: Object.keys(allowed) };
+  }
+
+  async recordProjectProgress(
+    projectId: string,
+    progressPercent: number,
+    notes?: string,
+    actor = 'system'
+  ): Promise<ProjectEntity> {
+    if (!projectId) throw new Error('Missing required input: project_id');
+    if (typeof progressPercent !== 'number' || progressPercent < 0 || progressPercent > 100) {
+      throw new Error('progressPercent must be a number between 0 and 100');
+    }
+
+    const supabase = getSupabase();
+    const updatePayload: Record<string, unknown> = {
+      progress_percent: progressPercent,
+      updated_at: new Date().toISOString(),
+    };
+    if (progressPercent === 100) {
+      updatePayload.status = 'completed';
+      updatePayload.completed_date = new Date().toISOString().split('T')[0];
+    }
+
+    const { data: project, error } = await supabase
+      .from('projects')
+      .update(updatePayload)
+      .eq('id', projectId)
+      .select()
+      .single();
+
+    if (error || !project) {
+      throw new Error(`recordProjectProgress failed: ${error?.message || 'Project not found'}`);
+    }
+
+    await audit({
+      event_type: 'project.progress_updated',
+      entity_type: 'project',
+      entity_id: projectId,
+      actor,
+      description: `Project ${project.name} progress updated to ${progressPercent}%${notes ? `: ${notes}` : ''}`,
+      metadata: { progress_percent: progressPercent, notes },
+    });
+
+    return project as ProjectEntity;
+  }
+
+  async getClientCommercialProfile(clientId: string): Promise<ClientCommercialProfile> {
+    if (!clientId) throw new Error('Missing required input: client_id');
+    const supabase = getSupabase();
+
+    const { data: client, error: clientErr } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('id', clientId)
+      .single();
+
+    if (clientErr || !client) {
+      throw new Error(`Client not found: ${clientId}`);
+    }
+
+    let leadOrigin: LeadEntity | null = null;
+    if (client.converted_from_lead_id) {
+      const { data: lead } = await supabase
+        .from('leads')
+        .select('*')
+        .eq('id', client.converted_from_lead_id)
+        .maybeSingle();
+      leadOrigin = lead as LeadEntity | null;
+    }
+
+    const [projectsRes, tasksRes, proposalsRes, invoicesRes, paymentsRes] = await Promise.all([
+      supabase.from('projects').select('*').eq('client_id', clientId),
+      supabase.from('tasks').select('*').eq('client_id', clientId),
+      supabase.from('proposals').select('*').eq('client_id', clientId),
+      supabase.from('invoices').select('*').eq('client_id', clientId),
+      supabase.from('payments').select('amount, invoice_id'),
+    ]);
+
+    const invoices = (invoicesRes.data ?? []) as Array<{ id: string; total: number; balance_due: number; status: string }>;
+    const totalInvoiced = invoices.reduce((sum, inv) => sum + (Number(inv.total) || 0), 0);
+    const invoiceIds = new Set(invoices.map((inv) => inv.id));
+    const clientPayments = (paymentsRes.data ?? []).filter((p) => invoiceIds.has(p.invoice_id));
+    const totalPaid = clientPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    const outstandingBalance = invoices
+      .filter((inv) => ['sent', 'partially_paid', 'overdue'].includes(inv.status))
+      .reduce((sum, inv) => sum + (Number(inv.balance_due) || 0), 0);
+
+    return {
+      client: client as ClientEntity,
+      lead_origin: leadOrigin,
+      projects: (projectsRes.data ?? []) as ProjectEntity[],
+      tasks: (tasksRes.data ?? []) as TaskEntity[],
+      proposals: proposalsRes.data ?? [],
+      invoices,
+      total_invoiced: Math.round(totalInvoiced * 100) / 100,
+      total_paid: Math.round(totalPaid * 100) / 100,
+      outstanding_balance: Math.round(outstandingBalance * 100) / 100,
+    };
   }
 }
 

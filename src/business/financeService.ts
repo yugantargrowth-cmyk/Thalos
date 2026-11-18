@@ -377,6 +377,69 @@ export class FinanceService {
 
     return payment as PaymentEntity;
   }
+
+  /**
+   * Generate proposal PDF document from validated business data and persist with versioning (S05-AC-06).
+   */
+  async generateProposalDocument(
+    proposalId: string,
+    version = 1,
+    actor = 'system'
+  ): Promise<{ document_id: string; proposal: ProposalEntity; buffer: Buffer; checksum: string }> {
+    if (!proposalId) throw new Error('proposalId is required');
+
+    const supabase = getSupabase();
+    const { data: proposal, error } = await supabase
+      .from('proposals')
+      .select('*')
+      .eq('id', proposalId)
+      .single();
+
+    if (error || !proposal) throw new Error(`Proposal not found: ${proposalId}`);
+
+    const { buildProposalPDF } = await import('./proposals/pdfBuilder.js');
+    const buffer = await buildProposalPDF(proposal);
+    const crypto = await import('crypto');
+    const checksum = crypto.createHash('sha256').update(buffer).digest('hex');
+
+    // Persist as a versioned document record
+    const { data: doc, error: docErr } = await supabase
+      .from('documents')
+      .insert({
+        title: `Proposal - ${proposal.client_name} (v${version})`,
+        original_filename: `proposal_${proposalId.slice(0, 8)}_v${version}.pdf`,
+        file_format: 'pdf',
+        mime_type: 'application/pdf',
+        file_size_bytes: buffer.length,
+        checksum_sha256: checksum,
+        version,
+        status: 'indexed',
+        category: 'proposal',
+        has_extractable_text: true,
+        tags: ['proposal', `proposal_id:${proposalId}`],
+        uploaded_by: actor,
+      })
+      .select('*')
+      .single();
+
+    if (docErr || !doc) throw new Error(`Failed to store proposal document: ${docErr?.message}`);
+
+    await audit({
+      event_type: 'proposal.document_generated',
+      entity_type: 'proposal',
+      entity_id: proposalId,
+      actor,
+      description: `Generated proposal document v${version} for ${proposal.client_name}`,
+      metadata: { document_id: doc.id, version, checksum },
+    });
+
+    return {
+      document_id: doc.id,
+      proposal: proposal as ProposalEntity,
+      buffer,
+      checksum,
+    };
+  }
 }
 
 export const financeService = new FinanceService();

@@ -1,0 +1,13 @@
+# ACCEPTANCE MATRIX: S05 — Business Organs (Mission 12)
+
+| Criterion | Description | Status | Evidence / Verification Location |
+|---|---|---|---|
+| **S05-AC-01** | Leads/CRM supports capture, deduplication, stages, activities, follow-ups and source provenance. | **PASS** | `src/business/crmService.ts` (`createLead`, `normalisePhone`, `scheduleFollowUp`, `logLeadActivity`), verified in `tests/unit/businessOrgans.test.ts`. |
+| **S05-AC-02** | Client management links clients to leads, projects, contacts and commercial records. | **PASS** | `createClient` (`converted_from_lead_id`) and `getClientCommercialProfile` in `src/business/crmService.ts`, verified in `tests/unit/businessOrgans.test.ts`. |
+| **S05-AC-03** | Projects/tasks support owners, status, due dates, dependencies and progress history. | **PASS** | `createProject`, `updateProject`, `recordProjectProgress`, `createTask`, `updateTask` in `src/business/crmService.ts`, verified in `tests/unit/businessOrgans.test.ts`. |
+| **S05-AC-04** | Marketing/social supports planning and drafting; publishing requires approval. | **PASS** | `src/business/marketingService.ts` enforces `publishPost` checks that status is `approved`, verified in `tests/unit/businessOrgans.test.ts`. |
+| **S05-AC-05** | Finance supports invoice lifecycle and payment records with explicit founder confirmation for material financial actions. | **PASS** | `src/business/financeService.ts` (`createInvoice`, `recordPayment`, partial payments, transitions), verified in `tests/unit/businessOrgans.test.ts`. |
+| **S05-AC-06** | Proposals/documents are generated from validated business data and stored with versions. | **PASS** | `generateProposalDocument` in `src/business/financeService.ts` generating PDF via `pdfBuilder.ts` and storing versioned document, verified in `tests/unit/businessOrgans.test.ts`. |
+| **S05-AC-07** | Reporting derives metrics from actual persisted records and displays freshness/source; no hardcoded example numbers. | **PASS** | `src/business/reportingService.ts` (`getPipelineReport`, `getRevenueReport`), verified in `tests/unit/businessOrgans.test.ts`. |
+| **S05-AC-08** | Product portfolio supports multiple Yugantar-owned products/business units without duplicating core entities. | **PASS** | `src/business/portfolioService.ts` managing 4 canonical business units with cross-unit metric attribution, verified in `tests/unit/businessOrgans.test.ts`. |
+| **S05-AC-09** | Cross-module relationships, audit events and API contracts are tested. | **PASS** | 15 tests in `tests/unit/businessOrgans.test.ts`; 315 tests across 41 files pass in `npm test`. |
