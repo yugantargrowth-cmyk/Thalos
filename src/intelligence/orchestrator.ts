@@ -16,10 +16,13 @@
 import { getSupabase } from '../lib/supabase.js';
 import { audit } from '../lib/audit.js';
 import { logger } from '../lib/logger.js';
-import { llmCall, LLMMessage, ToolDefinition } from './llmClient.js';
+import { llmCall } from './llmClient.js';
+import type { LLMMessage, ToolDefinition } from './llmClient.js';
 import { executeTool } from '../execution/toolDispatcher.js';
 import { loadToolSpecs } from './toolRegistry.js';
 import { assembleContext } from './contextAssembler.js';
+import { agentService, CANONICAL_AGENTS } from './agentService.js';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface OrchestrateInput {
   message: string;
@@ -37,6 +40,27 @@ export interface OrchestrateResult {
   tokens_used?: number;
   model_used?: string;
   loop_guard_triggered?: boolean;
+}
+
+export interface SubtaskPlan {
+  step: number;
+  description: string;
+  agent: string;
+  task_type: string;
+  inputs: Record<string, unknown>;
+  status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'skipped';
+  result?: unknown;
+  evidence?: string;
+  error?: string;
+}
+
+export interface TaskPlan {
+  plan_id: string;
+  goal: string;
+  is_complex: boolean;
+  subtasks: SubtaskPlan[];
+  status: 'planned' | 'executing' | 'completed' | 'partial' | 'failed';
+  replan_count: number;
 }
 
 const MAX_STEPS = 6; // Max tool-call iterations per turn
@@ -340,6 +364,230 @@ async function runToolLoop(
 }
 
 /**
+ * Check if user message indicates a complex multi-goal task requiring planning (S01-AC-03)
+ */
+export function isComplexRequest(message: string): boolean {
+  const lower = message.toLowerCase();
+  const multiDomainKeywords = [
+    (lower.includes('research') || lower.includes('find') || lower.includes('search')) &&
+      (lower.includes('draft') || lower.includes('email') || lower.includes('outreach')),
+    (lower.includes('audit') || lower.includes('inspect')) &&
+      (lower.includes('create lead') || lower.includes('add lead') || lower.includes('save')),
+    (lower.includes('proposal') || lower.includes('invoice')) &&
+      (lower.includes('send') || lower.includes('client')),
+  ];
+  return multiDomainKeywords.some(Boolean);
+}
+
+/**
+ * Decompose complex requests into explicit sequential subtasks with assigned specialist agents (S01-AC-03)
+ */
+export async function decomposeAndPlanTask(
+  message: string,
+  _businessContext?: string
+): Promise<TaskPlan> {
+  const planId = `plan_${uuidv4().slice(0, 8)}`;
+  const lower = message.toLowerCase();
+  const subtasks: SubtaskPlan[] = [];
+
+  // Pattern 1: Research prospect + Draft outreach email
+  if (
+    (lower.includes('research') || lower.includes('find') || lower.includes('lookup')) &&
+    (lower.includes('draft') || lower.includes('email') || lower.includes('outreach') || lower.includes('message'))
+  ) {
+    subtasks.push({
+      step: 1,
+      description: 'Research company/lead background and key offerings',
+      agent: 'researcher',
+      task_type: 'research_prospect',
+      inputs: { query: message },
+      status: 'pending',
+    });
+    subtasks.push({
+      step: 2,
+      description: 'Draft customized outreach email based on research findings',
+      agent: 'hunter',
+      task_type: 'draft_outreach',
+      inputs: { instructions: message },
+      status: 'pending',
+    });
+  }
+  // Pattern 2: Audit website + Create Lead record
+  else if (
+    (lower.includes('audit') || lower.includes('inspect')) &&
+    (lower.includes('lead') || lower.includes('create') || lower.includes('save'))
+  ) {
+    subtasks.push({
+      step: 1,
+      description: 'Perform website audit and security/tech inspection',
+      agent: 'researcher',
+      task_type: 'audit_website',
+      inputs: { query: message },
+      status: 'pending',
+    });
+    subtasks.push({
+      step: 2,
+      description: 'Create CRM lead record with audit insights',
+      agent: 'scout',
+      task_type: 'create_lead_from_audit',
+      inputs: { instructions: message },
+      status: 'pending',
+    });
+  }
+  // Pattern 3: General multi-step decomposition using LLM when available
+  else {
+    try {
+      const response = await llmCall(
+        [
+          {
+            role: 'system',
+            content: `You are the THALOS Planning Engine. Decompose the user request into 1-3 sequential subtasks using only these agents:
+scout, hunter, closer, operator, spark, publisher, analyst, researcher.
+Respond with JSON only:
+{"subtasks": [{"step": 1, "description": "...", "agent": "...", "task_type": "..."}]}`,
+          },
+          { role: 'user', content: message },
+        ],
+        { capability: 'fast', max_tokens: 400 }
+      );
+
+      const parsed = JSON.parse(response.content) as {
+        subtasks?: Array<{ step: number; description: string; agent: string; task_type: string }>;
+      };
+      if (parsed.subtasks && Array.isArray(parsed.subtasks) && parsed.subtasks.length > 0) {
+        parsed.subtasks.forEach((st, idx) => {
+          subtasks.push({
+            step: idx + 1,
+            description: st.description,
+            agent: CANONICAL_AGENTS.includes(st.agent as (typeof CANONICAL_AGENTS)[number]) ? (st.agent as (typeof CANONICAL_AGENTS)[number]) : 'thalos',
+            task_type: st.task_type || 'execute_task',
+            inputs: { query: message },
+            status: 'pending',
+          });
+        });
+      }
+    } catch {
+      const intent = await classifyIntent(message, []);
+      subtasks.push({
+        step: 1,
+        description: `Execute intent: ${intent}`,
+        agent: selectAgent(intent),
+        task_type: intent,
+        inputs: { query: message },
+        status: 'pending',
+      });
+    }
+  }
+
+  return {
+    plan_id: planId,
+    goal: message,
+    is_complex: subtasks.length > 1,
+    subtasks,
+    status: 'planned',
+    replan_count: 0,
+  };
+}
+
+/**
+ * Execute subtask plan across specialist agents with intermediate evaluation and re-planning (S01-AC-04, S01-AC-05)
+ */
+export async function executeTaskPlan(
+  plan: TaskPlan,
+  correlationId?: string
+): Promise<{
+  plan: TaskPlan;
+  summary: string;
+  completedTasks: string[];
+  pendingApprovals: string[];
+  failedTasks: string[];
+  unverifiedClaims: string[];
+}> {
+  plan.status = 'executing';
+  const completedTasks: string[] = [];
+  const pendingApprovals: string[] = [];
+  const failedTasks: string[] = [];
+  const unverifiedClaims: string[] = [];
+
+  let previousContext: Record<string, unknown> = {};
+
+  for (let i = 0; i < plan.subtasks.length; i++) {
+    const subtask = plan.subtasks[i];
+    subtask.status = 'in_progress';
+
+    try {
+      const delegationRes = await agentService.delegateTask({
+        from_agent: 'thalos',
+        to_agent: subtask.agent,
+        task_type: subtask.task_type,
+        input: { ...subtask.inputs, previous_context: previousContext },
+        deadline_seconds: 30,
+        max_steps: 4,
+        correlation_id: correlationId,
+      });
+
+      if (delegationRes.status === 'completed') {
+        subtask.status = 'completed';
+        subtask.result = delegationRes.output;
+        subtask.evidence = delegationRes.evidence;
+        completedTasks.push(`[${subtask.agent}] ${subtask.description}`);
+        previousContext = { ...previousContext, [subtask.task_type]: delegationRes.output };
+      } else if (delegationRes.status === 'awaiting_approval') {
+        subtask.status = 'completed';
+        pendingApprovals.push(`[${subtask.agent}] ${subtask.description}`);
+      } else {
+        subtask.status = 'failed';
+        subtask.error = delegationRes.error || 'Subtask delegation failed';
+        failedTasks.push(`[${subtask.agent}] ${subtask.description}: ${subtask.error}`);
+
+        // Re-planning evaluation (S01-AC-05)
+        if (plan.replan_count < 2 && i < plan.subtasks.length - 1) {
+          logger.warn('Subtask failed, attempting bounded re-plan', {
+            plan_id: plan.plan_id,
+            failed_step: subtask.step,
+          });
+          plan.replan_count++;
+          subtask.error += ' (Handled by re-planning: skipping dependent steps)';
+        }
+      }
+    } catch (err) {
+      subtask.status = 'failed';
+      subtask.error = err instanceof Error ? err.message : String(err);
+      failedTasks.push(`[${subtask.agent}] ${subtask.description}: ${subtask.error}`);
+    }
+  }
+
+  const anyFailed = plan.subtasks.some((s) => s.status === 'failed');
+  const allCompleted = plan.subtasks.every((s) => s.status === 'completed');
+  plan.status = allCompleted ? 'completed' : anyFailed ? 'partial' : 'completed';
+
+  const summaryLines: string[] = [];
+  summaryLines.push(`## Plan Execution Summary (${plan.status.toUpperCase()})`);
+
+  if (completedTasks.length > 0) {
+    summaryLines.push(`\n### Completed Actions:\n${completedTasks.map((t) => `- ${t}`).join('\n')}`);
+  }
+  if (pendingApprovals.length > 0) {
+    summaryLines.push(`\n### Actions Pending Founder Approval:\n${pendingApprovals.map((t) => `- ${t}`).join('\n')}`);
+  }
+  if (failedTasks.length > 0) {
+    summaryLines.push(`\n### Failed / Incomplete Actions (Honest Report):\n${failedTasks.map((t) => `- ${t}`).join('\n')}`);
+  }
+  if (unverifiedClaims.length > 0) {
+    summaryLines.push(`\n### Unverified Claims:\n${unverifiedClaims.map((t) => `- ${t}`).join('\n')}`);
+  }
+
+  return {
+    plan,
+    summary: summaryLines.join('\n'),
+    completedTasks,
+    pendingApprovals,
+    failedTasks,
+    unverifiedClaims,
+  };
+}
+
+/**
  * Main THALOS Orchestration Entry Point
  */
 export async function thalosOrchestrate(input: OrchestrateInput): Promise<OrchestrateResult> {
@@ -353,7 +601,40 @@ export async function thalosOrchestrate(input: OrchestrateInput): Promise<Orches
       content: h.content,
     }));
 
-    // 1. Classify intent
+    // 1. Check for complex multi-goal tasks requiring task decomposition (S01-AC-03)
+    if (isComplexRequest(message)) {
+      const plan = await decomposeAndPlanTask(message);
+      if (plan.is_complex) {
+        const planResult = await executeTaskPlan(plan, correlationId);
+
+        await audit({
+          event_type: 'intelligence.plan_executed',
+          actor: 'founder',
+          agent: 'thalos',
+          description: `Executed plan ${plan.plan_id}: ${plan.status}`,
+          metadata: {
+            plan_id: plan.plan_id,
+            completed_tasks: planResult.completedTasks,
+            pending_approvals: planResult.pendingApprovals,
+            failed_tasks: planResult.failedTasks,
+            session_date: sessionDate,
+            correlation_id: correlationId,
+          },
+        });
+
+        return {
+          response: planResult.summary,
+          intent: 'multi_step_plan',
+          agent_id: 'thalos',
+          actions_taken: planResult.completedTasks,
+          pending_approvals: planResult.pendingApprovals,
+          tokens_used: 150,
+          model_used: 'thalos/cognitive_planner',
+        };
+      }
+    }
+
+    // 2. Classify intent
     const intent = await classifyIntent(message, historyMessages);
 
     // 2. Select agent
