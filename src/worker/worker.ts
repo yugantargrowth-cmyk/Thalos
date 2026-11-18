@@ -148,7 +148,9 @@ export type CanonicalJobType =
   | 'import_csv'
   | 'scan_follow_ups'
   | 'mark_overdue_invoices'
-  | 'expire_approvals';
+  | 'expire_approvals'
+  | 'system_health_check'
+  | 'monitor_pipeline';
 
 export type JobType = CanonicalJobType | (string & {});
 
@@ -190,6 +192,8 @@ export class WorkerService {
     scan_follow_ups: this.scanFollowUps.bind(this),
     mark_overdue_invoices: this.markOverdueInvoices.bind(this),
     expire_approvals: this.expireApprovals.bind(this),
+    system_health_check: this.systemHealthCheck.bind(this),
+    monitor_pipeline: this.monitorPipeline.bind(this),
   };
 
   constructor(workerId?: string) {
@@ -521,6 +525,48 @@ export class WorkerService {
   private async expireApprovals(_payload: Record<string, unknown>): Promise<void> {
     const supabase = getSupabase();
     await supabase.rpc('expire_approvals');
+  }
+
+  public async monitorPipeline(payload: Record<string, unknown>): Promise<void> {
+    const supabase = getSupabase();
+    const staleLeadDays = typeof payload.stale_lead_days === 'number' ? payload.stale_lead_days : 7;
+    const limit = typeof payload.limit === 'number' ? Math.min(payload.limit, 100) : 50;
+
+    const thresholdDate = new Date(Date.now() - staleLeadDays * 24 * 60 * 60 * 1000).toISOString();
+
+    const { data: staleLeads, error } = await supabase
+      .from('leads')
+      .select('id, name, stage, updated_at')
+      .lt('updated_at', thresholdDate)
+      .neq('stage', 'won')
+      .neq('stage', 'lost')
+      .neq('stage', 'unqualified')
+      .limit(limit);
+
+    if (error) {
+      throw new Error(`monitorPipeline error: ${error.message}`);
+    }
+
+    logger.info('monitor_pipeline executed', {
+      staleLeadDays,
+      staleLeadsFound: staleLeads?.length ?? 0,
+      limit,
+    });
+  }
+
+  public async systemHealthCheck(payload: Record<string, unknown>): Promise<void> {
+    const supabase = getSupabase();
+    const isPlaceholder = config.supabase.url.includes('placeholder');
+    if (!isPlaceholder) {
+      const { error } = await supabase.from('jobs').select('id', { count: 'exact', head: true });
+      if (error) throw new Error(`systemHealthCheck database ping failed: ${error.message}`);
+    }
+
+    logger.info('system_health_check executed successfully', {
+      workerId: this.workerId,
+      timestamp: new Date().toISOString(),
+      payload,
+    });
   }
 
   public async start(options?: { healthPort?: number; skipLoop?: boolean }): Promise<void> {

@@ -1,35 +1,47 @@
 /**
- * Web Search Tool
+ * Web Search Tool (S03-AC-01, S03-AC-02)
  * Uses SearXNG (self-hosted, primary) → Tavily (fallback)
- * Returns results with source URLs — never fabricates.
+ * Returns normalized results with title, URL, snippet, source and retrieval timestamp.
+ * Results are explicitly distinguishable from verified facts.
  */
 
 import { getSupabase } from '../../lib/supabase.js';
 import { decryptCredential } from '../../lib/vault.js';
 import { logger } from '../../lib/logger.js';
 import { config } from '../../lib/config.js';
+import { sanitizeExternalText } from '../../lib/externalContentGuard.js';
+
+import * as safeFetchModule from '../../lib/safeFetch.js';
 
 export interface SearchResult {
   title: string;
   url: string;
   snippet: string;
   source: string;
+  retrieved_at: string;
+  citation: string;
+}
+
+export function formatWebCitation(title: string, url: string): string {
+  return `[Web: ${title || 'Untitled'} (${url || 'No URL'})]`;
 }
 
 export async function execute(inputs: Record<string, unknown>): Promise<{
-  output: { results: SearchResult[]; query: string; source: string };
+  output: { results: SearchResult[]; query: string; source: string; retrieved_at: string };
   evidence: string;
 }> {
   const query = inputs.query as string;
   if (!query?.trim()) throw new Error('Search query is required');
+
+  const now = new Date().toISOString();
 
   // Try SearXNG first
   if (config.searxng.baseUrl) {
     try {
       const results = await searchSearXNG(query);
       return {
-        output: { results, query, source: 'searxng' },
-        evidence: `${results.length} results from SearXNG at ${new Date().toISOString()}`,
+        output: { results, query, source: 'searxng', retrieved_at: now },
+        evidence: `${results.length} normalized results from SearXNG at ${now}`,
       };
     } catch (err) {
       logger.warn('SearXNG failed, trying Tavily', { error: err instanceof Error ? err.message : err });
@@ -39,8 +51,8 @@ export async function execute(inputs: Record<string, unknown>): Promise<{
   // Fallback to Tavily
   const results = await searchTavily(query);
   return {
-    output: { results, query, source: 'tavily' },
-    evidence: `${results.length} results from Tavily at ${new Date().toISOString()}`,
+    output: { results, query, source: 'tavily', retrieved_at: now },
+    evidence: `${results.length} normalized results from Tavily at ${now}`,
   };
 }
 
@@ -50,10 +62,9 @@ async function searchSearXNG(query: string): Promise<SearchResult[]> {
   url.searchParams.set('format', 'json');
   url.searchParams.set('categories', 'general');
 
-  const { default: nodeFetch } = await import('node-fetch');
-  const resp = await nodeFetch(url.toString(), {
+  const resp = await safeFetchModule.safeFetch(url.toString(), {
     headers: { 'Accept': 'application/json' },
-    signal: AbortSignal.timeout(10000),
+    timeoutMs: 10000,
   });
 
   if (!resp.ok) throw new Error(`SearXNG HTTP ${resp.status}`);
@@ -62,12 +73,19 @@ async function searchSearXNG(query: string): Promise<SearchResult[]> {
     results: Array<{ title: string; url: string; content: string }>;
   };
 
-  return (data.results ?? []).slice(0, 10).map(r => ({
-    title: r.title ?? '',
-    url: r.url ?? '',
-    snippet: r.content ?? '',
-    source: 'searxng',
-  }));
+  const now = new Date().toISOString();
+  return (data.results ?? []).slice(0, 10).map((r) => {
+    const title = r.title ?? '';
+    const linkUrl = r.url ?? '';
+    return {
+      title,
+      url: linkUrl,
+      snippet: sanitizeExternalText(r.content ?? ''),
+      source: 'searxng',
+      retrieved_at: now,
+      citation: formatWebCitation(title, linkUrl),
+    };
+  });
 }
 
 async function searchTavily(query: string): Promise<SearchResult[]> {
@@ -90,21 +108,27 @@ async function searchTavily(query: string): Promise<SearchResult[]> {
     apiKey = decryptCredential(enc);
   }
 
-  const { default: nodeFetch } = await import('node-fetch');
-  const resp = await nodeFetch('https://api.tavily.com/search', {
+  const resp = await safeFetchModule.safeFetch('https://api.tavily.com/search', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ api_key: apiKey, query, search_depth: 'basic', max_results: 10 }),
-    signal: AbortSignal.timeout(15000),
+    timeoutMs: 15000,
   });
 
   if (!resp.ok) throw new Error(`Tavily HTTP ${resp.status}`);
   const data = (await resp.json()) as { results: Array<{ title: string; url: string; content: string }> };
 
-  return (data.results ?? []).map(r => ({
-    title: r.title ?? '',
-    url: r.url ?? '',
-    snippet: r.content ?? '',
-    source: 'tavily',
-  }));
+  const now = new Date().toISOString();
+  return (data.results ?? []).map((r) => {
+    const title = r.title ?? '';
+    const linkUrl = r.url ?? '';
+    return {
+      title,
+      url: linkUrl,
+      snippet: sanitizeExternalText(r.content ?? ''),
+      source: 'tavily',
+      retrieved_at: now,
+      citation: formatWebCitation(title, linkUrl),
+    };
+  });
 }
