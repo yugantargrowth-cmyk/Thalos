@@ -1,9 +1,11 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
+import type { Request, Response } from 'express';
 import { body, query, param, validationResult } from 'express-validator';
 import { getSupabase } from '../../lib/supabase.js';
 import { audit } from '../../lib/audit.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { crmService, normalisePhone } from '../../business/crmService.js';
+import { reportingService } from '../../business/reportingService.js';
 
 const router = Router();
 
@@ -47,6 +49,17 @@ router.get(
     res.json({ leads: data, total: count, limit, offset });
   }
 );
+
+// ── Pipeline Report (S08-AC-04) ──────────────────────────────
+router.get('/report', async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const report = await reportingService.getPipelineReport();
+    res.json({ report });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new AppError(500, 'Failed to generate pipeline report', msg);
+  }
+});
 
 // ── Get single lead with activities ──────────────────────────
 router.get(

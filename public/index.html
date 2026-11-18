@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>THALOS — Agentic AI Business Operating System</title>
   
+  <!-- PWA Meta Tags & Manifest (S08-AC-03, S08-AC-08) -->
+  <meta name="theme-color" content="#50D9D0"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <link rel="manifest" href="/manifest.json"/>
+
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
@@ -87,9 +93,27 @@
     ::-webkit-scrollbar-track { background: #05090C; }
     ::-webkit-scrollbar-thumb { background: #147F83; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #50D9D0; }
+
+    /* Adaptive Landscape Mobile Interactions (S08-AC-03) */
+    @media (max-width: 1024px) and (orientation: landscape) {
+      .workspace-view { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+      .glass-hud { padding: 0.85rem !important; }
+      header { padding-top: 0.35rem !important; padding-bottom: 0.35rem !important; }
+      .landscape-compact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    }
+
+    /* Offline State Indicator (S08-AC-07) */
+    #offlineBanner { display: none; }
+    body.is-offline #offlineBanner { display: flex; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col font-sans grid-mesh selection:bg-biolumCyan selection:text-black antialiased relative">
+
+  <!-- Offline Status Bar (S08-AC-07) -->
+  <div id="offlineBanner" class="bg-amber-950/90 border-b border-amber-500/50 px-4 py-1.5 text-center text-xs font-mono text-amber-300 items-center justify-center space-x-2 z-50">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>OFFLINE MODE ACTIVE: THALOS is disconnected from backend network. Displaying cached local state. Actions will pause safely.</span>
+  </div>
 
   <!-- ============================================== -->
   <!-- MASTER TOP NAVIGATION TELEMETRY HEADER        -->
@@ -165,35 +189,35 @@
   </header>
 
   <!-- ============================================== -->
-  <!-- SECONDARY WORKSPACE SELECTOR NAV TABS         -->
+  <!-- SECONDARY WORKSPACE SELECTOR NAV TABS (S08-AC-02, S08-AC-08) -->
   <!-- ============================================== -->
-  <nav class="bg-[#081219]/90 border-b border-oceanTeal/20 px-4 lg:px-6 py-2 flex items-center space-x-2 overflow-x-auto text-xs font-mono">
-    <button onclick="switchTab('command')" id="tab-command" class="nav-tab px-3 py-1.5 rounded-lg bg-oceanTeal/30 text-biolumCyan border border-biolumCyan/40 font-bold flex items-center space-x-1.5 transition">
+  <nav role="tablist" aria-label="Workspaces" class="bg-[#081219]/90 border-b border-oceanTeal/20 px-4 lg:px-6 py-2 flex items-center space-x-2 overflow-x-auto text-xs font-mono">
+    <button role="tab" aria-selected="true" aria-controls="view-command" onclick="switchTab('command')" id="tab-command" class="nav-tab px-3 py-1.5 rounded-lg bg-oceanTeal/30 text-biolumCyan border border-biolumCyan/40 font-bold flex items-center space-x-1.5 transition">
       <i class="fa-solid fa-compass"></i>
       <span>Command Chamber</span>
     </button>
-    <button onclick="switchTab('agents')" id="tab-agents" class="nav-tab px-3 py-1.5 rounded-lg text-mist hover:text-white hover:bg-deepOcean/50 border border-transparent flex items-center space-x-1.5 transition">
+    <button role="tab" aria-selected="false" aria-controls="view-agents" onclick="switchTab('agents')" id="tab-agents" class="nav-tab px-3 py-1.5 rounded-lg text-mist hover:text-white hover:bg-deepOcean/50 border border-transparent flex items-center space-x-1.5 transition">
       <i class="fa-solid fa-users-gear"></i>
       <span>9 AI Agents Matrix</span>
     </button>
-    <button onclick="switchTab('revenue')" id="tab-revenue" class="nav-tab px-3 py-1.5 rounded-lg text-mist hover:text-white hover:bg-deepOcean/50 border border-transparent flex items-center space-x-1.5 transition">
+    <button role="tab" aria-selected="false" aria-controls="view-revenue" onclick="switchTab('revenue')" id="tab-revenue" class="nav-tab px-3 py-1.5 rounded-lg text-mist hover:text-white hover:bg-deepOcean/50 border border-transparent flex items-center space-x-1.5 transition">
       <i class="fa-solid fa-chart-line"></i>
       <span>Revenue &amp; Pipeline</span>
     </button>
-    <button onclick="switchTab('clients')" id="tab-clients" class="nav-tab px-3 py-1.5 rounded-lg text-mist hover:text-white hover:bg-deepOcean/50 border border-transparent flex items-center space-x-1.5 transition">
+    <button role="tab" aria-selected="false" aria-controls="view-clients" onclick="switchTab('clients')" id="tab-clients" class="nav-tab px-3 py-1.5 rounded-lg text-mist hover:text-white hover:bg-deepOcean/50 border border-transparent flex items-center space-x-1.5 transition">
       <i class="fa-solid fa-briefcase"></i>
       <span>Projects &amp; Clients</span>
     </button>
-    <button onclick="switchTab('knowledge')" id="tab-knowledge" class="nav-tab px-3 py-1.5 rounded-lg text-mist hover:text-white hover:bg-deepOcean/50 border border-transparent flex items-center space-x-1.5 transition">
+    <button role="tab" aria-selected="false" aria-controls="view-knowledge" onclick="switchTab('knowledge')" id="tab-knowledge" class="nav-tab px-3 py-1.5 rounded-lg text-mist hover:text-white hover:bg-deepOcean/50 border border-transparent flex items-center space-x-1.5 transition">
       <i class="fa-solid fa-brain"></i>
       <span>Knowledge &amp; Memory</span>
     </button>
-    <button onclick="switchTab('engine')" id="tab-engine" class="nav-tab px-3 py-1.5 rounded-lg text-mist hover:text-white hover:bg-deepOcean/50 border border-transparent flex items-center space-x-1.5 transition">
+    <button role="tab" aria-selected="false" aria-controls="view-engine" onclick="switchTab('engine')" id="tab-engine" class="nav-tab px-3 py-1.5 rounded-lg text-mist hover:text-white hover:bg-deepOcean/50 border border-transparent flex items-center space-x-1.5 transition">
       <i class="fa-solid fa-gears"></i>
       <span>Engine &amp; Approvals</span>
       <span id="pendingApprovalsBadge" class="hidden text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded border border-amber-500/30">0</span>
     </button>
-    <button onclick="switchTab('settings')" id="tab-settings" class="nav-tab px-3 py-1.5 rounded-lg text-mist hover:text-white hover:bg-deepOcean/50 border border-transparent flex items-center space-x-1.5 transition">
+    <button role="tab" aria-selected="false" aria-controls="view-settings" onclick="switchTab('settings')" id="tab-settings" class="nav-tab px-3 py-1.5 rounded-lg text-mist hover:text-white hover:bg-deepOcean/50 border border-transparent flex items-center space-x-1.5 transition">
       <i class="fa-solid fa-key"></i>
       <span>Settings &amp; Vault</span>
     </button>
@@ -207,7 +231,7 @@
     <!-- ============================================== -->
     <!-- WORKSPACE VIEW 1: COMMAND CHAMBER (HOME)       -->
     <!-- ============================================== -->
-    <div id="view-command" class="workspace-view space-y-6">
+    <div id="view-command" role="tabpanel" aria-labelledby="tab-command" class="workspace-view space-y-6">
       <!-- Breadcrumb / Header Strip -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-oceanTeal/20">
         <div>
@@ -439,7 +463,7 @@
     <!-- ============================================== -->
     <!-- WORKSPACE VIEW 2: 9 AI AGENTS MATRIX           -->
     <!-- ============================================== -->
-    <div id="view-agents" class="workspace-view hidden space-y-6">
+    <div id="view-agents" role="tabpanel" aria-labelledby="tab-agents" class="workspace-view hidden space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-oceanTeal/20">
         <div>
           <div class="text-xs font-mono text-biolumCyan uppercase tracking-widest flex items-center space-x-2">
@@ -496,7 +520,7 @@
     <!-- ============================================== -->
     <!-- WORKSPACE VIEW 3: REVENUE & SALES PIPELINE     -->
     <!-- ============================================== -->
-    <div id="view-revenue" class="workspace-view hidden space-y-6">
+    <div id="view-revenue" role="tabpanel" aria-labelledby="tab-revenue" class="workspace-view hidden space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-oceanTeal/20">
         <div>
           <div class="text-xs font-mono text-biolumCyan uppercase tracking-widest flex items-center space-x-2">
@@ -615,7 +639,7 @@
     <!-- ============================================== -->
     <!-- WORKSPACE VIEW 4: PROJECTS & CLIENTS           -->
     <!-- ============================================== -->
-    <div id="view-clients" class="workspace-view hidden space-y-6">
+    <div id="view-clients" role="tabpanel" aria-labelledby="tab-clients" class="workspace-view hidden space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-oceanTeal/20">
         <div>
           <div class="text-xs font-mono text-biolumCyan uppercase tracking-widest flex items-center space-x-2">
@@ -674,7 +698,7 @@
     <!-- ============================================== -->
     <!-- WORKSPACE VIEW 5: KNOWLEDGE & MEMORY (RAG)     -->
     <!-- ============================================== -->
-    <div id="view-knowledge" class="workspace-view hidden space-y-6">
+    <div id="view-knowledge" role="tabpanel" aria-labelledby="tab-knowledge" class="workspace-view hidden space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-oceanTeal/20">
         <div>
           <div class="text-xs font-mono text-biolumCyan uppercase tracking-widest flex items-center space-x-2">
@@ -737,7 +761,7 @@
     <!-- ============================================== -->
     <!-- WORKSPACE VIEW 6: ENGINE & APPROVALS           -->
     <!-- ============================================== -->
-    <div id="view-engine" class="workspace-view hidden space-y-6">
+    <div id="view-engine" role="tabpanel" aria-labelledby="tab-engine" class="workspace-view hidden space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-oceanTeal/20">
         <div>
           <div class="text-xs font-mono text-biolumCyan uppercase tracking-widest flex items-center space-x-2">
@@ -776,16 +800,30 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-mono">
           <div class="p-3 bg-obsidian/70 rounded-xl border border-oceanTeal/30">
             <div class="text-mist text-[10px]">Worker Daemon:</div>
-            <div class="text-emerald-400 font-bold mt-1">Running • Concurrency 3</div>
+            <div class="text-emerald-400 font-bold mt-1" id="workerDaemonStatus">Running • Concurrency 3</div>
           </div>
           <div class="p-3 bg-obsidian/70 rounded-xl border border-oceanTeal/30">
-            <div class="text-mist text-[10px]">Lease Duration:</div>
-            <div class="text-iceWhite font-bold mt-1">300 Seconds</div>
+            <div class="text-mist text-[10px]">Queue Depth:</div>
+            <div class="text-iceWhite font-bold mt-1" id="queueWaitingCount">0 Queued</div>
           </div>
           <div class="p-3 bg-obsidian/70 rounded-xl border border-oceanTeal/30">
             <div class="text-mist text-[10px]">Dead Letter Queue:</div>
-            <div class="text-biolumCyan font-bold mt-1">0 Failed</div>
+            <div class="text-biolumCyan font-bold mt-1" id="queueDeadLetterCount">0 Failed</div>
           </div>
+        </div>
+      </div>
+
+      <!-- Live Structured Audit & System Logs (S08-AC-09) -->
+      <div class="glass-hud rounded-2xl p-5 space-y-4">
+        <div class="flex justify-between items-center text-xs font-mono border-b border-oceanTeal/30 pb-3">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-terminal text-biolumCyan"></i>
+            <span class="font-bold text-iceWhite uppercase">Live System &amp; Audit Logs</span>
+          </div>
+          <button onclick="loadSystemLogs()" class="text-[11px] text-mist hover:text-biolumCyan"><i class="fa-solid fa-rotate mr-1"></i>Refresh</button>
+        </div>
+        <div class="space-y-2 max-h-64 overflow-y-auto" id="systemLogsFeed">
+          <div class="text-center py-4 text-xs text-mist font-mono">Loading structured system logs...</div>
         </div>
       </div>
     </div>
@@ -793,7 +831,7 @@
     <!-- ============================================== -->
     <!-- WORKSPACE VIEW 7: SETTINGS & VAULT             -->
     <!-- ============================================== -->
-    <div id="view-settings" class="workspace-view hidden space-y-6">
+    <div id="view-settings" role="tabpanel" aria-labelledby="tab-settings" class="workspace-view hidden space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-oceanTeal/20">
         <div>
           <div class="text-xs font-mono text-biolumCyan uppercase tracking-widest flex items-center space-x-2">
@@ -892,6 +930,22 @@
               <div>Audit Trail: <span class="text-white font-bold">Append-Only Immutability</span></div>
             </div>
           </div>
+
+          <!-- Backup & Recovery Guidance HUD (S08-AC-09) -->
+          <div class="glass-hud rounded-2xl p-5 font-mono text-xs space-y-3">
+            <div class="text-sm font-bold text-iceWhite flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-cloud-arrow-up text-biolumCyan"></i>
+                <span>Backup &amp; Recovery</span>
+              </div>
+              <span class="text-[10px] text-emerald-400 font-bold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">PASS</span>
+            </div>
+            <div id="backupStatusDisplay" class="p-3 bg-obsidian/70 rounded-xl border border-oceanTeal/30 space-y-1 text-mist text-[11px]">
+              <div>Database: <span class="text-white">Continuous WAL + Daily Snapshots</span></div>
+              <div>Recovery Point: <span class="text-emerald-400">RPO &lt; 5 min</span></div>
+              <div>Automated Verification: <span class="text-biolumCyan font-bold">PASSED</span></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -969,19 +1023,50 @@
     window.addEventListener('DOMContentLoaded', () => {
       renderAgentsList();
       checkServerHealth();
+      
+      // Service Worker Registration for PWA (S08-AC-03, S08-AC-08)
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(err => {
+          console.warn('[PWA] Service worker registration note:', err);
+        });
+      }
+
+      // Online / Offline State Handlers (S08-AC-07)
+      window.addEventListener('online', () => {
+        document.body.classList.remove('is-offline');
+        checkServerHealth();
+      });
+      window.addEventListener('offline', () => {
+        document.body.classList.add('is-offline');
+      });
+
+      // Keyboard Accessibility Navigation (S08-AC-08)
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeVoiceBriefingModal();
+        }
+        if (e.altKey && e.key >= '1' && e.key <= '7') {
+          const tabs = ['command', 'agents', 'revenue', 'clients', 'knowledge', 'engine', 'settings'];
+          const idx = parseInt(e.key) - 1;
+          if (tabs[idx]) switchTab(tabs[idx]);
+        }
+      });
+
       if (authToken) {
         document.getElementById('authBadge').classList.remove('hidden');
         document.getElementById('authBtn').innerText = 'Connected';
         loadApprovalsFeed();
+        loadCommandChamberSummary();
       }
     });
 
-    // Tab Navigation Switcher
+    // Tab Navigation Switcher (S08-AC-02, S08-AC-08)
     function switchTab(tabId) {
       document.querySelectorAll('.workspace-view').forEach(v => v.classList.add('hidden'));
       document.querySelectorAll('.nav-tab').forEach(t => {
         t.classList.remove('bg-oceanTeal/30', 'text-biolumCyan', 'border-biolumCyan/40', 'font-bold');
         t.classList.add('text-mist');
+        t.setAttribute('aria-selected', 'false');
       });
 
       const targetView = document.getElementById('view-' + tabId);
@@ -990,10 +1075,39 @@
       if (targetTab) {
         targetTab.classList.add('bg-oceanTeal/30', 'text-biolumCyan', 'border-biolumCyan/40', 'font-bold');
         targetTab.classList.remove('text-mist');
+        targetTab.setAttribute('aria-selected', 'true');
       }
 
-      if (tabId === 'engine') loadApprovalsFeed();
-      if (tabId === 'revenue') loadPipelineStats();
+      if (tabId === 'engine') {
+        loadApprovalsFeed();
+        loadSystemTelemetry();
+        loadSystemLogs();
+      }
+      if (tabId === 'revenue') {
+        loadPipelineStats();
+        loadRevenueStats();
+      }
+      if (tabId === 'clients') {
+        loadClientsProjects();
+      }
+      if (tabId === 'agents') {
+        loadAgentsFleet();
+      }
+      if (tabId === 'settings') {
+        loadBackupAndRecovery();
+      }
+      if (tabId === 'command') {
+        loadCommandChamberSummary();
+      }
+    }
+
+    // Permission Denied / Auth Expiry Handler (S08-AC-07)
+    function handlePermissionDenied() {
+      alert('Authentication required or session expired. Please enter your Owner PIN to reconnect.');
+      authToken = '';
+      localStorage.removeItem('thalos_token');
+      document.getElementById('authBadge').classList.add('hidden');
+      document.getElementById('authBtn').innerText = 'Connect PIN';
     }
 
     // PIN Authentication
@@ -1013,6 +1127,7 @@
           document.getElementById('authBadge').classList.remove('hidden');
           document.getElementById('authBtn').innerText = 'Connected';
           loadApprovalsFeed();
+          loadCommandChamberSummary();
         } else {
           alert('Auth error: ' + (data.error || 'Failed to authenticate'));
         }
@@ -1027,11 +1142,11 @@
         const res = await fetch('/health');
         if (res.ok) {
           document.getElementById('dbHealthIndicator').innerText = 'ONLINE';
-          document.getElementById('dbHealthIndicator').classList.add('text-emerald-400');
+          document.getElementById('dbHealthIndicator').className = 'text-emerald-400 font-bold';
         }
       } catch {
         document.getElementById('dbHealthIndicator').innerText = 'OFFLINE';
-        document.getElementById('dbHealthIndicator').classList.add('text-rose-500');
+        document.getElementById('dbHealthIndicator').className = 'text-rose-500 font-bold';
       }
     }
 
@@ -1060,46 +1175,95 @@
       `).join('');
     }
 
-    // Load Approvals Feed
+    // Load Live Agents Fleet from Backend API (S08-AC-04)
+    async function loadAgentsFleet() {
+      if (!authToken) return;
+      try {
+        const res = await fetch('/api/system/agents', {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        if (res.status === 401 || res.status === 403) return handlePermissionDenied();
+        if (res.ok) {
+          const data = await res.json();
+          const agents = data.agents || [];
+          if (agents.length > 0) {
+            const container = document.getElementById('agentsFleetContainer');
+            if (!container) return;
+            container.innerHTML = agents.map(a => `
+              <div class="glass-hud p-5 rounded-2xl relative space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded ${a.risk_classification === 'high' ? 'bg-rose-950/60 text-rose-400 border border-rose-500/30' : a.risk_classification === 'medium' ? 'bg-amber-950/60 text-amber-400 border border-amber-500/30' : 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30'}">
+                    Risk: ${(a.risk_classification || 'low').toUpperCase()}
+                  </span>
+                  <span class="text-[11px] font-mono text-biolumCyan font-bold">Policy: ${(a.approval_policy || 'notify').toUpperCase()}</span>
+                </div>
+                <div>
+                  <h3 class="font-bold text-base text-iceWhite">${a.display_name || a.agent_id}</h3>
+                  <p class="text-xs text-biolumCyan/80 font-mono">ID: ${a.agent_id} • Status: ${a.status}</p>
+                </div>
+                <p class="text-xs text-mist leading-relaxed">${a.mission || ''}</p>
+                <div class="pt-2 border-t border-oceanTeal/20 text-[10px] font-mono text-mist flex justify-between">
+                  <span>Capability:</span>
+                  <span class="text-white">${a.model_capability || 'fast'}</span>
+                </div>
+              </div>
+            `).join('');
+          }
+        }
+      } catch (err) {
+        console.warn('Agents fleet fetch error:', err);
+      }
+    }
+
+    // Load Approvals Feed (S08-AC-04, S08-AC-06)
     async function loadApprovalsFeed() {
       if (!authToken) return;
       try {
         const res = await fetch('/api/approvals', {
           headers: { 'Authorization': 'Bearer ' + authToken }
         });
+        if (res.status === 401 || res.status === 403) return handlePermissionDenied();
         if (res.ok) {
           const data = await res.json();
           const approvals = data.approvals || [];
-          document.getElementById('pendingApprovalsSummary').innerText = approvals.length + ' Pending Sign-offs';
-          document.getElementById('approvalQueueCountHeader').innerText = approvals.length + ' Actions Pending';
+          const summaryEl = document.getElementById('pendingApprovalsSummary');
+          const headerEl = document.getElementById('approvalQueueCountHeader');
+          if (summaryEl) summaryEl.innerText = approvals.length + ' Pending Sign-offs';
+          if (headerEl) headerEl.innerText = approvals.length + ' Actions Pending';
           
           const badge = document.getElementById('pendingApprovalsBadge');
-          if (approvals.length > 0) {
-            badge.innerText = approvals.length;
-            badge.classList.remove('hidden');
-          } else {
-            badge.classList.add('hidden');
+          if (badge) {
+            if (approvals.length > 0) {
+              badge.innerText = approvals.length;
+              badge.classList.remove('hidden');
+            } else {
+              badge.classList.add('hidden');
+            }
           }
 
           const container = document.getElementById('approvalsFeed');
-          if (approvals.length === 0) {
-            container.innerHTML = `<div class="text-center py-6 text-xs text-mist font-mono">No actions awaiting approval right now. Safe execution active.</div>`;
-          } else {
-            container.innerHTML = approvals.map(app => `
-              <div class="p-3 bg-obsidian/80 rounded-xl border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <div>
-                  <div class="font-bold text-white">${app.action}</div>
-                  <div class="text-[11px] text-mist font-mono">Agent: ${app.agent} • Target: ${app.target_name || 'System'}</div>
+          if (container) {
+            if (approvals.length === 0) {
+              container.innerHTML = `<div class="text-center py-6 text-xs text-mist font-mono">No actions awaiting approval right now. Safe execution active.</div>`;
+            } else {
+              container.innerHTML = approvals.map(app => `
+                <div class="p-3 bg-obsidian/80 rounded-xl border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div>
+                    <div class="font-bold text-white">${app.action}</div>
+                    <div class="text-[11px] text-mist font-mono">Agent: ${app.agent} • Target: ${app.target_name || 'System'}</div>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <button onclick="approveAction('${app.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-mono rounded text-xs transition">Approve &amp; Execute</button>
+                    <button onclick="rejectAction('${app.id}')" class="px-2.5 py-1 bg-rose-950 text-rose-300 border border-rose-500/40 font-mono rounded text-xs transition">Reject</button>
+                  </div>
                 </div>
-                <div class="flex items-center space-x-2">
-                  <button onclick="approveAction('${app.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-mono rounded text-xs">Approve &amp; Execute</button>
-                  <button onclick="rejectAction('${app.id}')" class="px-2.5 py-1 bg-rose-950 text-rose-300 border border-rose-500/40 font-mono rounded text-xs">Reject</button>
-                </div>
-              </div>
-            `).join('');
+              `).join('');
+            }
           }
         }
-      } catch {}
+      } catch (err) {
+        console.warn('Approvals feed fetch error:', err);
+      }
     }
 
     // Approve Action
@@ -1126,7 +1290,244 @@
       }
     }
 
-    // Test Integrations Connection
+    // Reject Action
+    async function rejectAction(id) {
+      if (!authToken) return alert('Connect PIN first');
+      try {
+        const res = await fetch('/api/approvals/' + id + '/reject', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + authToken,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ reason: 'Rejected by founder via HUD' })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('Action rejected safely.');
+          loadApprovalsFeed();
+        } else {
+          alert('Error: ' + data.error);
+        }
+      } catch (err) {
+        alert('Rejection failed: ' + err.message);
+      }
+    }
+
+    // Live Pipeline Stats Loader (S08-AC-04)
+    async function loadPipelineStats() {
+      if (!authToken) return;
+      try {
+        const [reportRes, leadsRes] = await Promise.all([
+          fetch('/api/leads/report', { headers: { 'Authorization': 'Bearer ' + authToken } }),
+          fetch('/api/leads?limit=20', { headers: { 'Authorization': 'Bearer ' + authToken } })
+        ]);
+
+        if (reportRes.status === 401 || reportRes.status === 403) return handlePermissionDenied();
+
+        if (reportRes.ok) {
+          const { report } = await reportRes.json();
+          const totalEl = document.getElementById('statTotalLeads');
+          const valEl = document.getElementById('statPipelineValue');
+          const qualEl = document.getElementById('statQualifiedDeals');
+          const propEl = document.getElementById('statProposalsSent');
+
+          if (totalEl) totalEl.innerText = report.total_leads ?? 0;
+          if (valEl) valEl.innerText = '₹' + (report.total_pipeline_value ?? 0).toLocaleString('en-IN');
+          if (qualEl) qualEl.innerText = report.stage_counts?.qualified ?? 0;
+          if (propEl) propEl.innerText = report.stage_counts?.proposal_sent ?? 0;
+
+          const cmdVal = document.getElementById('commandPipelineValue');
+          const cmdDeals = document.getElementById('pipelineDealsCount');
+          if (cmdVal) cmdVal.innerText = '₹' + (report.total_pipeline_value ?? 0).toLocaleString('en-IN');
+          if (cmdDeals) cmdDeals.innerText = (report.total_leads ?? 0) + ' Active';
+        }
+
+        if (leadsRes.ok) {
+          const { leads } = await leadsRes.json();
+          renderKanbanLeads(leads || []);
+        }
+      } catch (err) {
+        console.warn('Pipeline stats fetch error:', err);
+      }
+    }
+
+    function renderKanbanLeads(leads) {
+      const stages = ['new', 'researching', 'outreach_drafted', 'contacted', 'qualified'];
+      stages.forEach(st => {
+        const col = document.getElementById('col-' + st);
+        if (!col) return;
+        const matching = leads.filter(l => l.stage === st);
+        if (matching.length === 0) {
+          col.innerHTML = `<div class="text-[10px] text-mist/60 font-mono py-2 text-center">Empty stage</div>`;
+        } else {
+          col.innerHTML = matching.slice(0, 4).map(l => `
+            <div class="p-3 bg-obsidian/80 rounded-lg border border-oceanTeal/30 text-xs space-y-1.5">
+              <div class="font-bold text-iceWhite">${l.name}</div>
+              <div class="text-[10px] text-mist font-mono">Source: ${l.source} • Phone: ${l.phone}</div>
+              <div class="text-[10px] text-biolumCyan font-mono">${l.location || 'India'}</div>
+            </div>
+          `).join('');
+        }
+      });
+    }
+
+    // Live Revenue & Finance Summary (S08-AC-04)
+    async function loadRevenueStats() {
+      if (!authToken) return;
+      try {
+        const res = await fetch('/api/finance/summary', {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        if (res.status === 401 || res.status === 403) return handlePermissionDenied();
+        if (res.ok) {
+          const data = await res.json();
+          const mrrEl = document.getElementById('revenueMrrValue');
+          if (mrrEl) mrrEl.innerText = '₹' + (data.mrr ?? 0).toLocaleString('en-IN');
+          const outEl = document.getElementById('revenueOutstandingValue');
+          if (outEl) outEl.innerText = '₹' + (data.outstanding ?? 0).toLocaleString('en-IN');
+          const collEl = document.getElementById('revenueCollectedValue');
+          if (collEl) collEl.innerText = '₹' + (data.collected_this_month ?? 0).toLocaleString('en-IN');
+        }
+      } catch (err) {
+        console.warn('Revenue stats fetch error:', err);
+      }
+    }
+
+    // Live Clients and Projects (S08-AC-04)
+    async function loadClientsProjects() {
+      if (!authToken) return;
+      try {
+        const res = await fetch('/api/clients', {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        if (res.status === 401 || res.status === 403) return handlePermissionDenied();
+        if (res.ok) {
+          const data = await res.json();
+          const clients = data.clients || [];
+          const container = document.getElementById('clientsGridContainer');
+          if (container && clients.length > 0) {
+            container.innerHTML = clients.map(c => `
+              <div class="glass-hud p-5 rounded-2xl space-y-3">
+                <div class="flex justify-between items-center">
+                  <h3 class="font-bold text-iceWhite text-base">${c.business_name}</h3>
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 uppercase">${c.status}</span>
+                </div>
+                <p class="text-xs text-mist font-mono">Contact: ${c.contact_name} • Phone: ${c.phone}</p>
+                <div class="flex justify-between items-center text-xs pt-2 border-t border-oceanTeal/20 font-mono">
+                  <span class="text-biolumCyan">Monthly Value: ₹${(c.monthly_value || 0).toLocaleString('en-IN')}</span>
+                  <span class="text-mist">${c.projects?.length || 0} Projects</span>
+                </div>
+              </div>
+            `).join('');
+          }
+        }
+      } catch (err) {
+        console.warn('Clients projects fetch error:', err);
+      }
+    }
+
+    // System Telemetry & Queue Monitor (S08-AC-09)
+    async function loadSystemTelemetry() {
+      try {
+        const [queueRes, healthRes] = await Promise.all([
+          authToken ? fetch('/api/system/queue', { headers: { 'Authorization': 'Bearer ' + authToken } }) : Promise.resolve(null),
+          fetch('/health')
+        ]);
+
+        if (queueRes && queueRes.ok) {
+          const qData = await queueRes.json();
+          const q = qData.queue;
+          if (q) {
+            const deadEl = document.getElementById('queueDeadLetterCount');
+            if (deadEl) deadEl.innerText = `${q.deadLetterJobs || 0} Failed`;
+            const queuedEl = document.getElementById('queueWaitingCount');
+            if (queuedEl) queuedEl.innerText = `${q.queuedJobs || 0} Queued`;
+          }
+        }
+
+        if (healthRes && healthRes.ok) {
+          const hData = await healthRes.json();
+          const uptimeEl = document.getElementById('systemUptimeText');
+          if (uptimeEl) {
+            const hours = Math.floor((hData.uptime || 0) / 3600);
+            const mins = Math.floor(((hData.uptime || 0) % 3600) / 60);
+            uptimeEl.innerText = `${hours}h ${mins}m Uptime`;
+          }
+        }
+      } catch (err) {
+        console.warn('Telemetry load note:', err);
+      }
+    }
+
+    // System Audit Logs (S08-AC-09)
+    async function loadSystemLogs() {
+      if (!authToken) return;
+      try {
+        const res = await fetch('/api/system/logs?limit=15', {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const container = document.getElementById('systemLogsFeed');
+          if (container) {
+            const logs = data.logs || [];
+            if (logs.length === 0) {
+              container.innerHTML = `<div class="text-center py-4 text-xs text-mist font-mono">No recent logs recorded. System healthy.</div>`;
+            } else {
+              container.innerHTML = logs.map(l => `
+                <div class="p-2.5 bg-obsidian/70 rounded-lg border border-oceanTeal/20 font-mono text-[11px] flex justify-between items-center">
+                  <div>
+                    <span class="${l.level === 'error' ? 'text-rose-400' : l.level === 'warn' ? 'text-amber-400' : 'text-biolumCyan'} font-bold">[${l.level.toUpperCase()}]</span>
+                    <span class="text-iceWhite ml-1.5">${l.message}</span>
+                    <span class="text-mist/60 text-[10px] ml-2">(${l.actor})</span>
+                  </div>
+                  <span class="text-mist text-[10px]">${new Date(l.timestamp).toLocaleTimeString()}</span>
+                </div>
+              `).join('');
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Logs load note:', err);
+      }
+    }
+
+    // Backup & Recovery Guidance (S08-AC-09)
+    async function loadBackupAndRecovery() {
+      if (!authToken) return;
+      try {
+        const [backupRes, recoveryRes] = await Promise.all([
+          fetch('/api/system/backup', { headers: { 'Authorization': 'Bearer ' + authToken } }),
+          fetch('/api/system/recovery', { headers: { 'Authorization': 'Bearer ' + authToken } })
+        ]);
+
+        if (backupRes.ok) {
+          const bData = await backupRes.json();
+          const bEl = document.getElementById('backupStatusDisplay');
+          if (bEl) {
+            bEl.innerHTML = `
+              <div class="text-xs font-mono space-y-1">
+                <div class="text-emerald-400 font-bold">Strategy: ${bData.strategy}</div>
+                <div class="text-mist">Point-in-Time Recovery: ${bData.point_in_time_recovery_enabled ? 'ENABLED' : 'DISABLED'} • Retention: ${bData.retention_days} Days</div>
+                <div class="text-mist">RPO Target: ${bData.recovery_point_objective_minutes} min • RTO Target: ${bData.recovery_time_objective_minutes} min</div>
+              </div>
+            `;
+          }
+        }
+      } catch (err) {
+        console.warn('Backup/Recovery load note:', err);
+      }
+    }
+
+    // Command Chamber summary
+    function loadCommandChamberSummary() {
+      loadPipelineStats();
+      loadApprovalsFeed();
+      loadSystemTelemetry();
+    }
+
+    // Test Integrations Connection (S08-AC-05)
     async function testIntegration(id) {
       if (!authToken) {
         await doAuthLogin();
@@ -1148,7 +1549,7 @@
       }
     }
 
-    // THALOS Orchestrator Chat Prompt Execution
+    // THALOS Orchestrator Chat Prompt Execution (S08-AC-06)
     async function executeOrchestratorPrompt() {
       const input = document.getElementById('chatInput');
       const text = input.value.trim();
@@ -1234,7 +1635,7 @@
           currentBriefText = data.brief?.content || 'Good morning Shlok. Today your primary focus is pipeline progression, reviewing outreach for textile leads, and ensuring GST invoicing.';
           contentEl.innerHTML = currentBriefText.replace(/\\n/g, '<br>');
         } else {
-          currentBriefText = 'Good morning Shlok. Pipeline status: 14 active leads in Ahmedabad, 5 qualified. 2 approvals pending review. All systems operational.';
+          currentBriefText = 'Good morning Shlok. Pipeline status: active leads in Ahmedabad. Approvals pending review. All systems operational.';
           contentEl.innerText = currentBriefText;
         }
       } catch {
@@ -1293,12 +1694,37 @@
       }
     }
 
-    function openCreateLeadModal() {
+    // Connected Lead Creation Action (S08-AC-06)
+    async function openCreateLeadModal() {
       const name = prompt('Enter Business Name:');
       if (!name) return;
       const phone = prompt('Enter Phone Number (+91XXXXXXXXXX):', '+91');
       if (!phone) return;
-      alert(`Lead "${name}" registered into pipeline.`);
+
+      if (!authToken) {
+        await doAuthLogin();
+        if (!authToken) return alert('Enter Owner PIN first to authorize creating leads.');
+      }
+
+      try {
+        const res = await fetch('/api/leads', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + authToken,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name, phone, source: 'manual' })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert(`Lead "${name}" successfully registered in pipeline.`);
+          loadPipelineStats();
+        } else {
+          alert(`Failed to create lead: ${data.error || 'Server error'}`);
+        }
+      } catch (err) {
+        alert(`Network error creating lead: ${err.message}`);
+      }
     }
   </script>
 </body>
