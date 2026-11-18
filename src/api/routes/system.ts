@@ -4,8 +4,16 @@ import { AppError } from '../middleware/errorHandler.js';
 import { config } from '../../lib/config.js';
 import { executeWorkflow } from '../../execution/workflowRuntime.js';
 import { agentService } from '../../intelligence/agentService.js';
+import { getQueueMetrics } from '../../worker/queueMetrics.js';
+import { defaultWorker } from '../../worker/worker.js';
 
 const router = Router();
+
+// ── Queue & Worker Telemetry (S06-AC-09) ──────────────────────
+router.get('/queue', async (_req: Request, res: Response): Promise<void> => {
+  const metrics = await getQueueMetrics(defaultWorker);
+  res.json({ queue: metrics });
+});
 
 // ── System health ─────────────────────────────────────────────
 router.get('/health', async (_req: Request, res: Response): Promise<void> => {

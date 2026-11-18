@@ -12,22 +12,191 @@ export interface WorkflowStep {
   tools?: string[];
   depends_on?: string | string[] | null;
   requires_approval?: boolean;
+  condition?: string | ((context: { inputs: Record<string, unknown>; outputs: Record<string, unknown> }) => boolean);
+  timeout_ms?: number;
+  on_failure?: 'fail' | 'continue' | 'branch';
+  failure_step?: string;
 }
 
 export interface WorkflowDefinition {
-  id: string;
+  id?: string;
   workflow_id: string;
   display_name: string;
   description: string;
-  version: string;
+  version?: string;
   status: string;
-  trigger_type: string;
+  trigger_type?: string;
   input_schema?: Record<string, unknown>;
   output_schema?: Record<string, unknown>;
   steps: WorkflowStep[];
   max_steps?: number;
   timeout_seconds?: number;
   approval_required?: boolean;
+}
+
+export function validateWorkflowDefinition(def: unknown): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  if (!def || typeof def !== 'object') {
+    return { valid: false, errors: ['Workflow definition must be an object'] };
+  }
+
+  const d = def as Partial<WorkflowDefinition>;
+
+  if (!d.workflow_id || typeof d.workflow_id !== 'string' || d.workflow_id.trim() === '') {
+    errors.push('workflow_id is required and must be a non-empty string');
+  }
+
+  if (!Array.isArray(d.steps) || d.steps.length === 0) {
+    errors.push('steps must be a non-empty array of workflow steps');
+    return { valid: false, errors };
+  }
+
+  const stepNames = new Set<string>();
+  for (let i = 0; i < d.steps.length; i++) {
+    const s = d.steps[i];
+    if (!s || typeof s !== 'object' || !s.step || typeof s.step !== 'string' || s.step.trim() === '') {
+      errors.push(`Step at index ${i} is missing a valid 'step' name`);
+      continue;
+    }
+    if (stepNames.has(s.step)) {
+      errors.push(`Duplicate step name: '${s.step}'`);
+    }
+    stepNames.add(s.step);
+  }
+
+  // Validate dependencies & failure branches
+  for (const s of d.steps) {
+    if (s.depends_on) {
+      const deps = Array.isArray(s.depends_on) ? s.depends_on : [s.depends_on];
+      for (const dep of deps) {
+        if (dep === s.step) {
+          errors.push(`Step '${s.step}' cannot depend on itself`);
+        } else if (!stepNames.has(dep)) {
+          errors.push(`Step '${s.step}' references unknown dependency '${dep}'`);
+        }
+      }
+    }
+    if (s.failure_step && !stepNames.has(s.failure_step)) {
+      errors.push(`Step '${s.step}' references unknown failure_step '${s.failure_step}'`);
+    }
+  }
+
+  // Cycle detection in DAG via DFS coloring (0: unvisited, 1: visiting, 2: visited)
+  const adj = new Map<string, string[]>();
+  for (const s of d.steps) {
+    const deps = s.depends_on ? (Array.isArray(s.depends_on) ? s.depends_on : [s.depends_on]) : [];
+    adj.set(s.step, deps.filter(dep => stepNames.has(dep)));
+  }
+
+  const visited = new Map<string, number>();
+  let hasCycle = false;
+  let cyclePath: string[] = [];
+
+  const dfs = (node: string, path: string[]): boolean => {
+    visited.set(node, 1);
+    path.push(node);
+
+    const neighbors = adj.get(node) ?? [];
+    for (const neighbor of neighbors) {
+      const state = visited.get(neighbor) ?? 0;
+      if (state === 1) {
+        cyclePath = [...path, neighbor];
+        return true;
+      }
+      if (state === 0) {
+        if (dfs(neighbor, path)) return true;
+      }
+    }
+
+    visited.set(node, 2);
+    path.pop();
+    return false;
+  };
+
+  for (const s of d.steps) {
+    if ((visited.get(s.step) ?? 0) === 0) {
+      if (dfs(s.step, [])) {
+        hasCycle = true;
+        break;
+      }
+    }
+  }
+
+  if (hasCycle) {
+    errors.push(`Circular dependency cycle detected in workflow steps: ${cyclePath.join(' -> ')}`);
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+export function evaluateCondition(
+  condition: string | ((context: { inputs: Record<string, unknown>; outputs: Record<string, unknown> }) => boolean),
+  context: { inputs: Record<string, unknown>; outputs: Record<string, unknown> }
+): boolean {
+  if (typeof condition === 'function') {
+    return Boolean(condition(context));
+  }
+
+  if (typeof condition !== 'string' || condition.trim() === '') {
+    return true;
+  }
+
+  const expr = condition.trim();
+
+  const resolvePath = (path: string): unknown => {
+    const parts = path.split('.');
+    let current: any = context;
+    for (const part of parts) {
+      if (current === null || current === undefined) return undefined;
+      current = current[part];
+    }
+    return current;
+  };
+
+  const match = expr.match(/^([a-zA-Z0-9_.]+)\s*(===|==|!==|!=|>=|<=|>|<)\s*(.+)$/);
+  if (match) {
+    const [, path, op, rawExpected] = match;
+    const actual = resolvePath(path);
+    let expected: any = rawExpected.trim();
+
+    if (expected === 'true') expected = true;
+    else if (expected === 'false') expected = false;
+    else if (expected === 'null') expected = null;
+    else if (expected === 'undefined') expected = undefined;
+    else if (!isNaN(Number(expected)) && !/^['"].*['"]$/.test(expected)) expected = Number(expected);
+    else if (/^['"].*['"]$/.test(expected)) expected = expected.slice(1, -1);
+
+    switch (op) {
+      case '===':
+        return actual === expected;
+      case '==':
+        // eslint-disable-next-line eqeqeq
+        return actual == expected;
+      case '!==':
+        return actual !== expected;
+      case '!=':
+        // eslint-disable-next-line eqeqeq
+        return actual != expected;
+      case '>':
+        return Number(actual) > Number(expected);
+      case '>=':
+        return Number(actual) >= Number(expected);
+      case '<':
+        return Number(actual) < Number(expected);
+      case '<=':
+        return Number(actual) <= Number(expected);
+      default:
+        return false;
+    }
+  }
+
+  if (expr.startsWith('!')) {
+    const val = resolvePath(expr.slice(1).trim());
+    return !val;
+  }
+
+  const val = resolvePath(expr);
+  return Boolean(val);
 }
 
 export interface WorkflowRunRecord {
@@ -117,6 +286,11 @@ export class WorkflowRuntime {
 
     if (definition.status !== 'active') {
       throw new Error(`Workflow '${workflowId}' is not active (status: ${definition.status})`);
+    }
+
+    const validation = validateWorkflowDefinition(definition);
+    if (!validation.valid) {
+      throw new Error(`Invalid workflow definition '${workflowId}': ${validation.errors.join('; ')}`);
     }
 
     // Determine next run_number
@@ -267,8 +441,8 @@ export class WorkflowRuntime {
     while (iteration < maxSteps) {
       iteration++;
 
-      // Check if all steps completed
-      const remainingSteps = steps.filter(s => !stepsCompleted.includes(s.step));
+      // Check if all steps processed (either completed or failed with continue)
+      const remainingSteps = steps.filter(s => !stepsCompleted.includes(s.step) && !stepsFailed.includes(s.step));
       if (remainingSteps.length === 0) {
         // Complete!
         await supabase
@@ -346,6 +520,24 @@ export class WorkflowRuntime {
         };
       }
 
+      // Check if step condition is satisfied
+      if (readyStep.condition) {
+        const shouldRun = evaluateCondition(readyStep.condition, { inputs: run.input_data ?? {}, outputs: outputData });
+        if (!shouldRun) {
+          logger.info(`Workflow step '${readyStep.step}' skipped due to false condition`);
+          stepsCompleted.push(readyStep.step);
+          outputData[readyStep.step] = { skipped: true, condition_met: false };
+          await supabase
+            .from('workflow_runs')
+            .update({
+              steps_completed: stepsCompleted,
+              output_data: outputData,
+            })
+            .eq('id', run.id);
+          continue;
+        }
+      }
+
       // Mark current step
       await supabase
         .from('workflow_runs')
@@ -411,29 +603,61 @@ export class WorkflowRuntime {
         };
       }
 
-      // Execute tool(s) for the step
+      // Execute tool(s) for the step with timeout support
       const toolNames: string[] = readyStep.tools ?? (readyStep.tool ? [readyStep.tool] : []);
       let stepSuccess = true;
       let stepError = '';
+      const stepTimeoutMs = readyStep.timeout_ms || (definition.timeout_seconds ? definition.timeout_seconds * 1000 : 0);
 
       for (const toolId of toolNames) {
-        // Merge inputs from run input_data + prior step output
+        // Merge inputs from run input_data + prior step outputs
+        const depOutputs: Record<string, unknown> = {};
+        if (readyStep.depends_on) {
+          const deps = Array.isArray(readyStep.depends_on) ? readyStep.depends_on : [readyStep.depends_on];
+          for (const dep of deps) {
+            if (outputData[dep] && typeof outputData[dep] === 'object') {
+              Object.assign(depOutputs, outputData[dep]);
+            }
+          }
+        }
+
         const stepInputs: Record<string, unknown> = {
           ...(run.input_data ?? {}),
-          ...(readyStep.depends_on && typeof readyStep.depends_on === 'string'
-            ? (outputData[readyStep.depends_on] as Record<string, unknown> ?? {})
-            : {}),
+          ...depOutputs,
         };
 
-        const result = await executeTool({
-          tool_id: toolId,
-          agent_id: readyStep.agent ?? 'system',
-          inputs: stepInputs,
-          workflow_run_id: run.id,
-          correlation_id: correlationId,
-        });
+        let result: { success: boolean; output?: unknown; error?: string; queued_for_approval?: boolean; approval_id?: string | null };
 
-        if (result.queued_for_approval) {
+        if (stepTimeoutMs > 0) {
+          result = await Promise.race([
+            executeTool({
+              tool_id: toolId,
+              agent_id: readyStep.agent ?? 'system',
+              inputs: stepInputs,
+              workflow_run_id: run.id,
+              correlation_id: correlationId,
+            }),
+            new Promise<{ success: false; error: string; queued_for_approval?: boolean }>((resolve) => {
+              setTimeout(() => {
+                resolve({
+                  success: false,
+                  error: `Step '${readyStep.step}' tool '${toolId}' timed out after ${stepTimeoutMs}ms`,
+                  queued_for_approval: false,
+                });
+              }, stepTimeoutMs);
+            }),
+          ]);
+        } else {
+          result = await executeTool({
+            tool_id: toolId,
+            agent_id: readyStep.agent ?? 'system',
+            inputs: stepInputs,
+            workflow_run_id: run.id,
+            correlation_id: correlationId,
+          });
+        }
+
+        if (result?.queued_for_approval) {
           // Tool itself queued an approval
           await supabase
             .from('workflow_runs')
@@ -457,9 +681,9 @@ export class WorkflowRuntime {
           };
         }
 
-        if (!result.success) {
+        if (!result || !result.success) {
           stepSuccess = false;
-          stepError = result.error ?? `Tool ${toolId} failed`;
+          stepError = result?.error ?? `Tool ${toolId} failed`;
           break;
         }
 
@@ -468,6 +692,33 @@ export class WorkflowRuntime {
 
       if (!stepSuccess) {
         stepsFailed.push(readyStep.step);
+        outputData[readyStep.step] = { error: stepError, failed: true };
+
+        if (readyStep.on_failure === 'continue') {
+          logger.warn(`Step '${readyStep.step}' failed with on_failure='continue'`, { error: stepError });
+          await supabase
+            .from('workflow_runs')
+            .update({
+              steps_failed: stepsFailed,
+              output_data: outputData,
+            })
+            .eq('id', run.id);
+          continue;
+        }
+
+        if (readyStep.on_failure === 'branch' && readyStep.failure_step) {
+          logger.warn(`Step '${readyStep.step}' failed, branching to failure step '${readyStep.failure_step}'`, { error: stepError });
+          await supabase
+            .from('workflow_runs')
+            .update({
+              steps_failed: stepsFailed,
+              output_data: outputData,
+              current_step: readyStep.failure_step,
+            })
+            .eq('id', run.id);
+          continue;
+        }
+
         await supabase
           .from('workflow_runs')
           .update({
@@ -535,9 +786,59 @@ export class WorkflowRuntime {
       error: maxStepErr,
     };
   }
+
+  /**
+   * Resume an interrupted or crashed workflow run from its persisted checkpoints.
+   * Only steps not present in steps_completed will be executed, preventing duplicate side effects.
+   */
+  async resumeInterruptedRun(runId: string, correlationId?: string): Promise<WorkflowRunResult> {
+    const supabase = getSupabase();
+    const { data: run, error: fetchErr } = await supabase
+      .from('workflow_runs')
+      .select('*')
+      .eq('id', runId)
+      .single();
+
+    if (fetchErr || !run) {
+      throw new Error(`Workflow run not found: ${runId}`);
+    }
+
+    if (run.status === 'completed' || run.status === 'rejected') {
+      return {
+        runId,
+        workflowId: run.workflow_id,
+        runNumber: Number(run.run_number),
+        status: run.status,
+        currentStep: run.current_step,
+        stepsCompleted: run.steps_completed ?? [],
+        stepsFailed: run.steps_failed ?? [],
+        outputData: run.output_data ?? {},
+        error: run.error_message,
+      };
+    }
+
+    const { data: definition } = await supabase
+      .from('workflow_definitions')
+      .select('*')
+      .eq('workflow_id', run.workflow_id)
+      .single();
+
+    if (!definition) {
+      throw new Error(`Workflow definition not found: ${run.workflow_id}`);
+    }
+
+    if (run.status !== 'running') {
+      await supabase.from('workflow_runs').update({ status: 'running' }).eq('id', runId);
+      run.status = 'running';
+    }
+
+    return this.runStepLoop(run, definition, correlationId);
+  }
 }
 
 export const workflowRuntime = new WorkflowRuntime();
 export const executeWorkflow = (params: ExecuteWorkflowParams) => workflowRuntime.executeWorkflow(params);
 export const resumeWorkflow = (runId: string, approved: boolean, approver?: string, correlationId?: string) =>
   workflowRuntime.resumeWorkflow(runId, approved, approver, correlationId);
+export const resumeInterruptedRun = (runId: string, correlationId?: string) =>
+  workflowRuntime.resumeInterruptedRun(runId, correlationId);

@@ -18,6 +18,141 @@ import { config, validateConfig } from '../lib/config.js';
 import { logger } from '../lib/logger.js';
 import { processIngestionJob } from '../persistence/ingestionQueue.js';
 import { validateVaultConfig } from '../lib/vault.js';
+import { getQueueMetrics } from './queueMetrics.js';
+
+export type JobStatus = 'queued' | 'claimed' | 'running' | 'completed' | 'failed' | 'cancelled' | 'dead_letter';
+
+export const VALID_JOB_TRANSITIONS: Record<JobStatus, readonly JobStatus[]> = {
+  queued: ['claimed', 'cancelled'],
+  claimed: ['running', 'completed', 'queued', 'failed', 'dead_letter', 'cancelled'],
+  running: ['completed', 'queued', 'failed', 'dead_letter', 'cancelled'],
+  completed: [],
+  failed: ['queued'],
+  cancelled: [],
+  dead_letter: ['queued'],
+};
+
+export function canTransitionJob(from: JobStatus, to: JobStatus): boolean {
+  return VALID_JOB_TRANSITIONS[from]?.includes(to) ?? false;
+}
+
+export class PermanentJobError extends Error {
+  public readonly isPermanent = true;
+  constructor(message: string) {
+    super(message);
+    this.name = 'PermanentJobError';
+  }
+}
+
+export class TransientJobError extends Error {
+  public readonly isTransient = true;
+  constructor(message: string) {
+    super(message);
+    this.name = 'TransientJobError';
+  }
+}
+
+export function classifyJobError(err: unknown): { isTransient: boolean; reason: string } {
+  if (err instanceof PermanentJobError || (err && typeof err === 'object' && 'isPermanent' in err && (err as { isPermanent: boolean }).isPermanent)) {
+    return { isTransient: false, reason: (err as Error).message || 'Permanent failure' };
+  }
+  if (err instanceof TransientJobError || (err && typeof err === 'object' && 'isTransient' in err && (err as { isTransient: boolean }).isTransient)) {
+    return { isTransient: true, reason: (err as Error).message || 'Transient failure' };
+  }
+  const msg = err instanceof Error ? err.message : String(err);
+  const lower = msg.toLowerCase();
+
+  if (
+    lower.includes('no handler') ||
+    lower.includes('validation') ||
+    lower.includes('invalid') ||
+    lower.includes('unsupported') ||
+    lower.includes('syntax') ||
+    lower.includes('bad request') ||
+    lower.includes('no csv data') ||
+    lower.includes('must contain a header')
+  ) {
+    return { isTransient: false, reason: msg };
+  }
+
+  if (
+    lower.includes('timeout') ||
+    lower.includes('rate limit') ||
+    lower.includes('429') ||
+    lower.includes('503') ||
+    lower.includes('502') ||
+    lower.includes('504') ||
+    lower.includes('econnreset') ||
+    lower.includes('etimedout') ||
+    lower.includes('network') ||
+    lower.includes('connection')
+  ) {
+    return { isTransient: true, reason: msg };
+  }
+
+  return { isTransient: true, reason: msg };
+}
+
+export function computeNextJobStatus(params: {
+  currentStatus?: JobStatus;
+  attempt: number;
+  maxAttempts: number;
+  success: boolean;
+  isTransient?: boolean;
+}): { nextStatus: JobStatus; willRetry: boolean; backoffDelayMs: number; isDeadLetter: boolean } {
+  const { attempt, maxAttempts, success, isTransient = true } = params;
+
+  if (success) {
+    return {
+      nextStatus: 'completed',
+      willRetry: false,
+      backoffDelayMs: 0,
+      isDeadLetter: false,
+    };
+  }
+
+  const attemptExceeded = attempt >= maxAttempts;
+
+  if (!isTransient) {
+    return {
+      nextStatus: attemptExceeded ? 'dead_letter' : 'failed',
+      willRetry: false,
+      backoffDelayMs: 0,
+      isDeadLetter: attemptExceeded,
+    };
+  }
+
+  if (attemptExceeded) {
+    return {
+      nextStatus: 'dead_letter',
+      willRetry: false,
+      backoffDelayMs: 0,
+      isDeadLetter: true,
+    };
+  }
+
+  const baseBackoffMs = 30000;
+  const maxBackoffMs = 3600000;
+  const delay = Math.min(Math.pow(2, attempt) * baseBackoffMs, maxBackoffMs);
+
+  return {
+    nextStatus: 'queued',
+    willRetry: true,
+    backoffDelayMs: delay,
+    isDeadLetter: false,
+  };
+}
+
+export type CanonicalJobType =
+  | 'ingest_document'
+  | 'import_csv'
+  | 'scan_follow_ups'
+  | 'mark_overdue_invoices'
+  | 'expire_approvals';
+
+export type JobType = CanonicalJobType | (string & {});
+
+export type JobHandler = (payload: Record<string, unknown>) => Promise<void>;
 
 export type JobRow = {
   id: string;
@@ -43,12 +178,13 @@ export class WorkerService {
   public readonly workerId: string;
   private running: boolean = false;
   private shutdownRequested: boolean = false;
+  private inFlightClaims: number = 0;
   private activeJobs: Map<string, { job: JobRow; promise: Promise<void> }> = new Map();
   private healthServer: HttpServer | null = null;
   private loopPromise: Promise<void> | null = null;
   private startTime: number = Date.now();
 
-  private readonly jobHandlers: Record<string, (payload: Record<string, unknown>) => Promise<void>> = {
+  private readonly jobHandlers: Record<string, JobHandler> = {
     ingest_document: processIngestionJob,
     import_csv: this.importCsv.bind(this),
     scan_follow_ups: this.scanFollowUps.bind(this),
@@ -84,12 +220,26 @@ export class WorkerService {
       const url = req.url || '/';
 
       if (url === '/health' || url === '/api/health') {
+        const queueMetrics = await getQueueMetrics(this);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           status: 'ok',
           ...this.getStatus(),
+          queue: {
+            depth: queueMetrics.depth,
+            oldest_queued_age_seconds: queueMetrics.oldest_queued_age_seconds,
+            breakdown: queueMetrics.breakdown,
+            active_leases: queueMetrics.active_leases,
+          },
           timestamp: new Date().toISOString(),
         }));
+        return;
+      }
+
+      if (url === '/metrics' || url === '/api/metrics' || url === '/queue') {
+        const queueMetrics = await getQueueMetrics(this);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(queueMetrics));
         return;
       }
 
@@ -152,16 +302,27 @@ export class WorkerService {
     });
   }
 
+  public registerHandler(jobType: string, handler: JobHandler): void {
+    this.jobHandlers[jobType] = handler;
+  }
+
+  public getRegisteredJobTypes(): string[] {
+    return Object.keys(this.jobHandlers);
+  }
+
   public async processJob(job: JobRow): Promise<void> {
     const supabase = getSupabase();
     const handler = this.jobHandlers[job.job_type];
 
     if (!handler) {
       logger.warn('No handler for job type', { job_type: job.job_type, job_id: job.id });
+      const isDeadLetter = job.attempt >= job.max_attempts;
       await supabase.from('jobs').update({
-        status: 'failed',
+        status: isDeadLetter ? 'dead_letter' : 'failed',
         error: `No handler registered for job type: ${job.job_type}`,
         completed_at: new Date().toISOString(),
+        dead_letter_at: isDeadLetter ? new Date().toISOString() : null,
+        dead_letter_reason: isDeadLetter ? `Max attempts reached: No handler registered for job type: ${job.job_type}` : null,
       }).eq('id', job.id);
       return;
     }
@@ -178,24 +339,45 @@ export class WorkerService {
       const msg = err instanceof Error ? err.message : String(err);
       logger.error('Job failed', { job_id: job.id, job_type: job.job_type, error: msg, attempt: job.attempt });
 
-      const willRetry = job.attempt < job.max_attempts;
-      await supabase.from('jobs').update({
-        status: willRetry ? 'queued' : 'failed',
-        error: msg.slice(0, 1000),
-        worker_id: null,
-        lease_expires_at: null,
-        next_attempt_at: willRetry
-          ? new Date(Date.now() + Math.pow(2, job.attempt) * 30000).toISOString()
-          : new Date().toISOString(),
-        completed_at: willRetry ? null : new Date().toISOString(),
-      }).eq('id', job.id);
+      const classification = classifyJobError(err);
+      const decision = computeNextJobStatus({
+        currentStatus: 'running',
+        attempt: job.attempt,
+        maxAttempts: job.max_attempts,
+        success: false,
+        isTransient: classification.isTransient,
+      });
+
+      if (!decision.willRetry) {
+        await supabase.from('jobs').update({
+          status: decision.nextStatus,
+          error: msg.slice(0, 1000),
+          worker_id: null,
+          lease_expires_at: null,
+          completed_at: new Date().toISOString(),
+          dead_letter_at: decision.isDeadLetter ? new Date().toISOString() : null,
+          dead_letter_reason: decision.isDeadLetter
+            ? `Exceeded max attempts (${job.attempt}/${job.max_attempts}): ${classification.reason}`
+            : null,
+        }).eq('id', job.id);
+      } else {
+        await supabase.from('jobs').update({
+          status: 'queued',
+          error: msg.slice(0, 1000),
+          worker_id: null,
+          lease_expires_at: null,
+          next_attempt_at: new Date(Date.now() + decision.backoffDelayMs).toISOString(),
+          completed_at: null,
+        }).eq('id', job.id);
+      }
     }
   }
 
   public async pollOnce(): Promise<boolean> {
     if (this.shutdownRequested) return false;
-    if (this.activeJobs.size >= config.worker.maxConcurrency) return false;
+    if (this.activeJobs.size + this.inFlightClaims >= config.worker.maxConcurrency) return false;
 
+    this.inFlightClaims++;
     const supabase = getSupabase();
     try {
       // Reclaim expired leases first
@@ -208,7 +390,10 @@ export class WorkerService {
         p_lease_seconds: config.worker.leaseSeconds,
       });
 
-      if (!jobs || jobs.length === 0) return false;
+      if (!jobs || jobs.length === 0) {
+        this.inFlightClaims--;
+        return false;
+      }
 
       const job = jobs[0] as JobRow;
       logger.info('Processing job', { job_type: job.job_type, job_id: job.id, active_count: this.activeJobs.size + 1 });
@@ -218,8 +403,10 @@ export class WorkerService {
       });
 
       this.activeJobs.set(job.id, { job, promise });
+      this.inFlightClaims--;
       return true;
     } catch (err) {
+      this.inFlightClaims--;
       const isPlaceholder = config.supabase.url.includes('placeholder');
       if (!isPlaceholder) {
         logger.error('Worker poll error', { error: err instanceof Error ? err.message : err });
