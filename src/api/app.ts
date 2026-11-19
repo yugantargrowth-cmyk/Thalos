@@ -1,5 +1,6 @@
 import 'express-async-errors';
 import express, { type Express } from 'express';
+import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import cors from 'cors';
 import path from 'path';
@@ -64,6 +65,7 @@ export function createApp(): Express {
   }));
 
   // ── Body parsing with limits ────────────────────────────────
+  app.use(cookieParser());
   app.use(express.json({ limit: '2mb' }));
   app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 

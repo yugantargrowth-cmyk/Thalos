@@ -97,6 +97,32 @@ async function runTest(integrationId: string, key: string): Promise<Omit<TestRes
       return { success: resp.ok, detail: `SearXNG health check: ${resp.status}` };
     }
 
+    case 'openai': {
+      const resp = await nodeFetch('https://api.openai.com/v1/models', {
+        headers: { Authorization: `Bearer ${key}` },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!resp.ok) throw new Error(`OpenAI API returned ${resp.status}`);
+      const data = (await resp.json()) as { data: unknown[] };
+      return { success: true, detail: `${data.data?.length ?? 0} models available` };
+    }
+
+    case 'supabase': {
+      const { config } = await import('../lib/config.js');
+      if (config.supabase.url.includes('placeholder') || config.supabase.url.includes('your-project')) {
+        throw new Error('Supabase URL is still configured with placeholder');
+      }
+      const resp = await nodeFetch(`${config.supabase.url}/rest/v1/`, {
+        headers: {
+          apikey: config.supabase.serviceRoleKey || key,
+          Authorization: `Bearer ${config.supabase.serviceRoleKey || key}`,
+        },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!resp.ok && resp.status !== 404) throw new Error(`Supabase returned status ${resp.status}`);
+      return { success: true, detail: 'Supabase REST gateway reached' };
+    }
+
     default:
       return { success: false, error: `No test implemented for integration: ${integrationId}` };
   }

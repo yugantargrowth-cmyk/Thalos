@@ -223,3 +223,45 @@ export function validateConfig(targetEnv?: string, targetCfg: typeof config = co
     throw new ConfigValidationError(errors);
   }
 }
+
+/** Update settings.json and synchronize in-memory config immediately */
+export function updateSettingsFile(updates: Partial<SettingsFile>): SettingsFile {
+  const settingsPath = path.resolve(process.cwd(), 'settings.json');
+  let current: SettingsFile = {};
+  if (fs.existsSync(settingsPath)) {
+    try {
+      current = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+    } catch {
+      current = {};
+    }
+  }
+
+  const merged: SettingsFile = {
+    ...current,
+    ...updates,
+    supabase: { ...current.supabase, ...updates.supabase },
+    auth: { ...current.auth, ...updates.auth },
+    encryption: { ...current.encryption, ...updates.encryption },
+    integrations: { ...current.integrations, ...updates.integrations },
+    runtime: { ...current.runtime, ...updates.runtime },
+  };
+
+  fs.writeFileSync(settingsPath, JSON.stringify(merged, null, 2), 'utf-8');
+  loadedSettings = merged;
+
+  if (merged.integrations) {
+    config.integrations = { ...config.integrations, ...merged.integrations };
+  }
+  if (merged.supabase?.url) {
+    config.supabase.url = merged.supabase.url;
+  }
+  if (merged.supabase?.serviceRoleKey) {
+    config.supabase.serviceRoleKey = merged.supabase.serviceRoleKey;
+  }
+  if (merged.supabase?.anonKey !== undefined) {
+    config.supabase.anonKey = merged.supabase.anonKey;
+  }
+
+  return merged;
+}
+

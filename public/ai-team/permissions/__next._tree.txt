@@ -1,4 +1,4 @@
-:HL["/_next/static/chunks/1h4eru62ntfvw.css","style"]
+:HL["/_next/static/chunks/0uduas14y3b0p.css","style"]
 2:[["children",{"s":"__PAGE__","h":160}]]
 1:[["children",{"s":{"n":"segments","t":"c","k":"ai-team/permissions","s":[]},"h":96,"c":"$Q2"}]]
-0:{"b":"1u_OiWNqsgcYe-pTm-GuP","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
+0:{"b":"ONwFs-Uzq70mEpGbWUKwi","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
