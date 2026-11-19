@@ -69,7 +69,7 @@ export function createApp(): Express {
 
   // ── Public routes & UI preview ──────────────────────────────
   const publicDir = path.resolve(process.cwd(), 'public');
-  app.use(express.static(publicDir));
+  app.use(express.static(publicDir, { extensions: ['html'] }));
   app.get('/', (_req, res) => res.sendFile(path.join(publicDir, 'index.html')));
 
   // ── Unauthenticated health & readiness checks ───────────────

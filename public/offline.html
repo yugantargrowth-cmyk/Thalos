@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#07111b">
+    <title>THALOS · Offline</title>
+    <style>
+      :root{color-scheme:dark;font-family:Arial,Helvetica,sans-serif;background:#07111b;color:#edf8fc}*{box-sizing:border-box}body{min-height:100svh;margin:0;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 0,#103443 0,#07111b 56%,#060d15 100%)}main{width:min(560px,100%);padding:clamp(24px,6vw,42px);border:1px solid #1b3949;border-radius:20px;background:linear-gradient(145deg,#0d1e2b,#0a1723);box-shadow:0 24px 80px #0007}header{display:flex;align-items:center;gap:13px}.mark{width:42px;height:42px;display:grid;place-items:center;border:1px solid #347385;border-radius:13px;color:#59dfeb;background:#103346}h1{margin:0;font-size:15px;letter-spacing:.25em}header p{margin:5px 0 0;color:#8da7b4;font-size:11px;letter-spacing:.04em}.status{display:flex;align-items:center;gap:9px;margin:32px 0 10px;color:#83d5ca;font-size:11px;letter-spacing:.14em;text-transform:uppercase}.dot{width:7px;height:7px;border-radius:50%;background:#e5b77f;box-shadow:0 0 12px #e5b77f88}h2{margin:0;font-size:clamp(24px,6vw,36px);font-weight:500;letter-spacing:-.04em}main>p{max-width:44ch;margin:12px 0 22px;color:#9aafbb;font-size:14px;line-height:1.65}.route{overflow-wrap:anywhere;color:#8099a5;font:11px ui-monospace,monospace}button{min-height:46px;margin-top:20px;padding:0 17px;border:1px solid #51d8e6;border-radius:9px;background:#45cddd;color:#06151d;font-weight:600;cursor:pointer}button:focus-visible{outline:2px solid #9ff3f7;outline-offset:3px}@media(orientation:landscape) and (max-height:480px){main{padding:20px 28px}.status{margin-top:20px}main>p{margin-bottom:14px}button{margin-top:12px}}
+    </style>
+  </head>
+  <body>
+    <main>
+      <header><div class="mark" aria-hidden="true">T</div><div><h1>THALOS</h1><p>One Intelligence. Every Device.</p></div></header>
+      <div class="status"><span class="dot" aria-hidden="true"></span>Connection unavailable</div>
+      <h2>Your command shell is offline.</h2>
+      <p>THALOS keeps this lightweight recovery screen available without a connection. Workspace records and actions are never stored for offline use.</p>
+      <div class="route">Requested workspace: <span id="route"></span></div>
+      <button type="button" onclick="location.reload()">Try connecting again</button>
+    </main>
+    <script>document.getElementById('route').textContent = location.pathname</script>
+  </body>
+</html>
