@@ -1,0 +1,116 @@
+{
+  "pack": "THALOS Mission Engineering Pack",
+  "version": "1.0.0",
+  "created_for": "THALOS / Yugantar Growth",
+  "missions": [
+    {
+      "id": "S01",
+      "name": "Brain",
+      "type": "Conceptual system"
+    },
+    {
+      "id": "S02",
+      "name": "Memory",
+      "type": "Conceptual system"
+    },
+    {
+      "id": "S03",
+      "name": "Eyes & Ears",
+      "type": "Conceptual system"
+    },
+    {
+      "id": "S04",
+      "name": "Hands",
+      "type": "Conceptual system"
+    },
+    {
+      "id": "S05",
+      "name": "Business Organs",
+      "type": "Conceptual system"
+    },
+    {
+      "id": "S06",
+      "name": "Nervous System",
+      "type": "Conceptual system"
+    },
+    {
+      "id": "S07",
+      "name": "Immune System",
+      "type": "Conceptual system"
+    },
+    {
+      "id": "S08",
+      "name": "Body & Home",
+      "type": "Conceptual system"
+    },
+    {
+      "id": "L09",
+      "name": "Intelligence",
+      "type": "Technical backend layer"
+    },
+    {
+      "id": "L10",
+      "name": "Agents",
+      "type": "Technical backend layer"
+    },
+    {
+      "id": "L11",
+      "name": "Execution",
+      "type": "Technical backend layer"
+    },
+    {
+      "id": "L12",
+      "name": "Business",
+      "type": "Technical backend layer"
+    },
+    {
+      "id": "L13",
+      "name": "Persistence",
+      "type": "Technical backend layer"
+    },
+    {
+      "id": "L14",
+      "name": "Runtime / Home",
+      "type": "Technical backend layer"
+    },
+    {
+      "id": "E15",
+      "name": "End-to-End Integration & Verification",
+      "type": "Final integration"
+    }
+  ],
+  "documents": [
+    "00_START_HERE/ANTIGRAVITY_RUN_INSTRUCTIONS.md",
+    "00_START_HERE/MASTER_CRISP_PROMPT.md",
+    "00_START_HERE/README_FIRST.md",
+    "01_GOVERNANCE/ACCEPTANCE_AND_QUALITY_STANDARD.md",
+    "01_GOVERNANCE/PRODUCT_CHARTER_AND_LOCKED_DECISIONS.md",
+    "01_GOVERNANCE/SECURITY_AND_APPROVAL_POLICY.md",
+    "02_ARCHITECTURE/CANONICAL_ARCHITECTURE.md",
+    "02_ARCHITECTURE/CANONICAL_OWNERSHIP_MAP.md",
+    "02_ARCHITECTURE/MISSION_EXECUTION_ORDER.md",
+    "03_BASELINE/INITIAL_DEFECT_AND_RISK_REGISTER.md",
+    "03_BASELINE/REPOSITORY_BASELINE_2026-11-18.md",
+    "04_MISSION_PROMPTS/E15_end-to-end_integration_and_verification_MISSION_PROMPT.md",
+    "04_MISSION_PROMPTS/EXECUTION_ORDER_QUICK_REFERENCE.md",
+    "04_MISSION_PROMPTS/LAYERS_09_TO_14/L09_intelligence_MISSION_PROMPT.md",
+    "04_MISSION_PROMPTS/LAYERS_09_TO_14/L10_agents_MISSION_PROMPT.md",
+    "04_MISSION_PROMPTS/LAYERS_09_TO_14/L11_execution_MISSION_PROMPT.md",
+    "04_MISSION_PROMPTS/LAYERS_09_TO_14/L12_business_MISSION_PROMPT.md",
+    "04_MISSION_PROMPTS/LAYERS_09_TO_14/L13_persistence_MISSION_PROMPT.md",
+    "04_MISSION_PROMPTS/LAYERS_09_TO_14/L14_runtime___home_MISSION_PROMPT.md",
+    "04_MISSION_PROMPTS/SYSTEMS_01_TO_08/S01_brain_MISSION_PROMPT.md",
+    "04_MISSION_PROMPTS/SYSTEMS_01_TO_08/S02_memory_MISSION_PROMPT.md",
+    "04_MISSION_PROMPTS/SYSTEMS_01_TO_08/S03_eyes_and_ears_MISSION_PROMPT.md",
+    "04_MISSION_PROMPTS/SYSTEMS_01_TO_08/S04_hands_MISSION_PROMPT.md",
+    "04_MISSION_PROMPTS/SYSTEMS_01_TO_08/S05_business_organs_MISSION_PROMPT.md",
+    "04_MISSION_PROMPTS/SYSTEMS_01_TO_08/S06_nervous_system_MISSION_PROMPT.md",
+    "04_MISSION_PROMPTS/SYSTEMS_01_TO_08/S07_immune_system_MISSION_PROMPT.md",
+    "04_MISSION_PROMPTS/SYSTEMS_01_TO_08/S08_body_and_home_MISSION_PROMPT.md",
+    "05_EVIDENCE_TEMPLATES/ACCEPTANCE_MATRIX_TEMPLATE.md",
+    "05_EVIDENCE_TEMPLATES/DEFECT_REGISTER_TEMPLATE.md",
+    "05_EVIDENCE_TEMPLATES/FINAL_SYSTEM_ACCEPTANCE_TEMPLATE.md",
+    "05_EVIDENCE_TEMPLATES/MISSION_REPORT_TEMPLATE.md",
+    "05_EVIDENCE_TEMPLATES/TEST_EVIDENCE_TEMPLATE.md"
+  ]
+}

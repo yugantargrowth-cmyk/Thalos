@@ -1,95 +1,101 @@
-import 'express-async-errors';
 import 'dotenv/config';
-import express from 'express';
-import helmet from 'helmet';
-import cors from 'cors';
-import path from 'path';
-import { config } from '../lib/config.js';
+import type { Server } from 'http';
+import { config, validateConfig } from '../lib/config.js';
 import { logger } from '../lib/logger.js';
 import { validateVaultConfig } from '../lib/vault.js';
-import { apiLimiter } from './middleware/rateLimit.js';
-import { requireAuth } from './middleware/auth.js';
-import { errorHandler, notFound } from './middleware/errorHandler.js';
+import { createApp } from './app.js';
 
-// Routes
-import authRoutes from './routes/auth.js';
-import leadsRoutes from './routes/leads.js';
-import clientsRoutes from './routes/clients.js';
-import financeRoutes from './routes/finance.js';
-import knowledgeRoutes from './routes/knowledge.js';
-import integrationsRoutes from './routes/integrations.js';
-import approvalsRoutes from './routes/approvals.js';
-import intelligenceRoutes from './routes/intelligence.js';
-import systemRoutes from './routes/system.js';
+let activeServer: Server | null = null;
+let isShuttingDown = false;
 
-async function bootstrap() {
-  // Validate vault before accepting any requests
+export async function startServer(port: number = config.port): Promise<Server> {
+  // Validate configuration schemas and production guards
+  validateConfig();
+
+  // Validate encryption vault before accepting requests
   validateVaultConfig();
 
-  const app = express();
+  const app = createApp();
 
-  // ── Security headers ───────────────────────────────────────
-  app.use(helmet({
-    contentSecurityPolicy: false, // API-only server — no HTML served
-    crossOriginEmbedderPolicy: false,
-  }));
-  app.disable('x-powered-by');
+  return new Promise((resolve, reject) => {
+    try {
+      const server = app.listen(port, () => {
+        logger.info(`THALOS API running on port ${port} [${config.nodeEnv}]`);
+        activeServer = server;
+        resolve(server);
+      });
 
-  // ── CORS ───────────────────────────────────────────────────
-  app.use(cors({
-    origin: (origin, cb) => {
-      if (!origin) { cb(null, true); return; } // Postman/server-to-server
-      if (config.cors.allowedOrigins.includes(origin)) {
-        cb(null, true);
-      } else {
-        cb(new Error(`Origin not allowed: ${origin}`));
-      }
-    },
-    credentials: true,
-    methods: ['GET','POST','PATCH','DELETE','OPTIONS'],
-    allowedHeaders: ['Content-Type','Authorization'],
-  }));
-
-  // ── Body parsing ────────────────────────────────────────────
-  app.use(express.json({ limit: '2mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '2mb' }));
-
-  // ── Rate limiting ───────────────────────────────────────────
-  app.use('/api/', apiLimiter);
-
-  // ── Public routes & UI preview ──────────────────────────────
-  const publicDir = path.resolve(process.cwd(), 'public');
-  app.use(express.static(publicDir));
-  app.get('/', (_req, res) => res.sendFile(path.join(publicDir, 'index.html')));
-
-  app.use('/api/auth', authRoutes);
-
-  // ── Unauthenticated health check ────────────────────────────
-  app.get('/health', (_req, res) => res.json({ status: 'ok', version: '1.0.0' }));
-
-  // ── Protected routes ────────────────────────────────────────
-  app.use('/api/intelligence', requireAuth, intelligenceRoutes);
-  app.use('/api/leads', requireAuth, leadsRoutes);
-  app.use('/api/clients', requireAuth, clientsRoutes);
-  app.use('/api/finance', requireAuth, financeRoutes);
-  app.use('/api/knowledge', requireAuth, knowledgeRoutes);
-  app.use('/api/integrations', requireAuth, integrationsRoutes);
-  app.use('/api/approvals', requireAuth, approvalsRoutes);
-  app.use('/api/system', requireAuth, systemRoutes);
-
-  // ── 404 and error handlers ──────────────────────────────────
-  app.use(notFound);
-  app.use(errorHandler);
-
-  // ── Start ───────────────────────────────────────────────────
-  app.listen(config.port, () => {
-    logger.info(`THALOS API running on port ${config.port} [${config.nodeEnv}]`);
+      server.on('error', (err) => {
+        logger.error('Server failed to start', { error: err.message });
+        reject(err);
+      });
+    } catch (err) {
+      reject(err);
+    }
   });
-
-  return app;
 }
 
-bootstrap().catch(err => {
-  console.error('Fatal startup error:', err);
-  process.exit(1);
-});
+export async function stopServer(): Promise<void> {
+  if (!activeServer) return;
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+
+  logger.info('Graceful server shutdown initiated');
+
+  return new Promise((resolve, reject) => {
+    // Force close after 10 seconds if connections refuse to drain
+    const forceTimer = setTimeout(() => {
+      logger.warn('Forcing server close after 10s drain timeout');
+      if (activeServer) {
+        activeServer.closeAllConnections?.();
+      }
+      resolve();
+    }, 10000);
+    forceTimer.unref();
+
+    activeServer!.close((err) => {
+      clearTimeout(forceTimer);
+      if (err) {
+        logger.error('Error during server close', { error: err.message });
+        reject(err);
+      } else {
+        logger.info('THALOS API stopped cleanly');
+        activeServer = null;
+        isShuttingDown = false;
+        resolve();
+      }
+    });
+  });
+}
+
+// Register signal handlers for clean container/process shutdown
+function registerShutdownSignals(): void {
+  const handleSignal = async (signal: string) => {
+    logger.info(`Received ${signal}, beginning graceful shutdown...`);
+    try {
+      await stopServer();
+      process.exit(0);
+    } catch (err) {
+      logger.error(`Error during ${signal} shutdown`, { error: err });
+      process.exit(1);
+    }
+  };
+
+  process.on('SIGTERM', () => void handleSignal('SIGTERM'));
+  process.on('SIGINT', () => void handleSignal('SIGINT'));
+}
+
+// Auto-start when run directly
+const isDirectRun = process.env.NODE_ENV !== 'test' && (
+  !process.argv[1] ||
+  process.argv[1].endsWith('server.ts') ||
+  process.argv[1].endsWith('server.js')
+);
+
+if (isDirectRun) {
+  registerShutdownSignals();
+  startServer().catch((err) => {
+    logger.error('Fatal startup error', { error: err instanceof Error ? err.message : String(err) });
+    process.exit(1);
+  });
+}

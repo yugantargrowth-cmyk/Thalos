@@ -24,6 +24,12 @@ Thumbs.db
 *.log
 logs/
 
+# Frontend (Next.js PWA)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+tmp_frontend_extract/
+
 # Uploads / temp
 uploads/
 tmp/

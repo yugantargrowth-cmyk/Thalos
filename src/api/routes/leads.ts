@@ -1,8 +1,11 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
+import type { Request, Response } from 'express';
 import { body, query, param, validationResult } from 'express-validator';
 import { getSupabase } from '../../lib/supabase.js';
 import { audit } from '../../lib/audit.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { crmService, normalisePhone } from '../../business/crmService.js';
+import { reportingService } from '../../business/reportingService.js';
 
 const router = Router();
 
@@ -46,6 +49,17 @@ router.get(
     res.json({ leads: data, total: count, limit, offset });
   }
 );
+
+// ── Pipeline Report (S08-AC-04) ──────────────────────────────
+router.get('/report', async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const report = await reportingService.getPipelineReport();
+    res.json({ report });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new AppError(500, 'Failed to generate pipeline report', msg);
+  }
+});
 
 // ── Get single lead with activities ──────────────────────────
 router.get(
@@ -122,9 +136,8 @@ router.post(
       return;
     }
 
-    const { data: lead, error } = await supabase
-      .from('leads')
-      .insert({
+    try {
+      const lead = await crmService.createLead({
         name: req.body.name,
         phone: normalised,
         email: req.body.email ?? null,
@@ -133,21 +146,13 @@ router.post(
         location: req.body.location ?? null,
         website: req.body.website ?? null,
         notes: req.body.notes ?? null,
-      })
-      .select()
-      .single();
+      }, req.auth?.sub ?? 'system');
 
-    if (error || !lead) throw new AppError(500, 'Failed to create lead', error?.message);
-
-    await audit({
-      event_type: 'lead.created',
-      entity_type: 'lead',
-      entity_id: lead.id,
-      actor: req.auth?.sub ?? 'system',
-      description: `Lead created: ${lead.name}`,
-    });
-
-    res.status(201).json({ lead });
+      res.status(201).json({ lead });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new AppError(500, 'Failed to create lead', msg);
+    }
   }
 );
 
@@ -185,35 +190,25 @@ router.patch(
       return;
     }
 
-    const { data: lead, error } = await supabase
-      .from('leads')
-      .update(updates)
-      .eq('id', req.params.id)
-      .select()
-      .single();
+    try {
+      const { lead } = await crmService.updateLead(req.params.id as string, updates, req.auth?.sub ?? 'system');
 
-    if (error || !lead) throw new AppError(404, 'Lead not found or update failed');
+      // Log stage changes to activity
+      if (updates.stage) {
+        await supabase.from('lead_activities').insert({
+          lead_id: lead.id,
+          activity: 'stage_change',
+          description: `Stage changed to: ${updates.stage}`,
+          agent: req.auth?.sub ?? 'founder',
+        });
+      }
 
-    // Log stage changes to activity
-    if (updates.stage) {
-      await supabase.from('lead_activities').insert({
-        lead_id: lead.id,
-        activity: 'stage_change',
-        description: `Stage changed to: ${updates.stage}`,
-        agent: req.auth?.sub ?? 'founder',
-      });
+      res.json({ lead });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('not found')) throw new AppError(404, msg);
+      throw new AppError(400, 'Failed to update lead', msg);
     }
-
-    await audit({
-      event_type: 'lead.updated',
-      entity_type: 'lead',
-      entity_id: lead.id,
-      actor: req.auth?.sub ?? 'system',
-      description: `Lead updated: ${lead.name}`,
-      metadata: { fields: Object.keys(updates) },
-    });
-
-    res.json({ lead });
   }
 );
 
@@ -304,14 +299,5 @@ router.post(
     res.status(207).json({ results });
   }
 );
-
-// ── Helpers ───────────────────────────────────────────────────
-function normalisePhone(phone: string): string {
-  const digits = phone.replace(/\D/g, '');
-  if (digits.length === 10) return `+91${digits}`;
-  if (digits.length === 12 && digits.startsWith('91')) return `+${digits}`;
-  if (digits.length === 13 && digits.startsWith('091')) return `+${digits.slice(1)}`;
-  return phone.startsWith('+') ? phone : `+${digits}`;
-}
 
 export default router;

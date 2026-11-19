@@ -19,12 +19,14 @@ declare global {
 
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {
   const header = req.headers.authorization;
-  if (!header?.startsWith('Bearer ')) {
+  const cookieToken = (req as any).cookies?.thalos_token;
+  const token = header?.startsWith('Bearer ') ? header.slice(7) : cookieToken;
+
+  if (!token) {
     res.status(401).json({ error: 'Missing or malformed Authorization header' });
     return;
   }
 
-  const token = header.slice(7);
   try {
     const payload = jwt.verify(token, config.auth.jwtSecret) as AuthPayload;
     req.auth = payload;

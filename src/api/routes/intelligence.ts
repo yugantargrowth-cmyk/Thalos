@@ -12,10 +12,14 @@ const router = Router();
  * Main THALOS conversational endpoint.
  * Body: { message: string, session_date?: string }
  */
+const inMemoryConversations: Record<string, any[]> = {};
+
 router.post(
   '/chat',
   body('message').isString().trim().isLength({ min: 1, max: 8000 }),
   body('session_date').optional().isISO8601(),
+  body('model').optional().isString().trim(),
+  body('provider').optional().isString().trim(),
   async (req: Request, res: Response): Promise<void> => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -23,35 +27,56 @@ router.post(
       return;
     }
 
-    const { message } = req.body as { message: string; session_date?: string };
+    const { message, model, provider } = req.body as { message: string; session_date?: string; model?: string; provider?: string };
     const sessionDate = req.body.session_date ?? new Date().toISOString().split('T')[0];
     const supabase = getSupabase();
 
-    // Load or create today's conversation context
-    let { data: conversation } = await supabase
-      .from('conversations')
-      .select('*')
-      .eq('session_date', sessionDate)
-      .maybeSingle();
+    let history: Array<{ role: string; content: string; timestamp: string }> = [];
 
-    if (!conversation) {
-      const { data: newConv } = await supabase
+    // Attempt to load from Supabase or fallback to in-memory
+    try {
+      const { data: conversation } = await supabase
         .from('conversations')
-        .insert({ session_date: sessionDate, messages: [] })
-        .select()
-        .single();
-      conversation = newConv;
-    }
+        .select('*')
+        .eq('session_date', sessionDate)
+        .maybeSingle();
 
-    const history = (conversation?.messages ?? []) as Array<{
-      role: string; content: string; timestamp: string;
-    }>;
+      if (conversation?.messages) {
+        history = conversation.messages;
+      }
+    } catch {
+      history = inMemoryConversations[sessionDate] || [];
+    }
 
     // Append user message to history
     history.push({ role: 'user', content: message, timestamp: new Date().toISOString() });
 
-    // Run orchestrator
-    const result = await thalosOrchestrate({ message, history, sessionDate });
+    const rawCorr = req.headers['x-correlation-id'] || (req as Request & { correlationId?: string }).correlationId;
+    const correlationId = Array.isArray(rawCorr) ? rawCorr[0] : (rawCorr as string | undefined);
+
+    let result: any;
+    try {
+      result = await thalosOrchestrate({
+        message,
+        history,
+        sessionDate,
+        correlationId,
+      });
+    } catch (err) {
+      const errStr = String(err);
+      if (errStr.includes('All LLM providers failed') || errStr.includes('not configured')) {
+        result = {
+          response: `I received your outcome request: "${message}".\n\nNo live LLM provider API key is configured yet. Please open **Execution & Settings → Integrations** to enter your Groq or Gemini API key.\n\nOnce entered, THALOS will execute real-time reasoning and tool dispatching using your selected model.`,
+          intent: 'configuration_needed',
+          actions_taken: [],
+          pending_approvals: [],
+          tokens_used: 0,
+          model_used: model ? `${provider || 'custom'}/${model}` : 'local/unconfigured',
+        };
+      } else {
+        throw err;
+      }
+    }
 
     // Append assistant response
     history.push({
@@ -62,11 +87,17 @@ router.post(
       ...( result.actions_taken?.length ? { actions_taken: result.actions_taken } : {} ),
     } as any);
 
-    // Persist updated conversation
-    await supabase.from('conversations').update({
-      messages: history,
-      token_count: (conversation?.token_count ?? 0) + (result.tokens_used ?? 0),
-    }).eq('session_date', sessionDate);
+    // Save history
+    inMemoryConversations[sessionDate] = history;
+    try {
+      await supabase.from('conversations').upsert({
+        session_date: sessionDate,
+        messages: history,
+        token_count: result.tokens_used ?? 0,
+      });
+    } catch {
+      // Ignored if offline
+    }
 
     res.json({
       response: result.response,

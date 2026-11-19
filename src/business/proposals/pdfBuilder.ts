@@ -5,15 +5,15 @@ type LineItem = { description: string; quantity: number; unit_price: number; sub
 interface ProposalRecord {
   id: string;
   client_name: string;
-  client_email?: string;
+  client_email?: string | null;
   line_items: LineItem[];
-  custom_scope?: string;
+  custom_scope?: string | null;
   subtotal: number;
   tax_percent: number;
   tax_amount: number;
   total: number;
-  valid_until?: string;
-  notes?: string;
+  valid_until?: string | null;
+  notes?: string | null;
   created_at: string;
 }
 
@@ -21,7 +21,7 @@ interface InvoiceRecord {
   id: string;
   invoice_number: string;
   client_name: string;
-  client_email?: string;
+  client_email?: string | null;
   line_items: LineItem[];
   subtotal: number;
   tax_percent: number;
@@ -29,7 +29,7 @@ interface InvoiceRecord {
   total: number;
   balance_due: number;
   due_date: string;
-  notes?: string;
+  notes?: string | null;
   created_at: string;
 }
 

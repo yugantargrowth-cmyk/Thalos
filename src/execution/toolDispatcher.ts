@@ -19,6 +19,7 @@ import crypto from 'crypto';
 // Tool handlers
 import * as webSearch from './tools/webSearch.js';
 import * as websiteAudit from './tools/websiteAudit.js';
+import * as socialLookup from './tools/socialLookup.js';
 import * as saveToDB from './tools/saveToDb.js';
 import * as searchKnowledge from './tools/searchKnowledge.js';
 import * as draftCompose from './tools/draftCompose.js';
@@ -28,6 +29,8 @@ import * as crmTools from './tools/crmTools.js';
 import * as financeTools from './tools/financeTools.js';
 import * as reportingTools from './tools/reportingTools.js';
 
+import { validateToolInput } from '../intelligence/toolRegistry.js';
+
 export interface ToolCallRequest {
   tool_id: string;
   agent_id: string;
@@ -35,16 +38,22 @@ export interface ToolCallRequest {
   workflow_run_id?: string;
   job_id?: string;
   is_approved?: boolean;
+  correlation_id?: string;
+  user_role?: string;
+  idempotency_key?: string;
 }
 
 export interface ToolResult {
   success: boolean;
+  tool_id: string;
   output?: unknown;
   evidence?: string;
   queued_for_approval?: boolean;
   approval_id?: string;
   error?: string;
   duration_ms: number;
+  correlation_id?: string;
+  timestamp: string;
 }
 
 type ToolHandler = (inputs: Record<string, unknown>) => Promise<{
@@ -52,11 +61,11 @@ type ToolHandler = (inputs: Record<string, unknown>) => Promise<{
   evidence?: string;
 }>;
 
-const HANDLERS: Record<string, ToolHandler> = {
+export const HANDLERS: Record<string, ToolHandler> = {
   // Research
   web_search: webSearch.execute,
   website_audit: websiteAudit.execute,
-  social_lookup: websiteAudit.execute,
+  social_lookup: socialLookup.execute,
 
   // Knowledge
   search_knowledge: searchKnowledge.execute,
@@ -96,11 +105,25 @@ const HANDLERS: Record<string, ToolHandler> = {
 
   // Generic DB write (agent-facing)
   save_to_db: saveToDB.execute,
+
+  // Automation — declared adapter stub for disabled/unconfigured n8n
+  n8n_trigger: async () => {
+    throw new Error('n8n_trigger is reserved for future deployment and is currently unconfigured / disabled');
+  },
 };
 
 export async function executeTool(req: ToolCallRequest): Promise<ToolResult> {
   const start = Date.now();
   const supabase = getSupabase();
+
+  const makeResult = (partial: Partial<ToolResult>): ToolResult => ({
+    success: false,
+    tool_id: req.tool_id,
+    duration_ms: Date.now() - start,
+    correlation_id: req.correlation_id,
+    timestamp: new Date().toISOString(),
+    ...partial,
+  });
 
   // Load tool definition
   const { data: tool } = await supabase
@@ -110,36 +133,118 @@ export async function executeTool(req: ToolCallRequest): Promise<ToolResult> {
     .single();
 
   if (!tool) {
-    return { success: false, error: `Tool not found: ${req.tool_id}`, duration_ms: Date.now() - start };
+    return makeResult({ success: false, error: `Tool not found: ${req.tool_id}` });
   }
 
-  // Check availability
-  if (tool.status !== 'available') {
+  // Check availability (S04-AC-03)
+  if (tool.status !== 'available' && tool.status !== 'operational') {
     const reason = tool.unavailable_reason ?? `Tool status: ${tool.status}`;
-    return { success: false, error: reason, duration_ms: Date.now() - start };
+    return makeResult({ success: false, error: reason });
   }
 
-  // Check agent is allowed to use this tool
+  // Check integration readiness (L11-AC-03, S04-AC-04)
+  if (tool.integration_id) {
+    const { data: integ } = await supabase
+      .from('integrations')
+      .select('status, display_name')
+      .eq('integration_id', tool.integration_id)
+      .maybeSingle();
+
+    const readyStatuses = ['configured', 'connected', 'tested', 'operational'];
+    if (integ && !readyStatuses.includes(integ.status)) {
+      return makeResult({
+        success: false,
+        error: `Tool ${req.tool_id} requires integration '${tool.integration_id}' which is not ready (status: ${integ.status})`,
+      });
+    }
+  }
+
+  // User authorization check server-side (S04-AC-04)
+  if (req.user_role && tool.permission_level >= 2) {
+    const role = req.user_role.toLowerCase();
+    if (['guest', 'unauthenticated', 'anonymous'].includes(role)) {
+      return makeResult({
+        success: false,
+        error: `User role '${req.user_role}' is not authorized to execute sensitive tool: ${req.tool_id}`,
+      });
+    }
+  }
+
+  // Check agent exists and is allowed to use this tool (S07-AC-03, S04-AC-04)
   const { data: agent } = await supabase
     .from('agents')
     .select('allowed_tools, prohibited_actions')
     .eq('agent_id', req.agent_id)
     .single();
 
-  if (agent && !agent.allowed_tools.includes(req.tool_id)) {
-    return {
+  if (!agent) {
+    return makeResult({
       success: false,
-      error: `Agent ${req.agent_id} is not permitted to use tool: ${req.tool_id}`,
-      duration_ms: Date.now() - start,
-    };
+      error: `Agent not found or unregistered: ${req.agent_id}`,
+    });
   }
 
-  // Create execution record
+  if (Array.isArray(agent.prohibited_actions) && agent.prohibited_actions.includes(req.tool_id)) {
+    return makeResult({
+      success: false,
+      error: `Action explicitly prohibited for agent ${req.agent_id}: ${req.tool_id}`,
+    });
+  }
+
+  if (!Array.isArray(agent.allowed_tools) || !agent.allowed_tools.includes(req.tool_id)) {
+    return makeResult({
+      success: false,
+      error: `Agent ${req.agent_id} is not permitted to use tool: ${req.tool_id}`,
+    });
+  }
+
+  // Schema input validation (L11-AC-02, S04-AC-01, S04-AC-04)
+  const validation = validateToolInput(req.tool_id, req.inputs);
+  if (!validation.valid) {
+    return makeResult({
+      success: false,
+      error: validation.errors.join('; '),
+    });
+  }
+
+  // Safe duplicate detection / idempotency (S04-AC-06)
   const inputsHash = crypto
     .createHash('sha256')
     .update(JSON.stringify(req.inputs))
     .digest('hex');
 
+  if (tool.idempotent || req.idempotency_key) {
+    try {
+      let existingQuery = supabase
+        .from('tool_executions')
+        .select('*')
+        .eq('tool_id', req.tool_id)
+        .eq('status', 'completed');
+
+      if (req.idempotency_key) {
+        existingQuery = existingQuery.eq('idempotency_key', req.idempotency_key);
+      } else {
+        existingQuery = existingQuery.eq('inputs_hash', inputsHash);
+      }
+
+      const { data: existingExec } = await existingQuery.limit(1).maybeSingle();
+      if (existingExec) {
+        logger.info('Returning idempotent tool execution result', {
+          tool_id: req.tool_id,
+          execId: existingExec.id,
+        });
+        return makeResult({
+          success: true,
+          output: existingExec.output,
+          evidence: `[Idempotent replay] ${existingExec.evidence ?? 'Previous successful execution reused'}`,
+        });
+      }
+    } catch {
+      // If tool_executions query fails or table is mocked, proceed to execute
+    }
+  }
+
+  // Create execution record
   const { data: execRecord } = await supabase.from('tool_executions').insert({
     tool_id: req.tool_id,
     agent_id: req.agent_id,
@@ -147,11 +252,12 @@ export async function executeTool(req: ToolCallRequest): Promise<ToolResult> {
     workflow_run_id: req.workflow_run_id ?? null,
     status: 'running',
     inputs_hash: inputsHash,
+    idempotency_key: req.idempotency_key ?? null,
   }).select().single();
 
   const execId = execRecord?.id;
 
-  // If tool requires approval, queue it and return (unless already approved)
+  // If tool requires approval, queue it and return (unless already approved) (S04-AC-04)
   if (tool.requires_approval && !req.is_approved) {
     const payloadStr = JSON.stringify({ tool_id: req.tool_id, agent_id: req.agent_id, inputs: req.inputs });
     const payloadHash = crypto.createHash('sha256').update(payloadStr).digest('hex');
@@ -175,21 +281,20 @@ export async function executeTool(req: ToolCallRequest): Promise<ToolResult> {
       }).eq('id', execId);
     }
 
-    return {
+    return makeResult({
       success: true,
       queued_for_approval: true,
       approval_id: approval?.id,
       evidence: `Queued for approval: ${approval?.id}`,
-      duration_ms: Date.now() - start,
-    };
+    });
   }
 
-  // Execute the tool
+  // Execute the tool (S04-AC-02)
   const handler = HANDLERS[req.tool_id];
   if (!handler) {
     const err = `No handler implemented for tool: ${req.tool_id}`;
     if (execId) await supabase.from('tool_executions').update({ status: 'failed', error: err, completed_at: new Date().toISOString(), duration_ms: Date.now() - start }).eq('id', execId);
-    return { success: false, error: err, duration_ms: Date.now() - start };
+    return makeResult({ success: false, error: err });
   }
 
   try {
@@ -211,15 +316,19 @@ export async function executeTool(req: ToolCallRequest): Promise<ToolResult> {
       event_type: 'tool.executed',
       agent: req.agent_id,
       description: `${tool.display_name} completed (${duration}ms)`,
-      metadata: { tool_id: req.tool_id, evidence },
+      metadata: { tool_id: req.tool_id, evidence, correlation_id: req.correlation_id },
     });
 
-    return { success: true, output, evidence, duration_ms: duration };
+    return makeResult({
+      success: true,
+      output,
+      evidence: evidence ?? 'Handler completed without specific evidence',
+    });
 
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     const duration = Date.now() - start;
-    logger.error('Tool execution failed', { tool_id: req.tool_id, error: errMsg });
+    logger.error('Tool execution failed', { tool_id: req.tool_id, error: errMsg, correlation_id: req.correlation_id });
 
     if (execId) {
       await supabase.from('tool_executions').update({
@@ -230,6 +339,16 @@ export async function executeTool(req: ToolCallRequest): Promise<ToolResult> {
       }).eq('id', execId);
     }
 
-    return { success: false, error: errMsg, duration_ms: duration };
+    await audit({
+      event_type: 'tool.failed',
+      agent: req.agent_id,
+      description: `${tool.display_name} failed: ${errMsg}`,
+      metadata: { tool_id: req.tool_id, error: errMsg, correlation_id: req.correlation_id },
+    });
+
+    return makeResult({
+      success: false,
+      error: errMsg,
+    });
   }
 }

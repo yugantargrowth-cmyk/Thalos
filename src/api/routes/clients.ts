@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { body, param, validationResult } from 'express-validator';
 import { getSupabase } from '../../lib/supabase.js';
-import { audit } from '../../lib/audit.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { crmService } from '../../business/crmService.js';
 
 const router = Router();
 
@@ -52,10 +52,8 @@ router.post(
       return;
     }
 
-    const supabase = getSupabase();
-    const { data: client, error } = await supabase
-      .from('clients')
-      .insert({
+    try {
+      const client = await crmService.createClient({
         business_name: req.body.business_name,
         contact_name: req.body.contact_name,
         phone: req.body.phone,
@@ -64,26 +62,13 @@ router.post(
         start_date: req.body.start_date,
         packages: req.body.packages ?? [],
         converted_from_lead_id: req.body.converted_from_lead_id ?? null,
-      })
-      .select()
-      .single();
+      }, req.auth?.sub ?? 'system');
 
-    if (error || !client) throw new AppError(500, 'Failed to create client', error?.message);
-
-    // If converting from lead, mark lead as won
-    if (req.body.converted_from_lead_id) {
-      await supabase.from('leads').update({ stage: 'won' }).eq('id', req.body.converted_from_lead_id);
+      res.status(201).json({ client });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new AppError(500, 'Failed to create client', msg);
     }
-
-    await audit({
-      event_type: 'client.created',
-      entity_type: 'client',
-      entity_id: client.id,
-      actor: req.auth?.sub ?? 'system',
-      description: `Client created: ${client.business_name}`,
-    });
-
-    res.status(201).json({ client });
   }
 );
 
@@ -91,7 +76,6 @@ router.patch(
   '/:id',
   param('id').isUUID(),
   async (req: Request, res: Response): Promise<void> => {
-    const supabase = getSupabase();
     const allowed = ['business_name','contact_name','email','monthly_value','status','packages','notes','tags','deliverable_tracker'];
     const updates: Record<string, unknown> = {};
     for (const f of allowed) if (req.body[f] !== undefined) updates[f] = req.body[f];
@@ -101,11 +85,14 @@ router.patch(
       return;
     }
 
-    const { data, error } = await supabase.from('clients').update(updates).eq('id', req.params.id).select().single();
-    if (error || !data) throw new AppError(404, 'Client not found');
-
-    await audit({ event_type: 'client.updated', entity_type: 'client', entity_id: data.id, actor: req.auth?.sub ?? 'system', description: `Client updated: ${data.business_name}` });
-    res.json({ client: data });
+    try {
+      const client = await crmService.updateClient(req.params.id as string, updates, req.auth?.sub ?? 'system');
+      res.json({ client });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('not found')) throw new AppError(404, 'Client not found');
+      throw new AppError(400, 'Failed to update client', msg);
+    }
   }
 );
 
