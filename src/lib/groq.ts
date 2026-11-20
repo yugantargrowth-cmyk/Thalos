@@ -1,7 +1,10 @@
 const GROQ_API_KEY = process.env.GROQ_API_KEY!
 const GROQ_BASE = 'https://api.groq.com/openai/v1'
 
-export async function chatCompletion( messages: { role: string; content: string }[], model = 'llama-3.3-70b-versatile' ) {
+export async function chatCompletion(
+  messages: { role: string; content: string }[],
+  model = 'llama-3.3-70b-versatile'
+) {
   const res = await fetch(`${GROQ_BASE}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -21,7 +24,7 @@ export async function chatCompletion( messages: { role: string; content: string 
     throw new Error(`Groq error: ${err}`)
   }
 
-  const data = await res.json()
+  const data = await res.json() as any
   return data.choices[0].message.content as string
 }
 
@@ -43,6 +46,6 @@ export async function transcribeAudio(audioBuffer: Buffer, filename = 'audio.web
     throw new Error(`Whisper error: ${err}`)
   }
 
-  const data = await res.json()
+  const data = await res.json() as any
   return data.text as string
-      }
+}
