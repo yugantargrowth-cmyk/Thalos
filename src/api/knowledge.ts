@@ -1,8 +1,8 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { supabase } from '../lib/supabase'
+import { Request, Response } from 'express'
+import { getSupabase } from '../lib/supabase'
 import { searchKnowledge, ingestDocument } from '../lib/rag'
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export async function knowledgeHandler(req: Request, res: Response) {
   const { method } = req
 
   try {
@@ -14,7 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(200).json(results)
       }
 
-      let query = supabase
+      let query = getSupabase()
         .from('knowledge_chunks')
         .select('id, title, source, category, created_at')
         .order('created_at', { ascending: false })
@@ -42,7 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       if (!id) return res.status(400).json({ error: 'ID required' })
 
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('knowledge_chunks')
         .delete()
         .eq('id', id)
