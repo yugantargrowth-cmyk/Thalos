@@ -1,69 +1,41 @@
-import { getSupabase } from './supabase.js';
-import { logger } from './logger.js';
+import { Request, Response } from 'express'
+import { getSupabase } from '../lib/supabase'
+import { randomUUID } from 'crypto'
 
-export interface AuditEvent {
-  event_type: string;
-  entity_type?: string;
-  entity_id?: string | string[];
-  agent?: string;
-  actor?: string | null;
-  description: string;
-  metadata?: Record<string, unknown>;
-  ip_address?: string;
-}
+export async function authHandler(req: Request, res: Response) {
+  if (req.method === 'POST') {
+    const { pin } = req.body
+    const correctPin = process.env.THALOS_PIN
 
-const SENSITIVE_KEY_REGEX = /password|secret|token|api_?key|auth|bearer|private_?key|pin|hash|credential|master_?key/i;
-const SENSITIVE_VALUE_REGEX = /(Bearer\s+[A-Za-z0-9\-._~+/]+=*)|((api_?key|secret|token|password)=['"]?[A-Za-z0-9\-._~+/]+['"]?)/gi;
-
-export function sanitizeAuditData(value: unknown): unknown {
-  if (value === null || value === undefined) return value;
-  if (typeof value === 'string') {
-    return value.replace(SENSITIVE_VALUE_REGEX, '$1[REDACTED]');
-  }
-  if (Array.isArray(value)) {
-    return value.map(sanitizeAuditData);
-  }
-  if (typeof value === 'object') {
-    const sanitized: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-      if (SENSITIVE_KEY_REGEX.test(k)) {
-        sanitized[k] = '[REDACTED]';
-      } else {
-        sanitized[k] = sanitizeAuditData(v);
-      }
+    if (!pin || pin !== correctPin) {
+      return res.status(401).json({ error: 'Invalid PIN' })
     }
-    return sanitized;
+
+    const token = randomUUID()
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+
+    await getSupabase().from('thalos_sessions').insert({
+      token,
+      expires_at: expiresAt.toISOString()
+    })
+
+    return res.status(200).json({ token, expires_at: expiresAt })
   }
-  return value;
-}
 
-/** Append an immutable audit entry. Never throws — log and continue on failure (S07-AC-07). */
-export async function audit(event: AuditEvent): Promise<void> {
-  try {
-    const supabase = getSupabase();
+  if (req.method === 'GET') {
+    const token = req.headers.authorization?.replace('Bearer ', '')
+    if (!token) return res.status(401).json({ error: 'No token' })
 
-    const sanitizedDescription = typeof event.description === 'string'
-      ? event.description.replace(SENSITIVE_VALUE_REGEX, '$1[REDACTED]')
-      : event.description;
+    const { data } = await getSupabase()
+      .from('thalos_sessions')
+      .select('*')
+      .eq('token', token)
+      .gt('expires_at', new Date().toISOString())
+      .single()
 
-    const sanitizedMetadata = sanitizeAuditData(event.metadata ?? {}) as Record<string, unknown>;
-
-    const { error } = await supabase.from('audit_log').insert({
-      event_type: event.event_type,
-      entity_type: event.entity_type ?? null,
-      entity_id: Array.isArray(event.entity_id) ? event.entity_id[0] : (event.entity_id ?? null),
-      agent: event.agent ?? null,
-      actor: event.actor ?? 'system',
-      description: sanitizedDescription,
-      metadata: sanitizedMetadata,
-      ip_address: event.ip_address ?? null,
-    });
-
-    if (error) {
-      logger.error('audit_log insert failed', { error: error.message, event_type: event.event_type });
-    }
-  } catch (err) {
-    // Audit failure must NEVER crash the main operation
-    logger.error('audit_log unexpected error', { err });
+    if (!data) return res.status(401).json({ error: 'Session expired' })
+    return res.status(200).json({ valid: true })
   }
+
+  return res.status(405).json({ error: 'Method not allowed' })
 }
