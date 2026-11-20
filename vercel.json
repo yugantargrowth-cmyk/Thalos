@@ -1,12 +1,5 @@
 {
   "rewrites": [
-    { "source": "/api/chat", "destination": "/api/chat" },
-    { "source": "/api/auth", "destination": "/api/auth" },
-    { "source": "/api/leads", "destination": "/api/leads" },
-    { "source": "/api/clients", "destination": "/api/clients" },
-    { "source": "/api/knowledge", "destination": "/api/knowledge" },
-    { "source": "/api/voice", "destination": "/api/voice" },
     { "source": "/(.*)", "destination": "/" }
-  ],
-  "functions": {
-    "api/*.ts": { "maxDuration": 30 } } }
+  ]
+}
