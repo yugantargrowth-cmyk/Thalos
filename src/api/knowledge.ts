@@ -7,7 +7,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     if (method === 'GET') {
-      const { q, category } = req.query if (q) {
+      const { q, category } = req.query
+
+      if (q) {
         const results = await searchKnowledge(q as string)
         return res.status(200).json(results)
       }
@@ -19,8 +21,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       if (category) query = query.eq('category', category)
 
-      const { data, error } = await query if (error) throw error return res.status(200).json(data) } if (method === 'POST') {
-      const { title, content, source, category } = req.body if (!title || !content) {
+      const { data, error } = await query
+      if (error) throw error
+      return res.status(200).json(data)
+    }
+
+    if (method === 'POST') {
+      const { title, content, source, category } = req.body
+
+      if (!title || !content) {
         return res.status(400).json({ error: 'title and content required' })
       }
 
@@ -29,7 +38,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (method === 'DELETE') {
-      const { id } = req.query if (!id) return res.status(400).json({ error: 'ID required' }) const { error } = await supabase
+      const { id } = req.query
+
+      if (!id) return res.status(400).json({ error: 'ID required' })
+
+      const { error } = await supabase
         .from('knowledge_chunks')
         .delete()
         .eq('id', id)
