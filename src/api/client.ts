@@ -2,7 +2,9 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { supabase } from '../lib/supabase'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const { method } = req try {
+  const { method } = req
+
+  try {
     if (method === 'GET') {
       const { status } = req.query
       let query = supabase
