@@ -189,10 +189,11 @@ async function callGroqCompletion(
   const modelsToTry = Array.from(new Set([
     preferredModel,
     'llama-3.3-70b-versatile',
-    'llama-3.1-70b-versatile',
-    'llama3-70b-8192',
     'llama-3.1-8b-instant',
-    'mixtral-8x7b-32768',
+    'gemma2-9b-it',
+    'llama-3.2-11b-vision-preview',
+    'llama-3.2-3b-preview',
+    'llama-3.2-1b-preview',
   ])).filter(Boolean);
 
   let lastError = '';
@@ -216,11 +217,8 @@ async function callGroqCompletion(
       if (!res.ok) {
         const errText = await res.text();
         lastError = `Groq API error (${res.status}) on model ${model}: ${errText}`;
-        if (res.status === 404 || errText.includes('model_not_found')) {
-          console.warn(`[THALOS Chat] Model ${model} not found on Groq, trying fallback...`);
-          continue;
-        }
-        throw new Error(lastError);
+        console.warn(`[THALOS Chat] Model ${model} returned error (${res.status}), trying fallback...`, errText);
+        continue;
       }
 
       const data = (await res.json()) as any;
@@ -228,9 +226,7 @@ async function callGroqCompletion(
       return { reply, modelUsed: model };
     } catch (e: any) {
       lastError = e?.message || String(e);
-      if (modelsToTry.indexOf(model) === modelsToTry.length - 1) {
-        throw new Error(lastError);
-      }
+      console.warn(`[THALOS Chat] Exception with model ${model}:`, lastError);
     }
   }
 
