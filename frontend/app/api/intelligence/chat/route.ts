@@ -212,7 +212,7 @@ async function callGroqCompletion(
 /**
  * Named POST handler for /api/intelligence/chat
  */
-export async function POST(req: Request): Promise<Response> {
+export async function POST(request: Request) {
   try {
     // 1. Runtime environment variable inspection and warning logging
     const supabaseUrl = process.env.SUPABASE_URL;
@@ -232,7 +232,7 @@ export async function POST(req: Request): Promise<Response> {
     // 2. Parse and validate JSON request body
     let body: ChatRequestBody;
     try {
-      body = await req.json();
+      body = await request.json();
     } catch {
       return Response.json(
         { error: 'Invalid JSON request body' },
