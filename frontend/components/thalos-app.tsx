@@ -158,8 +158,12 @@ function Companion({ environment, onNavigate }: { environment: Environment; onNa
     setPrompt("")
     setLoading(true)
 
+    const chatUrl = "/api/intelligence/chat"
+    const fullUrl = typeof window !== "undefined" ? `${window.location.origin}${chatUrl}` : chatUrl
+    console.log("[THALOS] Calling chat API URL:", fullUrl)
+
     try {
-      const res = await fetch("/api/intelligence/chat", {
+      const res = await fetch(chatUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: trimmed }),
