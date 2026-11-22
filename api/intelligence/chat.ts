@@ -169,29 +169,57 @@ async function saveToChatMessages(
 async function callGroqCompletion(
   apiKey: string,
   messages: Array<{ role: string; content: string }>,
-  model = 'llama-3.3-70b-versatile'
-): Promise<string> {
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      messages,
-      max_tokens: 2048,
-      temperature: 0.7,
-    }),
-  });
+  preferredModel = 'llama-3.3-70b-versatile'
+): Promise<{ reply: string; modelUsed: string }> {
+  const modelsToTry = Array.from(new Set([
+    preferredModel,
+    'llama-3.3-70b-versatile',
+    'llama-3.1-70b-versatile',
+    'llama3-70b-8192',
+    'llama-3.1-8b-instant',
+    'mixtral-8x7b-32768',
+  ])).filter(Boolean);
 
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Groq API error (${res.status}): ${errText}`);
+  let lastError = '';
+
+  for (const model of modelsToTry) {
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          max_tokens: 2048,
+          temperature: 0.7,
+        }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        lastError = `Groq API error (${res.status}) on model ${model}: ${errText}`;
+        if (res.status === 404 || errText.includes('model_not_found')) {
+          console.warn(`[THALOS Chat] Model ${model} not found on Groq, trying fallback...`);
+          continue;
+        }
+        throw new Error(lastError);
+      }
+
+      const data = (await res.json()) as any;
+      const reply = data.choices?.[0]?.message?.content || '';
+      return { reply, modelUsed: model };
+    } catch (e: any) {
+      lastError = e?.message || String(e);
+      if (modelsToTry.indexOf(model) === modelsToTry.length - 1) {
+        throw new Error(lastError);
+      }
+    }
   }
 
-  const data = (await res.json()) as any;
-  return data.choices?.[0]?.message?.content || '';
+  throw new Error(lastError || 'All Groq models failed');
 }
 
 async function processChat(body: ChatRequestBody) {
@@ -246,13 +274,15 @@ async function processChat(body: ChatRequestBody) {
     { role: 'user', content: trimmedMessage },
   ];
 
-  const activeModel = model || 'llama-3.3-70b-versatile';
+  let activeModel = model || 'llama-3.3-70b-versatile';
   let reply = '';
 
   if (!groqApiKey) {
     reply = `I received your outcome request: "${trimmedMessage}".\n\nNo live Groq API key is configured yet. Please configure GROQ_API_KEY in your Vercel project environment variables.\n\nOnce entered, THALOS will execute real-time reasoning using LLaMA 3.3 70B.`;
   } else {
-    reply = await callGroqCompletion(groqApiKey, messages, activeModel);
+    const groqResult = await callGroqCompletion(groqApiKey, messages, activeModel);
+    reply = groqResult.reply;
+    activeModel = groqResult.modelUsed;
   }
 
   if (supabaseUrl && supabaseServiceKey) {
