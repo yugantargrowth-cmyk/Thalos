@@ -1,21 +1,18 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { config } from './config.js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-// Service-role client — bypasses RLS. Never expose to browser.
-// All authorization is enforced in route middleware and business logic.
-let _client: SupabaseClient | null = null;
+const supabaseUrl = process.env.SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY!
+
+let instance: SupabaseClient | null = null
 
 export function getSupabase(): SupabaseClient {
-  if (!_client) {
-    _client = createClient(config.supabase.url, config.supabase.serviceRoleKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
+  if (!instance) {
+    instance = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false }
+    })
   }
-  return _client;
+  return instance
 }
 
-export const db = new Proxy({} as SupabaseClient, {
-  get(_target, prop) {
-    return (getSupabase() as any)[prop];
-  },
-});
+// Also export as default for our new files
+export const supabase = getSupabase()
