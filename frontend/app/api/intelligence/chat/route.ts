@@ -182,9 +182,14 @@ async function saveToChatMessages(
  * Call Groq LLaMA 3.3 70B completions endpoint with model fallbacks
  */
 /**
- * Discover the best available model on Groq using the provided API key
+ * Call Groq completions endpoint with dynamic discovery and automatic fallback across models
  */
-async function getBestGroqModel(apiKey: string, preferred = 'llama-3.3-70b-versatile'): Promise<string> {
+async function callGroqCompletion(
+  apiKey: string,
+  messages: Array<{ role: string; content: string }>,
+  preferredModel = 'llama-3.3-70b-versatile'
+): Promise<{ reply: string; modelUsed: string }> {
+  let availableIds: string[] = [];
   try {
     const res = await fetch('https://api.groq.com/openai/v1/models', {
       headers: { Authorization: `Bearer ${apiKey}` },
@@ -192,65 +197,89 @@ async function getBestGroqModel(apiKey: string, preferred = 'llama-3.3-70b-versa
     });
     if (res.ok) {
       const data = (await res.json()) as any;
-      const ids: string[] = (data?.data || []).map((m: any) => m.id);
-
-      if (ids.includes(preferred)) return preferred;
-
-      const priority = [
-        'llama-3.3-70b-versatile',
-        'llama-3.1-70b-versatile',
-        'llama-3.1-8b-instant',
-        'deepseek-r1-distill-llama-70b',
-        'gemma2-9b-it',
-      ];
-      for (const p of priority) {
-        if (ids.includes(p)) return p;
-      }
-
-      const anyLlama = ids.find((id) => id.includes('llama') && !id.includes('guard') && !id.includes('vision'));
-      if (anyLlama) return anyLlama;
-
-      const anyChat = ids.find((id) => !id.includes('whisper') && !id.includes('guard'));
-      if (anyChat) return anyChat;
+      availableIds = (data?.data || []).map((m: any) => m.id);
+      console.log('[THALOS Chat] Available Groq models for this key:', availableIds.join(', '));
     }
   } catch (err) {
-    console.warn('[THALOS Chat] Model discovery error:', err);
-  }
-  return preferred;
-}
-
-/**
- * Call Groq completions endpoint with dynamic model discovery
- */
-async function callGroqCompletion(
-  apiKey: string,
-  messages: Array<{ role: string; content: string }>,
-  preferredModel = 'llama-3.3-70b-versatile'
-): Promise<{ reply: string; modelUsed: string }> {
-  const chosenModel = await getBestGroqModel(apiKey, preferredModel);
-
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: chosenModel,
-      messages,
-      max_tokens: 2048,
-      temperature: 0.7,
-    }),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Groq API error (${res.status}) on model ${chosenModel}: ${errText}`);
+    console.warn('[THALOS Chat] Could not fetch Groq models list:', err);
   }
 
-  const data = (await res.json()) as any;
-  const reply = data.choices?.[0]?.message?.content || '';
-  return { reply, modelUsed: chosenModel };
+  // Strict list of verified text generation models with gpt-oss-120b first
+  const priorityList = [
+    preferredModel,
+    'openai/gpt-oss-120b',
+    'openai/gpt-oss-20b',
+    'llama-3.3-70b-versatile',
+    'llama-3.1-8b-instant',
+    'llama3-70b-8192',
+    'llama3-8b-8192',
+    'gemma2-9b-it',
+    'deepseek-r1-distill-llama-70b',
+  ];
+
+  const candidateSet = new Set<string>();
+
+  // Add priority models that are verified present (or all priority if discovery failed)
+  for (const p of priorityList) {
+    if (availableIds.length === 0 || availableIds.includes(p)) {
+      candidateSet.add(p);
+    }
+  }
+
+  // Add any other active chat models from availableIds, strictly excluding non-chat or terms-gated models
+  for (const id of availableIds) {
+    const lower = id.toLowerCase();
+    const isExcluded =
+      lower.includes('whisper') ||
+      lower.includes('orpheus') ||
+      lower.includes('canopy') ||
+      lower.includes('guard') ||
+      lower.includes('vision') ||
+      lower.includes('audio') ||
+      lower.includes('tts') ||
+      lower.includes('embed');
+
+    if (!isExcluded) {
+      candidateSet.add(id);
+    }
+  }
+
+  const modelsToTry = Array.from(candidateSet);
+  let lastError = '';
+
+  for (const model of modelsToTry) {
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          max_tokens: 2048,
+          temperature: 0.7,
+        }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        lastError = `Groq API error (${res.status}) on model ${model}: ${errText}`;
+        console.warn(`[THALOS Chat] Model ${model} failed (${res.status}), trying next candidate...`, errText);
+        continue; // Try next candidate model
+      }
+
+      const data = (await res.json()) as any;
+      const reply = data.choices?.[0]?.message?.content || '';
+      return { reply, modelUsed: model };
+    } catch (e: any) {
+      lastError = e?.message || String(e);
+      console.warn(`[THALOS Chat] Exception with model ${model}, trying next...`, lastError);
+    }
+  }
+
+  throw new Error(lastError || 'All Groq models failed');
 }
 
 /**
