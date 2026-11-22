@@ -181,56 +181,76 @@ async function saveToChatMessages(
 /**
  * Call Groq LLaMA 3.3 70B completions endpoint with model fallbacks
  */
+/**
+ * Discover the best available model on Groq using the provided API key
+ */
+async function getBestGroqModel(apiKey: string, preferred = 'llama-3.3-70b-versatile'): Promise<string> {
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/models', {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      cache: 'no-store',
+    });
+    if (res.ok) {
+      const data = (await res.json()) as any;
+      const ids: string[] = (data?.data || []).map((m: any) => m.id);
+
+      if (ids.includes(preferred)) return preferred;
+
+      const priority = [
+        'llama-3.3-70b-versatile',
+        'llama-3.1-70b-versatile',
+        'llama-3.1-8b-instant',
+        'deepseek-r1-distill-llama-70b',
+        'gemma2-9b-it',
+      ];
+      for (const p of priority) {
+        if (ids.includes(p)) return p;
+      }
+
+      const anyLlama = ids.find((id) => id.includes('llama') && !id.includes('guard') && !id.includes('vision'));
+      if (anyLlama) return anyLlama;
+
+      const anyChat = ids.find((id) => !id.includes('whisper') && !id.includes('guard'));
+      if (anyChat) return anyChat;
+    }
+  } catch (err) {
+    console.warn('[THALOS Chat] Model discovery error:', err);
+  }
+  return preferred;
+}
+
+/**
+ * Call Groq completions endpoint with dynamic model discovery
+ */
 async function callGroqCompletion(
   apiKey: string,
   messages: Array<{ role: string; content: string }>,
   preferredModel = 'llama-3.3-70b-versatile'
 ): Promise<{ reply: string; modelUsed: string }> {
-  const modelsToTry = Array.from(new Set([
-    preferredModel,
-    'llama-3.3-70b-versatile',
-    'llama-3.1-8b-instant',
-    'gemma2-9b-it',
-    'llama-3.2-11b-vision-preview',
-    'llama-3.2-3b-preview',
-    'llama-3.2-1b-preview',
-  ])).filter(Boolean);
+  const chosenModel = await getBestGroqModel(apiKey, preferredModel);
 
-  let lastError = '';
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: chosenModel,
+      messages,
+      max_tokens: 2048,
+      temperature: 0.7,
+    }),
+  });
 
-  for (const model of modelsToTry) {
-    try {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model,
-          messages,
-          max_tokens: 2048,
-          temperature: 0.7,
-        }),
-      });
-
-      if (!res.ok) {
-        const errText = await res.text();
-        lastError = `Groq API error (${res.status}) on model ${model}: ${errText}`;
-        console.warn(`[THALOS Chat] Model ${model} returned error (${res.status}), trying fallback...`, errText);
-        continue;
-      }
-
-      const data = (await res.json()) as any;
-      const reply = data.choices?.[0]?.message?.content || '';
-      return { reply, modelUsed: model };
-    } catch (e: any) {
-      lastError = e?.message || String(e);
-      console.warn(`[THALOS Chat] Exception with model ${model}:`, lastError);
-    }
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Groq API error (${res.status}) on model ${chosenModel}: ${errText}`);
   }
 
-  throw new Error(lastError || 'All Groq models failed');
+  const data = (await res.json()) as any;
+  const reply = data.choices?.[0]?.message?.content || '';
+  return { reply, modelUsed: chosenModel };
 }
 
 /**
