@@ -1,5 +1,3 @@
-import { NextResponse } from 'next/server';
-
 interface ChatRequestBody {
   message: string;
   history?: Array<{ role: string; content?: string; text?: string; [key: string]: any }>;
@@ -61,7 +59,7 @@ async function searchKnowledge(
       }
     }
   } catch (err) {
-    console.warn('search_knowledge RPC failed, attempting direct table search:', err);
+    console.warn('[THALOS Chat] search_knowledge RPC failed, attempting direct table search:', err);
   }
 
   // 2. Query knowledge_chunks via PostgREST full-text search
@@ -125,7 +123,7 @@ async function buildRAGContext(
     const formatted = `Relevant context from Yugantar Growth knowledge base:\n\n${contextContent}\n\n---`;
     return { text: formatted, chunks };
   } catch (err) {
-    console.warn('Failed to build RAG context:', err);
+    console.warn('[THALOS Chat] Failed to build RAG context:', err);
     return { text: '', chunks: [] };
   }
 }
@@ -176,7 +174,7 @@ async function saveToChatMessages(
       ]),
     });
   } catch (err) {
-    console.warn('Failed to save to chat_messages table:', err);
+    console.warn('[THALOS Chat] Failed to save to chat_messages table:', err);
   }
 }
 
@@ -212,31 +210,51 @@ async function callGroqCompletion(
 }
 
 /**
- * POST /api/intelligence/chat handler
+ * Named POST handler for /api/intelligence/chat
  */
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<Response> {
   try {
-    const body: ChatRequestBody = await req.json();
-    const { message, history = [], context = 'my-day', model } = body;
+    // 1. Runtime environment variable inspection and warning logging
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const groqApiKey = process.env.GROQ_API_KEY;
+
+    if (!supabaseUrl) {
+      console.warn('[THALOS Chat Route] Warning: SUPABASE_URL environment variable is undefined');
+    }
+    if (!process.env.SUPABASE_SERVICE_KEY) {
+      console.warn('[THALOS Chat Route] Warning: SUPABASE_SERVICE_KEY environment variable is undefined');
+    }
+    if (!groqApiKey) {
+      console.warn('[THALOS Chat Route] Warning: GROQ_API_KEY environment variable is undefined');
+    }
+
+    // 2. Parse and validate JSON request body
+    let body: ChatRequestBody;
+    try {
+      body = await req.json();
+    } catch {
+      return Response.json(
+        { error: 'Invalid JSON request body' },
+        { status: 400 }
+      );
+    }
+
+    const { message, history = [], context = 'my-day', model } = body || {};
 
     if (!message || typeof message !== 'string' || !message.trim()) {
-      return NextResponse.json({ error: 'Message required' }, { status: 400 });
+      return Response.json(
+        { error: 'Message required' },
+        { status: 400 }
+      );
     }
 
     const trimmedMessage = message.trim();
 
-    // Environment variables
-    const supabaseUrl = process.env.SUPABASE_URL || '';
-    const supabaseKey =
-      process.env.SUPABASE_SERVICE_KEY ||
-      process.env.SUPABASE_SERVICE_ROLE_KEY ||
-      '';
-    const groqApiKey = process.env.GROQ_API_KEY || '';
-
-    // 1. Build RAG context from knowledge_chunks via Supabase full-text search
+    // 3. Build RAG context from knowledge_chunks via Supabase full-text search
     const { text: ragContext, chunks } = await buildRAGContext(
-      supabaseUrl,
-      supabaseKey,
+      supabaseUrl || '',
+      supabaseServiceKey || '',
       trimmedMessage
     );
 
@@ -244,7 +262,7 @@ export async function POST(req: Request) {
       ? `${SYSTEM_PROMPT}\n\n${ragContext}`
       : SYSTEM_PROMPT;
 
-    // 2. Prepare message history and format
+    // 4. Prepare message history
     const formattedHistory: Array<{ role: string; content: string }> = [];
     if (Array.isArray(history)) {
       for (const h of history.slice(-10)) {
@@ -264,7 +282,7 @@ export async function POST(req: Request) {
       { role: 'user', content: trimmedMessage },
     ];
 
-    // 3. Call Groq LLaMA 3.3 70B
+    // 5. Call Groq with LLaMA 3.3 70B
     const activeModel = model || 'llama-3.3-70b-versatile';
     let reply = '';
 
@@ -274,28 +292,31 @@ export async function POST(req: Request) {
       reply = await callGroqCompletion(groqApiKey, messages, activeModel);
     }
 
-    // 4. Save messages to chat_messages table (asynchronous / non-blocking)
-    if (supabaseUrl && supabaseKey) {
+    // 6. Save messages to chat_messages table (asynchronous / non-blocking)
+    if (supabaseUrl && supabaseServiceKey) {
       saveToChatMessages(
         supabaseUrl,
-        supabaseKey,
+        supabaseServiceKey,
         trimmedMessage,
         reply,
         context
-      ).catch((err) => console.warn('Background message save error:', err));
+      ).catch((err) => console.warn('[THALOS Chat] Background message save error:', err));
     }
 
-    // 5. Return { reply, context } and backwards-compatible fields
-    return NextResponse.json({
+    // 7. Return successful JSON response
+    return Response.json({
       reply,
       response: reply,
       context: chunks.length > 0 ? chunks : context,
       model_used: activeModel,
     });
   } catch (err: any) {
-    console.error('Chat error in /api/intelligence/chat:', err);
-    return NextResponse.json(
-      { error: err?.message || 'Chat failed' },
+    console.error('Error in /api/intelligence/chat route handler:', err);
+    return Response.json(
+      {
+        error: err?.message || 'Chat failed',
+        stack: err?.stack || undefined,
+      },
       { status: 500 }
     );
   }
