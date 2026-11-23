@@ -2,10 +2,11 @@
 
 import { useEffect, useReducer, useRef, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { Activity, ArrowRight, Bell, BookOpen, Bot, CheckCircle2, ChevronDown, CircleHelp, Cpu, FileText, Globe2, Layers3, Search, Settings2, ShieldCheck, Sparkles, Target, TrendingUp, X, Zap } from "lucide-react"
+import { Activity, ArrowRight, Bell, BookOpen, Bot, CheckCircle2, ChevronDown, CircleHelp, Cpu, FileText, Globe2, Layers3, Mic, MicOff, Search, Settings2, ShieldCheck, Sparkles, Target, TrendingUp, Volume2, VolumeX, X, Zap } from "lucide-react"
 import { environments, initialDemoState, slugify, workspaces, type ApprovalStatus, type Environment, type OperationStatus, type TaskStatus, workspaceFromSlug } from "@/lib/thalos-data"
 import { WorkspaceContent } from "@/components/workspace-content"
 import { PwaInstallButton, usePwaStatus } from "@/components/pwa-runtime"
+import { getStoredVoiceSettings, saveVoiceSettings, speakResponse, stopSpeaking, createSpeechRecognizer, type VoiceSettings } from "@/lib/voice"
 
 const icons = [Target, TrendingUp, Globe2, Bot, BookOpen, Settings2]
 function BrandMark() { return <div className="brand-lockup"><div className="brand-symbol"><svg viewBox="0 0 42 42" aria-hidden="true"><path d="M21 3 4 36l17-9 17 9L21 3Z"/><path d="m12 29 9-18 9 18-9-5-9 5Z"/></svg></div><div><div className="brand-name">THALOS</div><div className="brand-tagline">One Intelligence. Every Device.</div></div></div> }
@@ -124,6 +125,20 @@ function Companion({ environment, onNavigate }: { environment: Environment; onNa
   const [activeModel, setActiveModel] = useState<string>("auto")
   const threadEndRef = useRef<HTMLDivElement>(null)
 
+  const [voiceSettings, setVoiceSettings] = useState<VoiceSettings>(() => getStoredVoiceSettings())
+  const [isListening, setIsListening] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [voiceNotice, setVoiceNotice] = useState("")
+  const recognizerRef = useRef<any>(null)
+
+  useEffect(() => {
+    const handleVoiceUpdate = (e: any) => {
+      if (e.detail) setVoiceSettings(e.detail)
+    }
+    window.addEventListener("thalos_voice_settings_changed", handleVoiceUpdate)
+    return () => window.removeEventListener("thalos_voice_settings_changed", handleVoiceUpdate)
+  }, [])
+
   useEffect(() => {
     const handle = () => setOpen(true)
     window.addEventListener("open-thalos-companion", handle)
@@ -144,6 +159,53 @@ function Companion({ environment, onNavigate }: { environment: Environment; onNa
   useEffect(() => {
     threadEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages, loading])
+
+  const toggleListening = () => {
+    if (isListening) {
+      if (recognizerRef.current) {
+        try { recognizerRef.current.stop() } catch {}
+        recognizerRef.current = null
+      }
+      setIsListening(false)
+      return
+    }
+
+    stopSpeaking()
+    setIsSpeaking(false)
+
+    const recognizer = createSpeechRecognizer(
+      (transcript, isFinal) => {
+        setPrompt(transcript)
+        if (isFinal && transcript.trim()) {
+          setIsListening(false)
+          recognizerRef.current = null
+          sendQuery(transcript)
+        }
+      },
+      () => {
+        setIsListening(false)
+        recognizerRef.current = null
+      },
+      (err) => {
+        setIsListening(false)
+        recognizerRef.current = null
+        setVoiceNotice(err)
+        setTimeout(() => setVoiceNotice(""), 4500)
+      }
+    )
+
+    if (recognizer) {
+      recognizerRef.current = recognizer
+      try {
+        recognizer.start()
+        setIsListening(true)
+      } catch (e: any) {
+        setIsListening(false)
+        setVoiceNotice(e.message || "Failed to start microphone")
+        setTimeout(() => setVoiceNotice(""), 4500)
+      }
+    }
+  }
 
   const sendQuery = async (queryText: string) => {
     const trimmed = queryText.trim()
@@ -171,17 +233,24 @@ function Companion({ environment, onNavigate }: { environment: Environment; onNa
       const data = await res.json()
       if (res.ok) {
         if (data.model_used) setActiveModel(data.model_used)
+        const assistantText = data.response || "Outcome analyzed and executed."
         setMessages((prev) => [
           ...prev,
           {
             id: `a-${Date.now()}`,
             role: "assistant",
-            text: data.response || "Outcome analyzed and executed.",
+            text: assistantText,
             model: data.model_used,
             intent: data.intent,
             actions: data.actions_taken,
           },
         ])
+
+        if (voiceSettings.enabled && voiceSettings.autoSpeak) {
+          setIsSpeaking(true)
+          speakResponse(assistantText, voiceSettings)
+            .finally(() => setIsSpeaking(false))
+        }
       } else {
         setMessages((prev) => [
           ...prev,
@@ -243,18 +312,47 @@ function Companion({ environment, onNavigate }: { environment: Environment; onNa
               <b>THALOS Companion</b>
               <span>Live AI Routing · {environment}</span>
             </div>
+            <button
+              className="icon-button"
+              style={{ marginRight: 4 }}
+              aria-label={voiceSettings.autoSpeak ? "Mute audio response" : "Unmute audio response"}
+              title={voiceSettings.autoSpeak ? "Voice responses active (Click to mute)" : "Voice responses muted (Click to unmute)"}
+              onClick={() => {
+                if (isSpeaking) {
+                  stopSpeaking()
+                  setIsSpeaking(false)
+                }
+                const updated = { ...voiceSettings, autoSpeak: !voiceSettings.autoSpeak }
+                setVoiceSettings(updated)
+                saveVoiceSettings(updated)
+              }}
+            >
+              {voiceSettings.autoSpeak ? <Volume2 size={15} style={{ color: "#54d9c7" }} /> : <VolumeX size={15} />}
+            </button>
             {messages.length > 0 && (
               <button
                 className="icon-button"
                 style={{ marginRight: 6 }}
                 aria-label="Clear conversation"
                 title="Clear conversation"
-                onClick={() => setMessages([])}
+                onClick={() => {
+                  stopSpeaking()
+                  setIsSpeaking(false)
+                  setMessages([])
+                }}
               >
                 <X size={14} />
               </button>
             )}
-            <button className="icon-button" aria-label="Close companion" onClick={() => setOpen(false)}>
+            <button
+              className="icon-button"
+              aria-label="Close companion"
+              onClick={() => {
+                stopSpeaking()
+                setIsSpeaking(false)
+                setOpen(false)
+              }}
+            >
               <X size={17} />
             </button>
           </div>
@@ -331,6 +429,52 @@ function Companion({ environment, onNavigate }: { environment: Environment; onNa
             ))}
           </div>
 
+          {(isListening || isSpeaking || voiceNotice) && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "6px 14px",
+                fontSize: "10px",
+                background: isListening
+                  ? "rgba(224, 75, 75, 0.15)"
+                  : isSpeaking
+                  ? "rgba(84, 217, 199, 0.15)"
+                  : "rgba(255, 255, 255, 0.05)",
+                borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+                color: isListening ? "#ff8585" : isSpeaking ? "#54d9c7" : "#e0ba7e",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                {isListening && <Mic size={12} className="animate-pulse" />}
+                {isSpeaking && <Volume2 size={12} className="animate-pulse" />}
+                <span>
+                  {isListening ? "Listening... speak now" : isSpeaking ? "THALOS is speaking..." : voiceNotice}
+                </span>
+              </div>
+              {isSpeaking && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    stopSpeaking()
+                    setIsSpeaking(false)
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#839ba7",
+                    cursor: "pointer",
+                    fontSize: "9px",
+                    textDecoration: "underline",
+                  }}
+                >
+                  Stop audio
+                </button>
+              )}
+            </div>
+          )}
+
           <form
             className="companion-compose"
             onSubmit={(e) => {
@@ -351,6 +495,21 @@ function Companion({ environment, onNavigate }: { environment: Environment; onNa
                 }
               }}
             />
+            {voiceSettings.enabled && (
+              <button
+                type="button"
+                className="companion-send"
+                aria-label={isListening ? "Stop voice listening" : "Start voice listening"}
+                title={isListening ? "Listening... click to stop" : "Speak to THALOS"}
+                onClick={toggleListening}
+                style={{
+                  background: isListening ? "#e04b4b" : "#173543",
+                  color: isListening ? "#ffffff" : "#68e0e7",
+                }}
+              >
+                {isListening ? <MicOff size={15} /> : <Mic size={15} />}
+              </button>
+            )}
             <button
               type="submit"
               className="companion-send"

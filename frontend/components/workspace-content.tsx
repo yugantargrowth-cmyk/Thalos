@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react"
 import type { Approval, ApprovalStatus, DemoState, Environment, Operation, OperationStatus, Task, TaskStatus } from "@/lib/thalos-data"
-import { Activity, AlertTriangle, ArrowRight, Check, CheckCircle2, Circle, Clock3, Cpu, Database, ExternalLink, Key, Plus, RefreshCw, Search, Send, ShieldCheck, Sparkles, X, Zap } from "lucide-react"
+import { Activity, AlertTriangle, ArrowRight, Check, CheckCircle2, Circle, Clock3, Cpu, Database, ExternalLink, Key, Mic, Plus, RefreshCw, Search, Send, ShieldCheck, Sparkles, Volume2, X, Zap } from "lucide-react"
+import { getStoredVoiceSettings, saveVoiceSettings, speakResponse, DEFAULT_VOICE_SETTINGS, type VoiceSettings } from "@/lib/voice"
 
 type Props = { environment: Environment; workspace: string; data: DemoState; selectedRecord: string | null; onSelectRecord: (id: string | null) => void; onTask: (id: string, status: TaskStatus) => void; onEditTask: (id: string, title: string) => void; onApproval: (id: string, status: ApprovalStatus) => void; onOperation: (id: string, status: OperationStatus) => void; onCreateTask: (title: string) => void; onNavigate: (environment: Environment, workspace: string) => void }
 const money = (value: number) => `$${value.toLocaleString()}`
@@ -349,6 +350,61 @@ function IntegrationsWorkspace({ onNavigate }: { onNavigate: (env: Environment, 
   const [testResults, setTestResults] = useState<Record<string, string>>({})
   const [toast, setToast] = useState("")
 
+  const [voiceConfig, setVoiceConfig] = useState<VoiceSettings>(() => getStoredVoiceSettings())
+  const [testingVoice, setTestingVoice] = useState(false)
+  const [voiceTestResult, setVoiceTestResult] = useState("")
+
+  useEffect(() => {
+    const handleVoiceChange = (e: any) => {
+      if (e.detail) setVoiceConfig(e.detail)
+    }
+    window.addEventListener("thalos_voice_settings_changed", handleVoiceChange)
+    return () => window.removeEventListener("thalos_voice_settings_changed", handleVoiceChange)
+  }, [])
+
+  const handleSaveVoice = () => {
+    saveVoiceSettings(voiceConfig)
+    setVoiceTestResult("✓ Voice settings saved to browser storage")
+    setTimeout(() => setVoiceTestResult(""), 4000)
+  }
+
+  const handleTestVoice = async () => {
+    setTestingVoice(true)
+    setVoiceTestResult("Speaking test phrase...")
+    try {
+      const ok = await speakResponse("Greetings. THALOS voice engine is active and operational for Yugantar Growth.", voiceConfig)
+      if (ok) {
+        setVoiceTestResult("✓ Voice synthesis successful")
+      } else {
+        setVoiceTestResult("⚠️ Voice synthesis finished or not supported by browser")
+      }
+    } catch (err: any) {
+      setVoiceTestResult(`Speech error: ${err.message}`)
+    } finally {
+      setTestingVoice(false)
+      setTimeout(() => setVoiceTestResult(""), 4500)
+    }
+  }
+
+  const handleVoicePackUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const updated: VoiceSettings = {
+        ...voiceConfig,
+        provider: "custom_voice",
+        customVoicePackName: file.name,
+        customVoicePackData: reader.result as string,
+      }
+      setVoiceConfig(updated)
+      saveVoiceSettings(updated)
+      setVoiceTestResult(`✓ Loaded voice pack: ${file.name}`)
+      setTimeout(() => setVoiceTestResult(""), 4000)
+    }
+    reader.readAsDataURL(file)
+  }
+
   const loadStatus = () => {
     fetch("/api/integrations/status")
       .then((r) => r.json())
@@ -693,6 +749,143 @@ function IntegrationsWorkspace({ onNavigate }: { onNavigate: (env: Environment, 
               <span style={{ fontSize: "9px", color: testResults.tavily.startsWith("✓") ? "#55d9bb" : "#e67f84" }}>
                 {testResults.tavily}
               </span>
+            )}
+          </div>
+        </Card>
+
+        {/* Voice Conversation & Speech Synthesis Card */}
+        <Card>
+          <div className="card-title">
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span className="round-icon violet"><Volume2 size={15} /></span>
+              <div>
+                <span className="eyebrow">VOICE & CONVERSATION</span>
+                <h3>Speech Engine & Audio Settings</h3>
+              </div>
+            </div>
+            <span style={{ fontSize: "9px", color: voiceConfig.enabled ? "#54d9c7" : "#e0ba7e" }}>
+              {voiceConfig.enabled
+                ? voiceConfig.provider === "elevenlabs"
+                  ? "ElevenLabs Neural"
+                  : voiceConfig.provider === "custom_voice"
+                  ? "Custom Voice Pack"
+                  : "Web Speech (Native/Android)"
+                : "Voice Disabled"}
+            </span>
+          </div>
+
+          <p style={{ fontSize: "10px", color: "#8299a5", margin: "6px 0 12px", lineHeight: "1.5" }}>
+            Enable hands-free voice conversations with THALOS. Works out of the box with Android and desktop Web Speech API (zero setup, no API key needed), or integrate custom neural voices via ElevenLabs or custom audio packs.
+          </p>
+
+          <div style={{ display: "grid", gap: "10px" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "11px", color: "#d7e5ea" }}>
+              <input
+                type="checkbox"
+                checked={voiceConfig.enabled}
+                onChange={(e) => setVoiceConfig((prev) => ({ ...prev, enabled: e.target.checked }))}
+                style={{ cursor: "pointer" }}
+              />
+              <span>Enable Voice Conversation & Audio Features</span>
+            </label>
+
+            {voiceConfig.enabled && (
+              <>
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "11px", color: "#d7e5ea" }}>
+                  <input
+                    type="checkbox"
+                    checked={voiceConfig.autoSpeak}
+                    onChange={(e) => setVoiceConfig((prev) => ({ ...prev, autoSpeak: e.target.checked }))}
+                    style={{ cursor: "pointer" }}
+                  />
+                  <span>Automatically speak THALOS responses aloud in Companion chat</span>
+                </label>
+
+                <label className="form-field">
+                  <span style={{ fontSize: "9px", color: "#839ba7" }}>Voice Provider Engine</span>
+                  <select
+                    value={voiceConfig.provider}
+                    onChange={(e) => setVoiceConfig((prev) => ({ ...prev, provider: e.target.value as any }))}
+                    style={{
+                      background: "#0a1822",
+                      border: "1px solid #25414f",
+                      color: "#d9e8ed",
+                      borderRadius: "6px",
+                      padding: "8px",
+                      fontSize: "11px"
+                    }}
+                  >
+                    <option value="web_speech">Web Speech API (Default · Native Android / Chrome / Safari · Free & No Setup)</option>
+                    <option value="elevenlabs">ElevenLabs Neural Voice (Custom API Key & Voice ID)</option>
+                    <option value="custom_voice">Custom Voice Pack (Upload Audio File / Profile)</option>
+                  </select>
+                </label>
+
+                {voiceConfig.provider === "elevenlabs" && (
+                  <div style={{ display: "grid", gap: "8px", padding: "10px", background: "rgba(255,255,255,0.02)", borderRadius: "6px", border: "1px solid #1a303e" }}>
+                    <label className="form-field">
+                      <span style={{ fontSize: "9px", color: "#839ba7" }}>ElevenLabs API Key (xi-api-key)</span>
+                      <input
+                        type="password"
+                        placeholder="Paste ElevenLabs API Key"
+                        value={voiceConfig.elevenLabsApiKey || ""}
+                        onChange={(e) => setVoiceConfig((prev) => ({ ...prev, elevenLabsApiKey: e.target.value }))}
+                      />
+                    </label>
+                    <label className="form-field">
+                      <span style={{ fontSize: "9px", color: "#839ba7" }}>Voice ID (Default: Rachel 21m00Tcm4TlvDq8ikWAM)</span>
+                      <input
+                        type="text"
+                        placeholder="e.g. 21m00Tcm4TlvDq8ikWAM or custom cloned voice ID"
+                        value={voiceConfig.elevenLabsVoiceId || ""}
+                        onChange={(e) => setVoiceConfig((prev) => ({ ...prev, elevenLabsVoiceId: e.target.value }))}
+                      />
+                    </label>
+                  </div>
+                )}
+
+                {voiceConfig.provider === "custom_voice" && (
+                  <div style={{ display: "grid", gap: "8px", padding: "10px", background: "rgba(255,255,255,0.02)", borderRadius: "6px", border: "1px solid #1a303e" }}>
+                    <span style={{ fontSize: "9px", color: "#839ba7" }}>Upload Custom Voice Pack (.mp3, .wav, or .json voice profile)</span>
+                    <input
+                      type="file"
+                      accept=".mp3,.wav,.ogg,.json"
+                      onChange={handleVoicePackUpload}
+                      style={{ fontSize: "10px", color: "#b9c9d0" }}
+                    />
+                    {voiceConfig.customVoicePackName && (
+                      <span style={{ fontSize: "10px", color: "#54d9c7" }}>
+                        ✓ Loaded pack: {voiceConfig.customVoicePackName}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "6px", flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    className="primary-action"
+                    onClick={handleSaveVoice}
+                    style={{ fontSize: "11px", padding: "6px 12px" }}
+                  >
+                    <Check size={13} /> Save Voice Settings
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-action"
+                    onClick={handleTestVoice}
+                    disabled={testingVoice}
+                    style={{ fontSize: "11px", padding: "6px 12px" }}
+                  >
+                    <Volume2 size={13} className={testingVoice ? "animate-pulse" : ""} /> {testingVoice ? "Speaking..." : "Test Voice Output"}
+                  </button>
+                  {voiceTestResult && (
+                    <span style={{ fontSize: "10px", color: voiceTestResult.startsWith("✓") ? "#55d9bb" : "#e0ba7e" }}>
+                      {voiceTestResult}
+                    </span>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </Card>
