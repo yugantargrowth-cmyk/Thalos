@@ -22,16 +22,48 @@ export const workspaces: Record<Environment, string[]> = {
 }
 
 export type Agent = { id: string; name: string; role: string; status: string; initials: string }
-export type Client = { id: string; name: string; industry: string; health: string; leadId: string }
-export type Lead = { id: string; company: string; contact: string; source: string; stage: string; value: number; clientId?: string; dealId?: string; campaignId: string }
+export type Client = { id: string; name: string; industry: string; health: string; leadId?: string; phone?: string; email?: string }
+export type Lead = {
+  id: string;
+  company: string;
+  contact: string;
+  source: string;
+  stage: string;
+  value: number;
+  phone?: string;
+  email?: string;
+  website?: string;
+  city?: string;
+  category?: string;
+  tier?: "A" | "B" | "C" | "D";
+  fitScore?: number;
+  triageReasons?: string[];
+  notes?: string;
+  clientId?: string;
+  dealId?: string;
+  campaignId?: string;
+  created?: string;
+}
 export type Deal = { id: string; leadId: string; name: string; amount: number; stage: string; ownerId: string }
 export type Task = { id: string; title: string; projectId: string; agentId: string; assignee: string; priority: "Urgent" | "High" | "Normal"; status: TaskStatus; due: string; description: string }
 export type Approval = { id: string; title: string; agentId: string; action: string; reason: string; impact: string; risk: string; context: string; status: ApprovalStatus; created: string }
 export type Operation = { id: string; name: string; agentId: string; status: OperationStatus; progress: number; stage: string; started: string; updated: string; error?: string }
-export type Project = { id: string; clientId: string; name: string; status: string; due: string; milestone: string; taskIds: string[] }
+export type Project = { id: string; clientId: string; name: string; status: string; due: string; milestone: string; taskIds: string[]; slaHours?: number; isWipBlocked?: boolean }
 export type Document = { id: string; title: string; collection: string; source: string; updated: string; summary: string }
 export type Campaign = { id: string; name: string; agentId: string; status: string; leadIds: string[]; channel: string }
-export type Invoice = { id: string; number: string; clientId: string; projectId?: string; amount: number; status: string; due: string }
+export type Invoice = {
+  id: string;
+  number: string;
+  clientId: string;
+  projectId?: string;
+  amount: number;
+  status: string;
+  due: string;
+  advanceRequired?: number;
+  advanceReceived?: boolean;
+  utrReference?: string;
+  utrVerifiedAt?: string;
+}
 export type ActivityRecord = { id: string; recordId: string; agentId: string; action: string; detail: string; timestamp: string }
 export type DemoState = { agents: Agent[]; clients: Client[]; leads: Lead[]; deals: Deal[]; tasks: Task[]; approvals: Approval[]; operations: Operation[]; projects: Project[]; documents: Document[]; campaigns: Campaign[]; invoices: Invoice[]; activities: ActivityRecord[]; approvalHistory: Approval[] }
 
@@ -114,3 +146,67 @@ export const initialDemoState: DemoState = {
 export function slugify(value: string) { return value.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") }
 export function environmentFromSlug(slug?: string): Environment { return environments.find((item) => slugify(item.name) === slug)?.name ?? environments[0].name }
 export function workspaceFromSlug(environment: Environment, slug?: string) { return workspaces[environment].find((item) => slugify(item) === slug) ?? workspaces[environment][0] }
+
+export const EMPTY_LIVE_STATE: DemoState = {
+  agents: initialDemoState.agents,
+  clients: [],
+  leads: [],
+  deals: [],
+  tasks: [],
+  approvals: [],
+  operations: [],
+  projects: [],
+  documents: [],
+  campaigns: [],
+  invoices: [],
+  activities: [],
+  approvalHistory: [],
+};
+
+export const THALOS_STATE_STORAGE_KEY = "thalos_operating_system_state_v3";
+export const THALOS_MODE_STORAGE_KEY = "thalos_mode_preference"; // 'clean' | 'demo'
+
+export function loadSavedState(): DemoState {
+  if (typeof window === "undefined") return EMPTY_LIVE_STATE;
+  try {
+    const saved = localStorage.getItem(THALOS_STATE_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && Array.isArray(parsed.agents) && Array.isArray(parsed.leads)) {
+        return parsed;
+      }
+    }
+    const mode = localStorage.getItem(THALOS_MODE_STORAGE_KEY);
+    return mode === "demo" ? initialDemoState : EMPTY_LIVE_STATE;
+  } catch {
+    return EMPTY_LIVE_STATE;
+  }
+}
+
+export function saveSavedState(state: DemoState): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(THALOS_STATE_STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.warn("Failed to persist THALOS state:", e);
+  }
+}
+
+export function resetToCleanState(): DemoState {
+  if (typeof window !== "undefined") {
+    localStorage.setItem(THALOS_MODE_STORAGE_KEY, "clean");
+    localStorage.setItem(THALOS_STATE_STORAGE_KEY, JSON.stringify(EMPTY_LIVE_STATE));
+    window.dispatchEvent(new CustomEvent("thalos_state_reset", { detail: "clean" }));
+  }
+  return EMPTY_LIVE_STATE;
+}
+
+export function resetToDemoState(): DemoState {
+  if (typeof window !== "undefined") {
+    localStorage.setItem(THALOS_MODE_STORAGE_KEY, "demo");
+    localStorage.setItem(THALOS_STATE_STORAGE_KEY, JSON.stringify(initialDemoState));
+    window.dispatchEvent(new CustomEvent("thalos_state_reset", { detail: "demo" }));
+  }
+  return initialDemoState;
+}
+

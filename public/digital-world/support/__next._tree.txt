@@ -1,4 +1,4 @@
-:HL["/_next/static/chunks/0uduas14y3b0p.css","style"]
+:HL["/_next/static/chunks/3s6wyl0bqhken.css","style"]
 2:[["children",{"s":"__PAGE__","h":160}]]
-1:[["children",{"s":{"n":"segments","t":"c","k":"digital-world/support","s":[]},"h":96,"c":"$Q2"}]]
-0:{"b":"ONwFs-Uzq70mEpGbWUKwi","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
+1:[["children",{"s":{"n":"segments","t":"c","k":"digital-world/support","s":["api"]},"h":96,"c":"$Q2"}]]
+0:{"b":"YEazbi7IObzwaxzbCvJx1","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
