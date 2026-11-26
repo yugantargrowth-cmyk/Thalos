@@ -1,0 +1,10 @@
+# Mission 1 Defect Register
+
+| Defect ID | Severity | Area | Description | Resolution | Status |
+|---|---|---|---|---|---|
+| D-M1-001 | Critical | Architecture Split | Frontend called standalone Next.js shadow chat handler (`frontend/app/api/intelligence/chat/route.ts`) bypassing Express auth, orchestrator, 9 specialist agents, approval queue, and audit | Deleted shadow Next route and root `api/` shadow folder. Configured `output: 'export'` and Next.js rewrites; connected Companion chat directly to canonical Express `POST /api/intelligence/chat` with JWT Bearer authentication | **FIXED** |
+| D-M1-002 | High | Authentication | Frontend lacked JWT Bearer token management and PIN authentication, causing all protected API requests to fail with 401 Unauthorized | Created `frontend/lib/api.ts` with `loginWithPin`, `getStoredToken`, and automatic Bearer header injection. Added Founder PIN modal in UI with local dev fallback | **FIXED** |
+| D-M1-003 | High | Knowledge UI | Knowledge page had static mockup documents only, with no document upload or hybrid RAG search controls | Implemented multi-format document upload form (`POST /api/knowledge/documents`) and semantic vector/keyword RAG search input (`POST /api/knowledge/search`) in `KnowledgePage` | **FIXED** |
+| D-M1-004 | High | Operations UI | Operations monitor displayed local mockup tasks with no visibility into backend worker queues or dead-letter retries | Added live queue telemetry header (`GET /api/system/queue`) and dead-letter retry handler (`POST /api/system/queue/retry-dead-letter`) in `OperationsPage` | **FIXED** |
+| D-M1-005 | Medium | Static Export | `package.json` build command `build:frontend` expected `frontend/out`, but Next.js configuration lacked `output: 'export'` | Added `output: 'export'` in `next.config.mjs`; verified static export copies cleanly to Express `public/` directory | **FIXED** |
+| D-M1-006 | Medium | Settings API | `POST /api/integrations/settings` returned `{ ok: true }` without `success: true` flag expected by UI adapters | Added `success: true` property to response payload in `src/api/routes/integrations.ts` | **FIXED** |

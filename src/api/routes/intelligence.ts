@@ -1,19 +1,29 @@
 import { Router, Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
+import { v4 as uuidv4 } from 'uuid';
 import { getSupabase } from '../../lib/supabase.js';
 import { AppError } from '../middleware/errorHandler.js';
-import { thalosOrchestrate } from '../../intelligence/orchestrator.js';
+import { thalosOrchestrate, ActionStatus } from '../../intelligence/orchestrator.js';
 import { generateDailyBrief } from '../../intelligence/brief.js';
 
 const router = Router();
 
 /**
- * POST /api/intelligence/chat
- * Main THALOS conversational endpoint.
- * Body: { message: string, session_date?: string }
+ * In-memory fallback conversation cache
  */
-const inMemoryConversations: Record<string, any[]> = {};
+interface InMemoryConversation {
+  id: string;
+  session_date: string;
+  messages: any[];
+  token_count: number;
+}
+const inMemoryConversations: Record<string, InMemoryConversation> = {};
 
+/**
+ * POST /api/intelligence/chat
+ * Main THALOS conversational endpoint with durable message IDs and action status.
+ * Body: { message: string, session_date?: string, model?: string, provider?: string }
+ */
 router.post(
   '/chat',
   body('message').isString().trim().isLength({ min: 1, max: 8000 }),
@@ -31,7 +41,17 @@ router.post(
     const sessionDate = req.body.session_date ?? new Date().toISOString().split('T')[0];
     const supabase = getSupabase();
 
-    let history: Array<{ role: string; content: string; timestamp: string }> = [];
+    let conversationId = uuidv4();
+    let history: Array<{
+      message_id?: string;
+      role: string;
+      content: string;
+      timestamp: string;
+      action_status?: ActionStatus;
+      intent?: string;
+      actions_taken?: string[];
+      pending_approvals?: string[];
+    }> = [];
 
     // Attempt to load from Supabase or fallback to in-memory
     try {
@@ -41,15 +61,33 @@ router.post(
         .eq('session_date', sessionDate)
         .maybeSingle();
 
-      if (conversation?.messages) {
-        history = conversation.messages;
+      if (conversation) {
+        conversationId = conversation.id || conversationId;
+        if (conversation.messages && Array.isArray(conversation.messages)) {
+          history = conversation.messages;
+        }
+      } else if (inMemoryConversations[sessionDate]) {
+        conversationId = inMemoryConversations[sessionDate].id;
+        history = inMemoryConversations[sessionDate].messages;
       }
     } catch {
-      history = inMemoryConversations[sessionDate] || [];
+      if (inMemoryConversations[sessionDate]) {
+        conversationId = inMemoryConversations[sessionDate].id;
+        history = inMemoryConversations[sessionDate].messages;
+      }
     }
 
-    // Append user message to history
-    history.push({ role: 'user', content: message, timestamp: new Date().toISOString() });
+    const userMessageId = uuidv4();
+    const userTimestamp = new Date().toISOString();
+
+    // Append user message with durable ID
+    history.push({
+      message_id: userMessageId,
+      role: 'user',
+      content: message,
+      timestamp: userTimestamp,
+      action_status: 'none',
+    });
 
     const rawCorr = req.headers['x-correlation-id'] || (req as Request & { correlationId?: string }).correlationId;
     const correlationId = Array.isArray(rawCorr) ? rawCorr[0] : (rawCorr as string | undefined);
@@ -68,6 +106,7 @@ router.post(
         result = {
           response: `I received your outcome request: "${message}".\n\nNo live LLM provider API key is configured yet. Please open **Execution & Settings → Integrations** to enter your Groq or Gemini API key.\n\nOnce entered, THALOS will execute real-time reasoning and tool dispatching using your selected model.`,
           intent: 'configuration_needed',
+          action_status: 'none',
           actions_taken: [],
           pending_approvals: [],
           tokens_used: 0,
@@ -78,30 +117,59 @@ router.post(
       }
     }
 
-    // Append assistant response
+    const assistantMessageId = uuidv4();
+    const assistantTimestamp = new Date().toISOString();
+    const actionStatus: ActionStatus =
+      result.action_status ||
+      (result.pending_approvals?.length > 0
+        ? 'pending_approval'
+        : result.actions_taken?.some((a: string) => a.startsWith('done:'))
+        ? 'completed'
+        : result.actions_taken?.some((a: string) => a.startsWith('failed:'))
+        ? 'attempted'
+        : result.intent === 'multi_step_plan'
+        ? 'plan'
+        : 'none');
+
+    // Append assistant response with durable message_id and action_status
     history.push({
+      message_id: assistantMessageId,
       role: 'assistant',
       content: result.response,
-      timestamp: new Date().toISOString(),
-      ...( result.intent ? { intent: result.intent } : {} ),
-      ...( result.actions_taken?.length ? { actions_taken: result.actions_taken } : {} ),
-    } as any);
+      timestamp: assistantTimestamp,
+      action_status: actionStatus,
+      ...(result.intent ? { intent: result.intent } : {}),
+      ...(result.actions_taken?.length ? { actions_taken: result.actions_taken } : {}),
+      ...(result.pending_approvals?.length ? { pending_approvals: result.pending_approvals } : {}),
+    });
 
-    // Save history
-    inMemoryConversations[sessionDate] = history;
+    // Save history in-memory
+    inMemoryConversations[sessionDate] = {
+      id: conversationId,
+      session_date: sessionDate,
+      messages: history,
+      token_count: result.tokens_used ?? 0,
+    };
+
+    // Save history in Supabase
     try {
       await supabase.from('conversations').upsert({
+        id: conversationId,
         session_date: sessionDate,
         messages: history,
         token_count: result.tokens_used ?? 0,
       });
     } catch {
-      // Ignored if offline
+      // Offline fallback preserved in inMemoryConversations
     }
 
     res.json({
+      conversation_id: conversationId,
+      message_id: assistantMessageId,
+      user_message_id: userMessageId,
       response: result.response,
       intent: result.intent,
+      action_status: actionStatus,
       actions_taken: result.actions_taken ?? [],
       pending_approvals: result.pending_approvals ?? [],
       tokens_used: result.tokens_used,
@@ -180,6 +248,39 @@ router.get('/conversations/:date', async (req: Request, res: Response): Promise<
 
   if (error || !data) throw new AppError(404, 'Conversation not found');
   res.json({ conversation: data });
+});
+
+/**
+ * DELETE /api/intelligence/conversations/:date
+ * Clears conversation history for a specific date.
+ */
+router.delete('/conversations/:date', async (req: Request, res: Response): Promise<void> => {
+  const date = Array.isArray(req.params.date) ? req.params.date[0] : (req.params.date as string);
+  delete inMemoryConversations[date];
+  const supabase = getSupabase();
+  try {
+    await supabase.from('conversations').delete().eq('session_date', date);
+  } catch {
+    // Offline fallback
+  }
+  res.json({ success: true, message: `Conversation for ${date} cleared` });
+});
+
+/**
+ * DELETE /api/intelligence/conversations
+ * Clears all conversation history.
+ */
+router.delete('/conversations', async (req: Request, res: Response): Promise<void> => {
+  for (const k of Object.keys(inMemoryConversations)) {
+    delete inMemoryConversations[k];
+  }
+  const supabase = getSupabase();
+  try {
+    await supabase.from('conversations').delete().neq('session_date', '1970-01-01');
+  } catch {
+    // Offline fallback
+  }
+  res.json({ success: true, message: 'All conversation histories cleared' });
 });
 
 export default router;

@@ -16,6 +16,35 @@ router.get('/queue', async (_req: Request, res: Response): Promise<void> => {
   res.json({ queue: metrics });
 });
 
+router.post('/queue/retry-dead-letter', async (_req: Request, res: Response): Promise<void> => {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from('jobs')
+    .update({ status: 'queued', attempts: 0, dead_letter_at: null, dead_letter_reason: null })
+    .eq('status', 'dead_letter')
+    .select();
+  if (error) throw new AppError(500, 'Failed to retry dead letter jobs', error.message);
+  res.json({ retried_count: data?.length ?? 0 });
+});
+
+router.get('/jobs', async (req: Request, res: Response): Promise<void> => {
+  const supabase = getSupabase();
+  const status = req.query.status as string | undefined;
+  const limit = parseInt(req.query.limit as string) || 50;
+
+  let q = supabase
+    .from('jobs')
+    .select('*', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (status) q = q.eq('status', status);
+
+  const { data, error, count } = await q;
+  if (error) throw new AppError(500, 'Failed to fetch jobs', error.message);
+  res.json({ jobs: data ?? [], total: count ?? 0 });
+});
+
 // ── System health ─────────────────────────────────────────────
 router.get('/health', async (_req: Request, res: Response): Promise<void> => {
   const supabase = getSupabase();

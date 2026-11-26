@@ -31,10 +31,13 @@ export interface OrchestrateInput {
   correlationId?: string;
 }
 
+export type ActionStatus = 'none' | 'plan' | 'pending_approval' | 'attempted' | 'completed' | 'clarification_needed';
+
 export interface OrchestrateResult {
   response: string;
   intent?: string;
   agent_id?: string;
+  action_status?: ActionStatus;
   actions_taken?: string[];
   pending_approvals?: string[];
   tokens_used?: number;
@@ -588,6 +591,58 @@ export async function executeTaskPlan(
 }
 
 /**
+ * Check if user message indicates an action requiring essential entity parameters
+ * that are missing from both message and recent history.
+ */
+export function checkMissingRequiredInfo(
+  message: string,
+  history: Array<{ role: string; content: string; timestamp?: string }>
+): { isMissing: boolean; clarifyingQuestion?: string; intent?: string } {
+  const lower = message.toLowerCase().trim();
+  const recentHistoryText = history.slice(-4).map((h) => h.content).join(' ').toLowerCase();
+  const fullContext = `${recentHistoryText} ${lower}`;
+
+  // 1. Invoice creation check
+  const isInvoiceIntent =
+    (lower.includes('invoice') || lower.includes('bill')) &&
+    (lower.includes('create') || lower.includes('draft') || lower.includes('generate') || lower.includes('send') || lower.includes('make'));
+  if (isInvoiceIntent) {
+    const hasAmount = /\b\d+(\.\d{1,2})?\b/.test(fullContext) || /₹|rs|inr|\$|usd/.test(fullContext);
+    const hasClient = /for\s+([A-Za-z0-9\s_-]+)/.test(lower) || /client|customer/.test(recentHistoryText);
+    if (!hasAmount && !hasClient) {
+      return {
+        isMissing: true,
+        clarifyingQuestion: 'Could you specify the client name and the invoice amount so I can draft this accurately?',
+        intent: 'deal_progression',
+      };
+    } else if (!hasAmount) {
+      return {
+        isMissing: true,
+        clarifyingQuestion: 'What is the amount for this invoice?',
+        intent: 'deal_progression',
+      };
+    }
+  }
+
+  // 2. Direct outreach check without recipient or target company
+  const isOutreachIntent =
+    (lower.includes('outreach') || lower.includes('pitch') || lower.includes('cold email')) &&
+    (lower.includes('send') || lower.includes('draft') || lower.includes('write'));
+  if (isOutreachIntent) {
+    const mentionsTarget = /to\s+([A-Za-z0-9\s_-]+)/.test(lower) || /for\s+([A-Za-z0-9\s_-]+)/.test(lower) || fullContext.includes('@') || /company|prospect|lead/.test(recentHistoryText);
+    if (!mentionsTarget && lower.split(/\s+/).length < 7) {
+      return {
+        isMissing: true,
+        clarifyingQuestion: 'Which prospect or company should I draft this outreach message for?',
+        intent: 'outreach',
+      };
+    }
+  }
+
+  return { isMissing: false };
+}
+
+/**
  * Main THALOS Orchestration Entry Point
  */
 export async function thalosOrchestrate(input: OrchestrateInput): Promise<OrchestrateResult> {
@@ -596,6 +651,21 @@ export async function thalosOrchestrate(input: OrchestrateInput): Promise<Orches
   let lastModel = 'unknown';
 
   try {
+    // 0. Check for missing required information before execution
+    const missingCheck = checkMissingRequiredInfo(message, history);
+    if (missingCheck.isMissing && missingCheck.clarifyingQuestion) {
+      return {
+        response: missingCheck.clarifyingQuestion,
+        intent: missingCheck.intent || 'clarification_needed',
+        agent_id: 'thalos',
+        action_status: 'clarification_needed',
+        actions_taken: [],
+        pending_approvals: [],
+        tokens_used: 10,
+        model_used: 'thalos/clarification_guard',
+      };
+    }
+
     const historyMessages: LLMMessage[] = history.map((h) => ({
       role: (h.role === 'assistant' ? 'assistant' : 'user') as 'user' | 'assistant',
       content: h.content,
@@ -622,10 +692,20 @@ export async function thalosOrchestrate(input: OrchestrateInput): Promise<Orches
           },
         });
 
+        const actionStatus: ActionStatus =
+          planResult.pendingApprovals.length > 0
+            ? 'pending_approval'
+            : planResult.completedTasks.length > 0
+            ? 'completed'
+            : planResult.failedTasks.length > 0
+            ? 'attempted'
+            : 'plan';
+
         return {
           response: planResult.summary,
           intent: 'multi_step_plan',
           agent_id: 'thalos',
+          action_status: actionStatus,
           actions_taken: planResult.completedTasks,
           pending_approvals: planResult.pendingApprovals,
           tokens_used: 150,
@@ -700,10 +780,20 @@ export async function thalosOrchestrate(input: OrchestrateInput): Promise<Orches
         },
       });
 
+      const toolActionStatus: ActionStatus =
+        loopResult.pendingApprovals.length > 0
+          ? 'pending_approval'
+          : loopResult.actionsTaken.some((a) => a.startsWith('done:'))
+          ? 'completed'
+          : loopResult.actionsTaken.some((a) => a.startsWith('failed:'))
+          ? 'attempted'
+          : 'none';
+
       return {
         response: loopResult.finalResponse,
         intent,
         agent_id: agentId,
+        action_status: toolActionStatus,
         actions_taken: loopResult.actionsTaken,
         pending_approvals: loopResult.pendingApprovals,
         tokens_used: totalTokens,
@@ -740,6 +830,7 @@ export async function thalosOrchestrate(input: OrchestrateInput): Promise<Orches
       response: directResponse.content,
       intent,
       agent_id: agentId,
+      action_status: 'none',
       actions_taken: [],
       pending_approvals: [],
       tokens_used: totalTokens,

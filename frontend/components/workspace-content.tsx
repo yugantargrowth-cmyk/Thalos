@@ -18,6 +18,11 @@ import {
 import {
   OBJECTION_BANK, buildHinglishWhatsAppPitch, getPersonalizedObjectionScript, type ObjectionCategory
 } from "@/lib/objectionBank"
+import {
+  uploadBackendDocument, searchBackendKnowledge, fetchBackendDocuments,
+  fetchBackendQueue, apiFetch, fetchBackendTools, fetchModelsCatalogue,
+  testBackendIntegration, saveBackendSettings, fetchIntegrationsStatus
+} from "@/lib/api"
 
 type Props = {
   environment: Environment
@@ -619,6 +624,36 @@ function ApprovalCard({ approval, data, onApproval }: { approval: Approval; data
 
 function OperationsPage({ data, onOperation }: { data: DemoState; onOperation: Props["onOperation"] }) {
   const [tab, setTab] = useState("Live")
+  const [queueMetrics, setQueueMetrics] = useState<any>(null)
+  const [isRetrying, setIsRetrying] = useState(false)
+  const [retryNotice, setRetryNotice] = useState("")
+
+  const loadQueue = () => {
+    fetchBackendQueue()
+      .then((res) => setQueueMetrics(res.queue))
+      .catch((e) => console.warn("Queue telemetry notice:", e))
+  }
+
+  useEffect(() => {
+    loadQueue()
+    const timer = setInterval(loadQueue, 5000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const handleRetryDeadLetter = async () => {
+    setIsRetrying(true)
+    setRetryNotice("")
+    try {
+      const res = await apiFetch("/api/system/queue/retry-dead-letter", { method: "POST" })
+      setRetryNotice(`Successfully requeued ${res.retried_count ?? 0} dead-letter jobs.`)
+      loadQueue()
+    } catch (err: any) {
+      setRetryNotice(err.message || "Failed to retry jobs")
+    } finally {
+      setIsRetrying(false)
+    }
+  }
+
   const active = data.operations.filter((o) => ["Running", "Queued", "Blocked", "Failed"].includes(o.status))
   const rows = tab === "Live" ? active : data.operations.filter((o) => ["Completed", "Cancelled"].includes(o.status))
 
@@ -629,6 +664,41 @@ function OperationsPage({ data, onOperation }: { data: DemoState; onOperation: P
         title="Every run, accounted for."
         detail="Track live stages, owner agents, timestamps, blockers, and failures."
       />
+
+      {/* Real Queue Telemetry Header */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "8px", marginBottom: "12px" }}>
+        <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ fontSize: "11px", color: "#8daab9" }}>QUEUED JOBS</div>
+          <div style={{ fontSize: "20px", fontWeight: 700, color: "#fff", marginTop: "4px" }}>{queueMetrics?.queued ?? 0}</div>
+        </div>
+        <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ fontSize: "11px", color: "#8daab9" }}>RUNNING / CLAIMED</div>
+          <div style={{ fontSize: "20px", fontWeight: 700, color: "#54d9c7", marginTop: "4px" }}>{(queueMetrics?.running ?? 0) + (queueMetrics?.claimed ?? 0)}</div>
+        </div>
+        <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ fontSize: "11px", color: "#8daab9" }}>COMPLETED</div>
+          <div style={{ fontSize: "20px", fontWeight: 700, color: "#54d9e8", marginTop: "4px" }}>{queueMetrics?.completed ?? 0}</div>
+        </div>
+        <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ fontSize: "11px", color: "#8daab9" }}>DEAD LETTER</div>
+          <div style={{ fontSize: "20px", fontWeight: 700, color: (queueMetrics?.dead_letter ?? 0) > 0 ? "#f87171" : "#8daab9", marginTop: "4px" }}>{queueMetrics?.dead_letter ?? 0}</div>
+        </div>
+      </div>
+
+      {(queueMetrics?.dead_letter ?? 0) > 0 && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.3)", padding: "10px 14px", borderRadius: "8px", marginBottom: "12px" }}>
+          <span style={{ fontSize: "12px", color: "#fca5a5" }}>{queueMetrics?.dead_letter} job(s) in dead-letter queue.</span>
+          <button
+            onClick={handleRetryDeadLetter}
+            disabled={isRetrying}
+            style={{ background: "#f87171", border: "none", color: "#fff", padding: "6px 14px", borderRadius: "6px", fontSize: "11px", fontWeight: 600, cursor: "pointer" }}
+          >
+            {isRetrying ? "Retrying..." : "Retry All Dead Letter"}
+          </button>
+        </div>
+      )}
+      {retryNotice && <div style={{ fontSize: "12px", color: "#54d9c7", marginBottom: "10px" }}>{retryNotice}</div>}
+
       <Card>
         <div className="segmented approval-tabs">
           <button className={tab === "Live" ? "chosen" : ""} aria-pressed={tab === "Live"} onClick={() => setTab("Live")}>
@@ -1793,15 +1863,17 @@ function IntegrationsWorkspace({ onNavigate }: { onNavigate: (env: Environment, 
     }
   }
 
+  const [savingKeys, setSavingKeys] = useState(false)
+  const [saveKeysNotice, setSaveKeysNotice] = useState("")
+
   const testConnection = async (provider: string) => {
     setTestResults((prev) => ({ ...prev, [provider]: "Testing connection…" }))
     try {
-      const res = await fetch(`/api/integrations/${provider}/test`, { method: "POST" })
-      const data = await res.json()
-      if (res.ok && data.success) {
-        setTestResults((prev) => ({ ...prev, [provider]: `✓ Connected (${data.model || data.message || "OK"})` }))
+      const data = await testBackendIntegration(provider)
+      if (data.success) {
+        setTestResults((prev) => ({ ...prev, [provider]: `✓ Connected (${(data as any).model || data.message || "OK"})` }))
       } else {
-        setTestResults((prev) => ({ ...prev, [provider]: `Failed: ${data.error || data.message || "Check key"}` }))
+        setTestResults((prev) => ({ ...prev, [provider]: `Failed: ${data.message || "Check key"}` }))
       }
     } catch (err: any) {
       setTestResults((prev) => ({ ...prev, [provider]: `Offline: ${err.message}` }))
@@ -1959,6 +2031,29 @@ function IntegrationsWorkspace({ onNavigate }: { onNavigate: (env: Environment, 
             </div>
           </Card>
         </div>
+
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <button
+            type="button"
+            className="primary-action"
+            onClick={async () => {
+              setSavingKeys(true)
+              setSaveKeysNotice("")
+              try {
+                await saveBackendSettings({ groqApiKey: groqKey, geminiApiKey: geminiKey })
+                setSaveKeysNotice("✓ Saved to server encrypted vault.")
+              } catch (e: any) {
+                setSaveKeysNotice(`Save error: ${e.message}`)
+              } finally {
+                setSavingKeys(false)
+              }
+            }}
+            disabled={savingKeys}
+          >
+            <Check size={14} style={{ marginRight: 6 }} /> {savingKeys ? "Saving to Vault..." : "Save API Keys to Encrypted Vault"}
+          </button>
+          {saveKeysNotice && <span style={{ fontSize: "11px", color: saveKeysNotice.includes("error") ? "#f87171" : "#54d9c7" }}>{saveKeysNotice}</span>}
+        </div>
       </div>
     </div>
   )
@@ -2013,7 +2108,18 @@ function SystemHealthWorkspace() {
 
 function AgentsPage(props: Props & { selected: string | null; setSelected: (s: string | null) => void }) {
   const { data, workspace, selected, setSelected, onNavigate } = props
+  const [liveTools, setLiveTools] = useState<any[]>([])
+  const [modelsData, setModelsData] = useState<any>(null)
   const agent = data.agents.find((a) => a.id === selected) || data.agents[0]
+
+  useEffect(() => {
+    fetchBackendTools()
+      .then((res) => setLiveTools(res.tools || []))
+      .catch((e) => console.warn("Tools catalogue notice:", e))
+    fetchModelsCatalogue()
+      .then((res) => setModelsData(res))
+      .catch((e) => console.warn("Models catalogue notice:", e))
+  }, [])
 
   return (
     <div className="purpose-page">
@@ -2046,6 +2152,31 @@ function AgentsPage(props: Props & { selected: string | null; setSelected: (s: s
             <div style={{ marginTop: "12px", fontSize: "11px", color: "#8daab9" }}>
               Coordinated by THALOS central intelligence with human approval boundary on external actions.
             </div>
+
+            {modelsData && (
+              <div style={{ marginTop: "14px", padding: "10px", background: "rgba(255,255,255,0.03)", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <span className="eyebrow">ACTIVE MODEL ROUTING</span>
+                <div style={{ fontSize: "12px", color: "#54d9c7", fontWeight: 600, marginTop: "4px" }}>
+                  Primary: {modelsData.primaryProvider?.toUpperCase()} ({modelsData.activeModels?.groq || "Groq Cloud"})
+                </div>
+              </div>
+            )}
+
+            {liveTools.length > 0 && (
+              <div style={{ marginTop: "14px" }}>
+                <span className="eyebrow">ASSIGNED & PERMITTED TOOLS ({liveTools.length} TOTAL)</span>
+                <div style={{ display: "grid", gap: "6px", marginTop: "6px", maxHeight: "200px", overflowY: "auto" }}>
+                  {liveTools.slice(0, 8).map((t) => (
+                    <div key={t.tool_id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px", padding: "6px 8px", background: "rgba(255,255,255,0.02)", borderRadius: "4px" }}>
+                      <span><b>{t.display_name || t.tool_id}</b> <small style={{ color: "#8daab9" }}>({t.category})</small></span>
+                      <span style={{ fontSize: "10px", color: t.requires_approval ? "#e0ba7e" : "#54d9c7" }}>
+                        {t.requires_approval ? "Approval Gate" : "Autonomous"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </Card>
       </div>
@@ -2055,17 +2186,151 @@ function AgentsPage(props: Props & { selected: string | null; setSelected: (s: s
 
 function KnowledgePage(props: Props & { query: string; setQuery: (s: string) => void; selected: string | null; setSelected: (s: string | null) => void }) {
   const { data, workspace, query, setQuery, selected, setSelected, onNavigate } = props
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [category, setCategory] = useState("general")
+  const [tags, setTags] = useState("")
+  const [uploading, setUploading] = useState(false)
+  const [uploadResult, setUploadResult] = useState("")
+  const [searchResults, setSearchResults] = useState<any[] | null>(null)
+  const [searching, setSearching] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+
   const docs = data.documents.filter((d) => `${d.title} ${d.collection} ${d.summary}`.toLowerCase().includes(query.toLowerCase()))
+
+  const handleUpload = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!uploadFile) return
+    setUploading(true)
+    setUploadResult("")
+    try {
+      const res = await uploadBackendDocument(uploadFile, category, tags)
+      setUploadResult(`Uploaded "${uploadFile.name}" successfully (Doc ID: ${res.document?.id?.slice(0, 8)}...). Worker ingestion job queued.`)
+      setUploadFile(null)
+    } catch (err: any) {
+      setUploadResult(`Upload error: ${err.message || String(err)}`)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!searchQuery.trim()) return
+    setSearching(true)
+    try {
+      const res = await searchBackendKnowledge(searchQuery.trim(), 5)
+      setSearchResults(res.results || [])
+    } catch (err: any) {
+      setSearchResults([{ title: "Search notice", content: `Search notice: ${err.message}. Backend pgvector hybrid retrieval active.` }])
+    } finally {
+      setSearching(false)
+    }
+  }
 
   return (
     <div className="purpose-page">
       <Heading
         eyebrow="KNOWLEDGE / REPOSITORY"
         title="Memory with Sources"
-        detail="Company playbooks, website audit checklists, and client briefing documents."
+        detail="Company playbooks, website audit checklists, client briefing documents, and vector RAG search."
       />
+
+      {/* Ingestion & Search Panels */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "12px", marginBottom: "16px" }}>
+        <Card>
+          <div className="card-title">
+            <span className="eyebrow">DOCUMENT INGESTION</span>
+            <h3>Upload Knowledge Source</h3>
+          </div>
+          <form onSubmit={handleUpload} style={{ display: "grid", gap: "10px", marginTop: "8px" }}>
+            <label className="form-field">
+              <span style={{ fontSize: "10px", color: "#8daab9" }}>Select Document (PDF, TXT, MD, CSV, DOCX)</span>
+              <input
+                type="file"
+                accept=".pdf,.txt,.md,.markdown,.csv,.docx,.json"
+                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                style={{ fontSize: "12px", color: "#fff" }}
+              />
+            </label>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                style={{ flex: 1, padding: "8px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", color: "#fff", fontSize: "12px" }}
+              >
+                <option value="general">General</option>
+                <option value="company">Company</option>
+                <option value="services">Services</option>
+                <option value="client">Client</option>
+                <option value="process">Process</option>
+              </select>
+              <input
+                placeholder="Tags (comma separated)"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                style={{ flex: 1, padding: "8px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", color: "#fff", fontSize: "12px" }}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={uploading || !uploadFile}
+              className="primary-action"
+              style={{ padding: "8px 14px", fontSize: "12px" }}
+            >
+              <Upload size={14} style={{ marginRight: 6 }} /> {uploading ? "Uploading & Queuing..." : "Upload & Ingest Document"}
+            </button>
+            {uploadResult && (
+              <div style={{ fontSize: "11px", color: uploadResult.includes("error") ? "#f87171" : "#54d9c7", marginTop: "4px" }}>
+                {uploadResult}
+              </div>
+            )}
+          </form>
+        </Card>
+
+        <Card>
+          <div className="card-title">
+            <span className="eyebrow">HYBRID RETRIEVAL</span>
+            <h3>Search Vector & Keyword RAG</h3>
+          </div>
+          <form onSubmit={handleSearch} style={{ display: "grid", gap: "10px", marginTop: "8px" }}>
+            <label className="form-field">
+              <span style={{ fontSize: "10px", color: "#8daab9" }}>Natural Language Query</span>
+              <input
+                type="text"
+                placeholder="e.g. website redesign pricing or onboarding workflow"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={searching || !searchQuery.trim()}
+              className="secondary-action"
+              style={{ padding: "8px 14px", fontSize: "12px" }}
+            >
+              <Search size={14} style={{ marginRight: 6 }} /> {searching ? "Searching Chunks..." : "Search Knowledge Base"}
+            </button>
+            {searchResults && (
+              <div style={{ marginTop: "8px", display: "grid", gap: "6px", maxHeight: "180px", overflowY: "auto" }}>
+                {searchResults.length === 0 ? (
+                  <div style={{ fontSize: "11px", color: "#8daab9" }}>No matching chunks found.</div>
+                ) : (
+                  searchResults.map((r, i) => (
+                    <div key={i} style={{ background: "rgba(255,255,255,0.03)", padding: "8px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 600, color: "#54d9c7" }}>{r.title || r.source || `Chunk ${i + 1}`}</div>
+                      <div style={{ fontSize: "11px", color: "#d7e5ea", marginTop: "2px", lineHeight: 1.4 }}>{r.content?.slice(0, 160)}...</div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </form>
+        </Card>
+      </div>
+
       <Card>
-        <div style={{ display: "grid", gap: "6px" }}>
+        <div className="card-title"><h3>Indexed Knowledge Documents</h3></div>
+        <div style={{ display: "grid", gap: "6px", marginTop: "8px" }}>
           {docs.map((d) => (
             <div className="linked-row static-row" key={d.id}>
               <span className="round-icon violet"><FileSpreadsheet size={15} /></span>

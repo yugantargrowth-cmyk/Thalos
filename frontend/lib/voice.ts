@@ -162,6 +162,18 @@ export async function speakResponse(
   return false;
 }
 
+export function isSpeechRecognitionSupported(): boolean {
+  if (typeof window === 'undefined') return false;
+  return Boolean(
+    (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+  );
+}
+
+export function isSpeechSynthesisSupported(): boolean {
+  if (typeof window === 'undefined') return false;
+  return 'speechSynthesis' in window;
+}
+
 /**
  * Initialize Web Speech API Recognition for voice input (Android & Desktop)
  */

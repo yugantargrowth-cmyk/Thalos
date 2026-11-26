@@ -149,7 +149,7 @@ router.post('/settings', async (req: Request, res: Response): Promise<void> => {
     description: 'Updated system settings and integrations configuration',
   });
 
-  res.json({ message: 'Settings saved successfully', ok: true });
+  res.json({ message: 'Settings saved successfully', ok: true, success: true });
 });
 
 // ── List all integrations (never returns credential values) ──

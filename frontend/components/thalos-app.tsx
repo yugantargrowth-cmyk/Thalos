@@ -4,14 +4,21 @@ import { useEffect, useReducer, useRef, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import {
   Activity, ArrowRight, Bell, BookOpen, Bot, CheckCircle2, ChevronDown, CircleHelp,
-  Cpu, FileText, Globe2, Layers3, Mic, MicOff, RefreshCw, Search, Settings2,
-  ShieldCheck, Sparkles, Target, Trash2, TrendingUp, Volume2, VolumeX, X, Zap
+  Cpu, FileText, Globe2, Key, Layers3, Lock, Mic, MicOff, RefreshCw, Search, Settings2,
+  ShieldCheck, Sparkles, Target, Trash2, TrendingUp, Unlock, Volume2, VolumeX, X, Zap
 } from "lucide-react"
 import {
   environments, initialDemoState, EMPTY_LIVE_STATE, loadSavedState, saveSavedState,
   resetToCleanState, resetToDemoState, slugify, workspaces,
   type ApprovalStatus, type DemoState, type Environment, type OperationStatus, type TaskStatus, workspaceFromSlug
 } from "@/lib/thalos-data"
+import {
+  getStoredToken, setStoredToken, clearStoredToken, loginWithPin,
+  chatWithThalos, fetchBackendLeads, createBackendLead, updateBackendLead,
+  fetchBackendClients, createBackendClient, updateBackendClient,
+  fetchBackendApprovals, approveBackendAction, rejectBackendAction,
+  fetchBackendInvoices, createBackendInvoice, verifyBackendUtr, checkBackendReady, fetchIntegrationsStatus
+} from "@/lib/api"
 import { WorkspaceContent } from "@/components/workspace-content"
 import { PwaInstallButton, usePwaStatus } from "@/components/pwa-runtime"
 import { getStoredVoiceSettings, saveVoiceSettings, speakResponse, stopSpeaking, createSpeechRecognizer, type VoiceSettings } from "@/lib/voice"
@@ -183,6 +190,14 @@ function MobileCommandBar({
 }
 
 function reducer(state: DemoState, action: any): DemoState {
+  if (action.type === "merge-backend-data") {
+    const updated = {
+      ...state,
+      ...action.updates,
+    }
+    saveSavedState(updated)
+    return updated
+  }
   if (action.type === "reset-clean") {
     return resetToCleanState()
   }
@@ -531,7 +546,6 @@ function Companion({
     setPrompt("")
     setLoading(true)
 
-    const chatUrl = "/api/intelligence/chat"
     try {
       // Assemble active context snippet to give THALOS intelligence real-time dashboard awareness
       const contextSummary = {
@@ -545,59 +559,46 @@ function Companion({
 
       const contextualMessage = `[Screen Context: ${contextSummary.activeScreen} | Leads: ${contextSummary.totalLeads} | Approvals: ${contextSummary.pendingApprovals} | Tasks: ${contextSummary.openTasks}]\nUser query: ${trimmed}`
 
-      const res = await fetch(chatUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: contextualMessage }),
+      const respData = await chatWithThalos({
+        message: contextualMessage,
+        session_date: new Date().toISOString().split("T")[0],
       })
-      const respData = await res.json()
-      if (res.ok) {
-        if (respData.model_used) setActiveModel(respData.model_used)
-        let assistantText = respData.response || "Outcome evaluated."
 
-        // Parse structured tags in assistant response e.g. [[NAVIGATE: Revenue / Lead CRM]]
-        const navMatch = assistantText.match(/\[\[NAVIGATE:\s*([A-Za-z\s&]+)\s*\/\s*([A-Za-z\s&]+)\]\]/i)
-        if (navMatch) {
-          const envTarget = navMatch[1].trim() as Environment
-          const wsTarget = navMatch[2].trim()
-          if (environments.some((e) => e.name === envTarget)) {
-            onNavigate(envTarget, wsTarget)
-          }
-          assistantText = assistantText.replace(navMatch[0], "").trim()
+      if (respData.model_used) setActiveModel(respData.model_used)
+      let assistantText = respData.response || "Outcome evaluated."
+
+      // Parse structured tags in assistant response e.g. [[NAVIGATE: Revenue / Lead CRM]]
+      const navMatch = assistantText.match(/\[\[NAVIGATE:\s*([A-Za-z\s&]+)\s*\/\s*([A-Za-z\s&]+)\]\]/i)
+      if (navMatch) {
+        const envTarget = navMatch[1].trim() as Environment
+        const wsTarget = navMatch[2].trim()
+        if (environments.some((e) => e.name === envTarget)) {
+          onNavigate(envTarget, wsTarget)
         }
+        assistantText = assistantText.replace(navMatch[0], "").trim()
+      }
 
-        const selMatch = assistantText.match(/\[\[SELECT_LEAD:\s*([a-zA-Z0-9_-]+)\]\]/i)
-        if (selMatch) {
-          setSelectedRecord(selMatch[1].trim())
-          assistantText = assistantText.replace(selMatch[0], "").trim()
-        }
+      const selMatch = assistantText.match(/\[\[SELECT_LEAD:\s*([a-zA-Z0-9_-]+)\]\]/i)
+      if (selMatch) {
+        setSelectedRecord(selMatch[1].trim())
+        assistantText = assistantText.replace(selMatch[0], "").trim()
+      }
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `a-${Date.now()}`,
-            role: "assistant",
-            text: assistantText,
-            model: respData.model_used,
-            intent: respData.intent,
-            actions: respData.actions_taken,
-          },
-        ])
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `a-${Date.now()}`,
+          role: "assistant",
+          text: assistantText,
+          model: respData.model_used,
+          intent: respData.intent,
+          actions: respData.actions_taken,
+        },
+      ])
 
-        if (voiceSettings.enabled && voiceSettings.autoSpeak) {
-          setIsSpeaking(true)
-          speakResponse(assistantText, voiceSettings).finally(() => setIsSpeaking(false))
-        }
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `a-${Date.now()}`,
-            role: "assistant",
-            text: respData.error || respData.message || "Failed to process request with THALOS intelligence.",
-            isError: true,
-          },
-        ])
+      if (voiceSettings.enabled && voiceSettings.autoSpeak) {
+        setIsSpeaking(true)
+        speakResponse(assistantText, voiceSettings).finally(() => setIsSpeaking(false))
       }
     } catch (err: any) {
       setMessages((prev) => [
@@ -879,6 +880,150 @@ export default function ThalosApp({
   const [searchOpen, setSearchOpen] = useState(false)
   const [notice, setNotice] = useState("")
 
+  const [isLiveConnected, setIsLiveConnected] = useState(false)
+  const [pinModalOpen, setPinModalOpen] = useState(false)
+  const [pinInput, setPinInput] = useState("")
+  const [authError, setAuthError] = useState("")
+  const [isAuthLoading, setIsAuthLoading] = useState(false)
+
+  // Auto-connect and sync backend live data on mount
+  useEffect(() => {
+    let mounted = true
+
+    async function syncBackend() {
+      try {
+        let token = getStoredToken()
+        if (!token) {
+          try {
+            // Attempt auto-login with default dev PIN or existing session
+            const authRes = await loginWithPin("1234")
+            token = authRes.token
+          } catch {
+            // Require explicit PIN entry if custom PIN configured
+          }
+        }
+
+        const [leadsRes, clientsRes, approvalsRes, invoicesRes] = await Promise.allSettled([
+          fetchBackendLeads(),
+          fetchBackendClients(),
+          fetchBackendApprovals("pending"),
+          fetchBackendInvoices(),
+        ])
+
+        if (!mounted) return
+
+        const updates: Partial<DemoState> = {}
+
+        if (leadsRes.status === "fulfilled" && Array.isArray(leadsRes.value?.leads) && leadsRes.value.leads.length > 0) {
+          updates.leads = leadsRes.value.leads.map((l: any) => ({
+            id: l.id,
+            company: l.company || l.name,
+            contact: l.contact_name || l.name,
+            source: l.source || "Website",
+            stage: l.stage || "New",
+            value: Number(l.expected_value || l.value || 0),
+            phone: l.phone,
+            email: l.email,
+            tier: l.tier || "B",
+            fitScore: l.score,
+          }))
+        }
+
+        if (clientsRes.status === "fulfilled" && Array.isArray(clientsRes.value?.clients) && clientsRes.value.clients.length > 0) {
+          updates.clients = clientsRes.value.clients.map((c: any) => ({
+            id: c.id,
+            name: c.business_name || c.name,
+            industry: c.industry || "General",
+            health: (c.health_score ?? 80) > 70 ? "On track" : "Needs attention",
+            phone: c.phone,
+            email: c.email,
+          }))
+        }
+
+        if (approvalsRes.status === "fulfilled" && Array.isArray(approvalsRes.value?.approvals) && approvalsRes.value.approvals.length > 0) {
+          updates.approvals = approvalsRes.value.approvals.map((a: any) => ({
+            id: a.id,
+            title: a.description || a.action_type,
+            agentId: `agent-${a.agent_id || "operator"}`,
+            action: a.action_type,
+            reason: a.reason || "Autonomous agent requested action",
+            impact: a.impact || "Business execution",
+            risk: a.risk_level || "Medium",
+            context: JSON.stringify(a.payload || {}),
+            status: a.status === "pending" ? "Pending" : a.status === "approved" ? "Approved" : "Rejected",
+            created: new Date(a.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          }))
+        }
+
+        if (invoicesRes.status === "fulfilled" && Array.isArray(invoicesRes.value?.invoices) && invoicesRes.value.invoices.length > 0) {
+          updates.invoices = invoicesRes.value.invoices.map((i: any) => ({
+            id: i.id,
+            number: i.invoice_number || i.id.slice(0, 8),
+            clientId: i.client_id,
+            amount: Number(i.total_amount || 0),
+            status: i.status,
+            due: i.due_date || "Due on receipt",
+            advanceReceived: i.status === "paid",
+          }))
+        }
+
+        if (Object.keys(updates).length > 0) {
+          dispatch({ type: "merge-backend-data", updates })
+          setIsLiveConnected(true)
+        }
+      } catch (e) {
+        console.warn("Backend live sync offline or unauthenticated:", e)
+      }
+    }
+
+    syncBackend()
+
+    const handleAuthReq = () => setPinModalOpen(true)
+    window.addEventListener("thalos_auth_required", handleAuthReq)
+    return () => {
+      mounted = false
+      window.removeEventListener("thalos_auth_required", handleAuthReq)
+    }
+  }, [])
+
+  const handlePinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!pinInput.trim()) return
+    setIsAuthLoading(true)
+    setAuthError("")
+    try {
+      await loginWithPin(pinInput.trim())
+      setPinModalOpen(false)
+      setPinInput("")
+      setIsLiveConnected(true)
+      // Trigger sync
+      const [leadsRes, clientsRes, approvalsRes, invoicesRes] = await Promise.allSettled([
+        fetchBackendLeads(),
+        fetchBackendClients(),
+        fetchBackendApprovals("pending"),
+        fetchBackendInvoices(),
+      ])
+      const updates: Partial<DemoState> = {}
+      if (leadsRes.status === "fulfilled" && Array.isArray(leadsRes.value?.leads) && leadsRes.value.leads.length > 0) {
+        updates.leads = leadsRes.value.leads.map((l: any) => ({
+          id: l.id,
+          company: l.company || l.name,
+          contact: l.contact_name || l.name,
+          source: l.source || "Website",
+          stage: l.stage || "New",
+          value: Number(l.expected_value || l.value || 0),
+        }))
+      }
+      if (Object.keys(updates).length > 0) {
+        dispatch({ type: "merge-backend-data", updates })
+      }
+    } catch (err: any) {
+      setAuthError(err.message || "Failed to authenticate PIN")
+    } finally {
+      setIsAuthLoading(false)
+    }
+  }
+
   const isDemo = data.leads.some((l) => l.id.includes("northstar"))
 
   const segments = (pathname ?? "/").split("/").filter(Boolean)
@@ -983,6 +1128,16 @@ export default function ThalosApp({
           <PwaInstallButton />
 
           <button
+            type="button"
+            className="icon-button top-action"
+            title={getStoredToken() ? "Owner Authenticated to Express API" : "Enter Owner PIN to Authenticate"}
+            aria-label="Auth status"
+            onClick={() => setPinModalOpen(true)}
+          >
+            {getStoredToken() ? <Unlock size={16} style={{ color: "#54d9c7" }} /> : <Lock size={16} style={{ color: "#e0ba7e" }} />}
+          </button>
+
+          <button
             className="user-avatar"
             aria-label="User profile"
             onClick={() => navigate("Execution & Settings", "Integrations")}
@@ -998,6 +1153,104 @@ export default function ThalosApp({
           </button>
         )}
       </header>
+
+      {pinModalOpen && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(3, 7, 18, 0.85)",
+          backdropFilter: "blur(8px)",
+          zIndex: 99999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "20px",
+        }}>
+          <div style={{
+            background: "#0c1520",
+            border: "1px solid rgba(84, 217, 199, 0.3)",
+            borderRadius: "16px",
+            padding: "28px",
+            maxWidth: "380px",
+            width: "100%",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.6)",
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 600, color: "#fff", display: "flex", alignItems: "center", gap: "8px" }}>
+                <Key size={18} style={{ color: "#54d9c7" }} /> Founder Authentication
+              </h3>
+              <button
+                onClick={() => setPinModalOpen(false)}
+                style={{ background: "none", border: "none", color: "#8daab9", cursor: "pointer" }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <p style={{ fontSize: "12px", color: "#8daab9", margin: "0 0 16px 0", lineHeight: 1.5 }}>
+              Enter your Owner PIN to unlock authenticated access to the canonical Express orchestrator, approvals queue, and business APIs.
+            </p>
+            <form onSubmit={handlePinSubmit}>
+              <input
+                type="password"
+                autoFocus
+                placeholder="Enter PIN (e.g. 1234)"
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: "8px",
+                  color: "#fff",
+                  fontSize: "14px",
+                  marginBottom: "12px",
+                  boxSizing: "border-box",
+                }}
+              />
+              {authError && (
+                <div style={{ color: "#f87171", fontSize: "12px", marginBottom: "12px" }}>{authError}</div>
+              )}
+              <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearStoredToken()
+                    setPinModalOpen(false)
+                  }}
+                  style={{
+                    padding: "8px 14px",
+                    background: "transparent",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    borderRadius: "8px",
+                    color: "#8daab9",
+                    fontSize: "12px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Clear Token
+                </button>
+                <button
+                  type="submit"
+                  disabled={isAuthLoading || !pinInput.trim()}
+                  style={{
+                    padding: "8px 18px",
+                    background: "#54d9c7",
+                    color: "#030712",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontWeight: 600,
+                    fontSize: "12px",
+                    cursor: "pointer",
+                  }}
+                >
+                  {isAuthLoading ? "Authenticating..." : "Unlock THALOS"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <RadialNavigation selected={environment} onSelect={(env) => navigate(env)} />
 
@@ -1094,14 +1347,58 @@ export default function ThalosApp({
             onSelectRecord={setSelectedRecord}
             onTask={(id, status) => dispatch({ type: "task", id, status })}
             onEditTask={(id, title) => dispatch({ type: "edit-task", id, title })}
-            onApproval={(id, status) => dispatch({ type: "approval", id, status })}
+            onApproval={async (id, status) => {
+              dispatch({ type: "approval", id, status })
+              try {
+                if (status === "Approved") {
+                  await approveBackendAction(id, true)
+                } else if (status === "Rejected") {
+                  await rejectBackendAction(id, "Rejected by founder in dashboard")
+                }
+              } catch (e) {
+                console.warn("Backend approval update notice:", e)
+              }
+            }}
             onOperation={(id, status) => dispatch({ type: "operation", id, status })}
             onCreateTask={(title) => dispatch({ type: "create-task", title })}
             onNavigate={navigate}
-            onImportLeads={(newLeads) => dispatch({ type: "import-leads", leads: newLeads })}
-            onCreateLead={(newLead) => dispatch({ type: "create-lead", lead: newLead })}
-            onUpdateLead={(id, updates) => dispatch({ type: "update-lead", id, updates })}
-            onUpdateInvoice={(id, updates) => dispatch({ type: "update-invoice", id, updates })}
+            onImportLeads={async (newLeads) => {
+              dispatch({ type: "import-leads", leads: newLeads })
+              for (const l of newLeads) {
+                try {
+                  await createBackendLead(l)
+                } catch {}
+              }
+            }}
+            onCreateLead={async (newLead) => {
+              dispatch({ type: "create-lead", lead: newLead })
+              try {
+                const res = await createBackendLead(newLead)
+                if (res?.lead?.id && res.lead.id !== newLead.id) {
+                  dispatch({ type: "update-lead", id: newLead.id, updates: { id: res.lead.id } })
+                }
+              } catch (e) {
+                console.warn("Backend lead create notice:", e)
+              }
+            }}
+            onUpdateLead={async (id, updates) => {
+              dispatch({ type: "update-lead", id, updates })
+              try {
+                await updateBackendLead(id, updates)
+              } catch (e) {
+                console.warn("Backend lead update notice:", e)
+              }
+            }}
+            onUpdateInvoice={async (id, updates) => {
+              dispatch({ type: "update-invoice", id, updates })
+              try {
+                if (updates.utrReference) {
+                  await verifyBackendUtr(id, updates.utrReference)
+                }
+              } catch (e) {
+                console.warn("Backend invoice update notice:", e)
+              }
+            }}
             onResetClean={() => dispatch({ type: "reset-clean" })}
             onResetDemo={() => dispatch({ type: "reset-demo" })}
           />

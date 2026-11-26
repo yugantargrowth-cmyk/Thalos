@@ -108,12 +108,22 @@ export function assembleContext(options: ContextAssemblyOptions): AssembledConte
   const effectiveHistoryBudget = Math.min(remainingBudget, maxHistoryTokens);
 
   // 2. Filter & Prune History (newest first, then reverse)
+  // Exclude immediate user message if already present at the end of history
+  const sanitizedHistory = [...history];
+  if (
+    sanitizedHistory.length > 0 &&
+    sanitizedHistory[sanitizedHistory.length - 1].role === 'user' &&
+    sanitizedHistory[sanitizedHistory.length - 1].content?.trim() === userMessage.trim()
+  ) {
+    sanitizedHistory.pop();
+  }
+
   const prunedHistory: LLMMessage[] = [];
   let currentHistoryTokens = 0;
   let historyPrunedCount = 0;
 
   // Process history in reverse order (most recent first)
-  const reversedHistory = [...history].reverse();
+  const reversedHistory = sanitizedHistory.reverse();
 
   for (const item of reversedHistory) {
     if (!item.content || !item.content.trim()) continue;
